@@ -23,6 +23,10 @@ Open the URL in a browser. Works in Chrome, Firefox, Safari, Edge.
 
 ### Controls
 
+On phones and tablets an on-screen d-pad with A, B and Start buttons appears
+under the picture (or over it when the phone is held sideways). Add the page
+to your home screen for a full-screen cabinet.
+
 | Action                      | Player 1       | Player 2        | Gamepad          |
 |-----------------------------|----------------|-----------------|------------------|
 | Move / aim / pick base      | `W A S D`      | Arrow keys      | D-pad / stick    |
