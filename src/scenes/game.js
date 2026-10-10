@@ -4,6 +4,7 @@ import { Play } from '../game/play.js';
 import { drawBatView } from '../render/batview.js';
 import { drawFieldView, resetCamera } from '../render/fieldview.js';
 import { drawHud } from '../render/hud.js';
+import { drawFormation } from '../render/formation.js';
 import { sfx } from '../audio.js';
 
 export class GameScene {
@@ -34,7 +35,10 @@ export class GameScene {
     this.play.events.length = 0;
   }
   draw() {
-    if (this.play.fieldView) drawFieldView(this.play); else drawBatView(this.play);
+    if (this.play.phase === 'sidechange') {
+      const m = this.match, ft = m.teams[m.fieldingTeam];
+      drawFormation(ft, { title: `${ft.city} ${ft.name} TAKE THE FIELD`.toUpperCase(), subtitle: m.inningLabel(), t: this.t });
+    } else if (this.play.fieldView) drawFieldView(this.play); else drawBatView(this.play);
     drawHud(this.play);
     if (this.paused) {
       rect(0, 0, W, H, 'rgba(0,0,0,0.5)');

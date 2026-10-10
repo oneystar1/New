@@ -6,6 +6,7 @@ function abbr(team) { return team.name.slice(0, 3).toUpperCase(); }
 
 export function drawHud(play) {
   const m = play.m;
+  if (play.phase === 'sidechange') { drawMessage(play); return; }
   // --- score panel (top-left)
   panel(3, 3, 92, 34);
   const t0 = m.teams[0], t1 = m.teams[1];
@@ -50,15 +51,7 @@ export function drawHud(play) {
     panel(W / 2 - w / 2, H - 38, w, 12, 'rgba(10,10,30,0.85)', pt.special ? '#ffd84a' : '#fff');
     text(label, W / 2, H - 35, { align: 'center', color: pt.special ? '#ffd84a' : '#fff' });
   }
-  // --- message
-  if (play.message) {
-    const { text: t, big } = play.message;
-    const sc = big ? 2 : 1;
-    const w = textWidth(t, sc) + 16;
-    const y = play.fieldView ? 44 : 44;
-    panel(W / 2 - w / 2, y, w, 10 * sc + 8, 'rgba(10,10,30,0.85)', big ? '#ffd84a' : '#fff');
-    text(t, W / 2, y + 4, { align: 'center', scale: sc, color: big ? '#ffd84a' : '#fff', shadow: '#000' });
-  }
+  drawMessage(play);
   // --- control hints
   if (play.phase === 'pitching' && play.t < 2.5) {
     let hint = '';
@@ -71,4 +64,14 @@ export function drawHud(play) {
     if (play.fieldInput) text('MOVE FIELDER  DIR+A: THROW TO BASE', W / 2, H - 34, { align: 'center', color: '#ddd', shadow: '#000' });
     else if (play.batInput) text('A: ADVANCE RUNNERS   B: RETREAT', W / 2, H - 34, { align: 'center', color: '#ddd', shadow: '#000' });
   }
+}
+
+function drawMessage(play) {
+  if (!play.message) return;
+  const { text: t, big } = play.message;
+  const sc = big ? 2 : 1;
+  const w = textWidth(t, sc) + 16;
+  const y = 44;
+  panel(W / 2 - w / 2, y, w, 10 * sc + 8, 'rgba(10,10,30,0.85)', big ? '#ffd84a' : '#fff');
+  text(t, W / 2, y + 4, { align: 'center', scale: sc, color: big ? '#ffd84a' : '#fff', shadow: '#000' });
 }

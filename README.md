@@ -50,6 +50,16 @@ Step on a base or tag a runner by running into them.
 **Base running.** Runners go automatically on contact. Press A to send everyone
 an extra base, B to retreat.
 
+### Lineup card
+
+After picking teams, a formation chart shows each club's defence spread over
+the diamond with a name/position label under every player, in the style of a
+football depth chart. Press B to flip to the batting order with ratings, A to
+continue. The same chart appears whenever a team takes the field between
+innings.
+
+![lineup](docs/screenshots/05-lineup.png)
+
 ### Modes
 
 * **1P vs CPU** – you bat first as the away team.
@@ -59,12 +69,19 @@ an extra base, B to retreat.
 
 ### Teams
 
-Four nine-Pokémon squads, each with a type special pitch:
+Six nine-Pokémon squads, each with a type special pitch:
 
 * **Pallet Pikas** (Electric/Normal) – Pikachu, Eevee, Raichu, Snorlax, Electabuzz, Meowth, Clefairy, Jigglypuff, Magnemite
 * **Cinnabar Blaze** (Fire) – Ponyta, Growlithe, Charizard, Magmar, Flareon, Charmeleon, Charmander, Vulpix, Cyndaquil
 * **Cerulean Tides** (Water) – Vaporeon, Squirtle, Lapras, Blastoise, Wartortle, Staryu, Poliwag, Psyduck, Magikarp
 * **Viridian Vines** (Grass) – Chikorita, Oddish, Ivysaur, Venusaur, Exeggutor, Weepinbell, Bulbasaur, Tangela, Bellsprout
+* **Pewter Bruisers** (Fighting/Ground/Rock) – Tauros, Primeape, Machamp, Rhydon, Kangaskhan, Machoke, Marowak, Sandslash, Golem
+* **Lavender Shadows** (Poison/Ghost/Bug) – Dodrio, Scyther, Nidoking, Gengar, Muk, Kabutops, Poliwrath, Arbok, Magneton
+
+Special pitches by type: Flame Ball (fire), Bubble Ball (water), Vine Ball
+(grass), Thunderbolt (electric), Body Slam (normal), Mega Punch (fighting),
+Dig Sinker (ground), Rock Slide (rock), Sludge Ball (poison), Shadow Ball
+(ghost – the ball vanishes mid-flight), Fury Cutter (bug), Drill Peck (flying).
 
 Each species has power, contact, speed, arm, glove and pitching ratings in
 `src/data/pokemon.js`; rosters and colours live in `src/data/teams.js`.

@@ -330,7 +330,7 @@ export class Play {
     const m = this.m;
     const change = m.checkSideChange();
     if (change === 'over') { this.phase = 'gameover'; this.say('GAME OVER', 999, true); sfx.win(); this.emit('gameover'); return; }
-    if (change === 'inning') { this.phase = 'sidechange'; this.timer = 2.2; this.say('CHANGE SIDES', 2.2, true); sfx.inning(); this.emit('sidechange'); return; }
+    if (change === 'inning') { this.phase = 'sidechange'; this.timer = 3.2; this.say('CHANGE SIDES', 1.2, true); sfx.inning(); this.emit('sidechange'); return; }
     this.newAtBat();
   }
 

@@ -6,6 +6,7 @@ import { unlockAudio, toggleMute } from './audio.js';
 import { TitleScene } from './scenes/title.js';
 import { SelectScene } from './scenes/select.js';
 import { GameScene } from './scenes/game.js';
+import { LineupScene } from './scenes/lineup.js';
 import { ResultScene } from './scenes/result.js';
 
 const canvas = document.getElementById('game');
@@ -23,7 +24,7 @@ const game = {
   input: new Input(),
   scene: null,
   goto(name, opts = {}) {
-    const S = { title: TitleScene, select: SelectScene, game: GameScene, result: ResultScene }[name];
+    const S = { title: TitleScene, select: SelectScene, lineup: LineupScene, game: GameScene, result: ResultScene }[name];
     this.scene = new S(this, opts);
     this.sceneName = name;
   },

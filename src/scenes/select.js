@@ -10,7 +10,8 @@ export class SelectScene {
     this.picks = [0, 1];          // team index for away (P1) / home (P2 or CPU)
     this.step = 0;                // 0 = picking away, 1 = picking home, 2 = done
     this.who = opts.mode === '2p' ? [0, 1] : [0, 0];  // which input slot picks each side
-    if (opts.mode === 'cpu') { this.picks = [Math.floor(Math.random() * 4), 0]; this.picks[1] = (this.picks[0] + 1 + Math.floor(Math.random() * 3)) % 4; this.step = 2; this.timer = 0.5; }
+    const n = TEAMS.length;
+    if (opts.mode === 'cpu') { this.picks = [Math.floor(Math.random() * n), 0]; this.picks[1] = (this.picks[0] + 1 + Math.floor(Math.random() * (n - 1))) % n; this.step = 2; this.timer = 0.5; }
   }
   update(input) {
     this.t += 1 / 60;
@@ -20,13 +21,14 @@ export class SelectScene {
       return;
     }
     const inp = this.opts.mode === '2p' ? input.p(this.who[this.step]) : input.any;
-    if (inp.pressed.left) { this.picks[this.step] = (this.picks[this.step] + 3) % 4; sfx.menuMove(); }
-    if (inp.pressed.right) { this.picks[this.step] = (this.picks[this.step] + 1) % 4; sfx.menuMove(); }
+    const n = TEAMS.length;
+    if (inp.pressed.left) { this.picks[this.step] = (this.picks[this.step] + n - 1) % n; sfx.menuMove(); }
+    if (inp.pressed.right) { this.picks[this.step] = (this.picks[this.step] + 1) % n; sfx.menuMove(); }
     if (inp.pressed.b && this.step === 1) { this.step = 0; sfx.menuMove(); return; }
     if (inp.pressed.b && this.step === 0) { this.game.goto('title'); return; }
     if (inp.pressed.a || inp.pressed.start) {
       sfx.menuSelect();
-      if (this.step === 0) { this.step = 1; if (this.picks[1] === this.picks[0]) this.picks[1] = (this.picks[0] + 1) % 4; }
+      if (this.step === 0) { this.step = 1; if (this.picks[1] === this.picks[0]) this.picks[1] = (this.picks[0] + 1) % TEAMS.length; }
       else { this.step = 2; this.timer = 0.6; }
     }
   }
@@ -34,7 +36,7 @@ export class SelectScene {
     const away = TEAMS[this.picks[0]], home = TEAMS[this.picks[1]];
     prebuildTeam(away); prebuildTeam(home);
     const controllers = this.opts.mode === '1p' ? ['human0', 'cpu'] : this.opts.mode === '2p' ? ['human0', 'human1'] : ['cpu', 'cpu'];
-    this.game.goto('game', { away, home, innings: this.opts.innings, controllers });
+    this.game.goto('lineup', { away, home, innings: this.opts.innings, controllers });
   }
   draw() {
     rect(0, 0, W, H, '#1a2a4c');
@@ -50,6 +52,7 @@ export class SelectScene {
       rect(x + 4, 36, 142, 14, rgb(team.colors.primary));
       text(`${team.city} ${team.name}`, x + 75, 40, { align: 'center', color: '#fff', shadow: '#000' });
       if (active) { text('<', x + 6, 40, { color: '#fff' }); text('>', x + 138, 40, { color: '#fff' }); }
+      text(`${this.picks[side] + 1}/${TEAMS.length}`, x + 75, 190, { align: 'center', color: '#888' });
       // roster
       team.roster.forEach((r, i) => {
         const sp = SPECIES[r.species];

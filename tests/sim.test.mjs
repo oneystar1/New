@@ -8,8 +8,8 @@ const fakeInput = { p: () => null };
 let failures = 0;
 const check = (cond, msg) => { if (!cond) { failures++; console.error('FAIL:', msg); } };
 
-for (let g = 0; g < 6; g++) {
-  const away = TEAMS[g % 4], home = TEAMS[(g + 1) % 4];
+for (let g = 0; g < TEAMS.length; g++) {
+  const away = TEAMS[g % TEAMS.length], home = TEAMS[(g + 1) % TEAMS.length];
   const m = new Match(away, home, { innings: 3, controllers: ['cpu', 'cpu'] });
   const play = new Play(m, fakeInput);
   const results = {};

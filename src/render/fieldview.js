@@ -121,3 +121,12 @@ export function drawFieldView(play) {
 }
 
 export function resetCamera() { cam = { x: 0, y: 0 }; }
+
+/** Draw the empty field with an explicit camera (used by the formation chart). */
+export function drawFieldBackdrop(cx, cy) {
+  if (!fieldImg) buildField();
+  ctx.drawImage(fieldImg, HOME.x - FOX - cx, HOME.y - FOY - cy);
+}
+export function projectStatic(x, z, cx, cy, y = 0) {
+  return { sx: HOME.x + x * SX - cx, sy: HOME.y - z * SZ - y * SY - cy };
+}

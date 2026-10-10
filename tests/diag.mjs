@@ -9,7 +9,7 @@ const exits = [], dists = [];
 let pa = 0;
 let gi = 0;
 while (pa < N) {
-  const m = new Match(TEAMS[gi % 4], TEAMS[(gi + 1) % 4], { innings: 9, controllers: ['cpu', 'cpu'] }); gi++;
+  const m = new Match(TEAMS[gi % TEAMS.length], TEAMS[(gi + 1) % TEAMS.length], { innings: 9, controllers: ['cpu', 'cpu'] }); gi++;
   const play = new Play(m, fakeInput);
   let lastPhase = play.phase, steps = 0, contactLogged = false;
   while (play.phase !== 'gameover' && pa < N && steps < 60 * 60 * 60) {

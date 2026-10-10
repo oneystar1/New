@@ -52,6 +52,26 @@ export const SPECIES = {
   tangela:    sp('Tangela',    'grass',    50, 72, 55, 60, 95, [70, 75, 90, 75]),
   chikorita:  sp('Chikorita',  'grass',    48, 85, 78, 55, 80, [70, 85, 65, 70]),
   weepinbell: sp('Weepinbell', 'grass',    62, 65, 60, 78, 72, [80, 66, 82, 72]),
+  // Fighting / Ground / Rock
+  machamp:    sp('Machamp',    'fighting', 96, 58, 55, 95, 70, [96, 55, 50, 85]),
+  machoke:    sp('Machoke',    'fighting', 82, 62, 60, 88, 65, [92, 62, 55, 82]),
+  primeape:   sp('Primeape',   'fighting', 72, 60, 88, 75, 60, [88, 50, 60, 70]),
+  rhydon:     sp('Rhydon',     'ground',   92, 50, 35, 85, 60, [90, 55, 70, 90]),
+  golem:      sp('Golem',      'rock',     88, 52, 30, 80, 75, [86, 60, 72, 92]),
+  marowak:    sp('Marowak',    'ground',   70, 75, 60, 80, 85, [82, 78, 65, 75]),
+  sandslash:  sp('Sandslash',  'ground',   60, 72, 75, 65, 88, [76, 72, 70, 72]),
+  tauros:     sp('Tauros',     'normal',   85, 66, 92, 70, 60, [90, 58, 50, 78]),
+  kangaskhan: sp('Kangaskhan', 'normal',   80, 70, 65, 72, 78, [84, 70, 60, 85]),
+  // Poison / Ghost / Bug / Flying
+  gengar:     sp('Gengar',     'ghost',    78, 68, 85, 75, 70, [90, 68, 95, 85]),
+  muk:        sp('Muk',        'poison',   84, 55, 25, 70, 65, [78, 50, 85, 95]),
+  arbok:      sp('Arbok',      'poison',   66, 72, 72, 78, 70, [84, 74, 80, 75]),
+  nidoking:   sp('Nidoking',   'poison',   90, 58, 68, 85, 65, [92, 60, 68, 82]),
+  kabutops:   sp('Kabutops',   'rock',     74, 76, 80, 88, 80, [88, 72, 60, 72]),
+  scyther:    sp('Scyther',    'bug',      70, 80, 95, 70, 82, [86, 74, 72, 68]),
+  dodrio:     sp('Dodrio',     'flying',   62, 74, 98, 60, 70, [84, 66, 55, 65]),
+  poliwrath:  sp('Poliwrath',  'water',    76, 64, 70, 82, 78, [88, 66, 70, 85]),
+  magneton:   sp('Magneton',   'electric', 64, 62, 50, 90, 92, [92, 90, 48, 88]),
 };
 
 // Pitch repertoire. Direction conventions: dx>0 breaks toward the pitcher's
@@ -68,10 +88,22 @@ export const PITCHES = {
   vine:      { name: 'Vine Ball',  speed: 0.85, dx: -2.0, dy: -0.6, wobble: 0,   stamina: 8, special: 'grass' },
   thunder:   { name: 'Thunderbolt', speed: 1.05, dx: 0,   dy: 0,    wobble: 2.2, stamina: 9, special: 'electric' },
   tackle:    { name: 'Body Slam',  speed: 1.10, dx: 0.8,  dy: 0.4,  wobble: 0,   stamina: 8, special: 'normal' },
+  megapunch: { name: 'Mega Punch', speed: 1.22, dx: 0,    dy: 0.7,  wobble: 0,   stamina: 9, special: 'fighting' },
+  dig:       { name: 'Dig Sinker', speed: 0.95, dx: 0.5,  dy: -2.8, wobble: 0,   stamina: 8, special: 'ground' },
+  rockslide: { name: 'Rock Slide', speed: 1.08, dx: 1.4,  dy: -1.2, wobble: 0,   stamina: 8, special: 'rock' },
+  sludge:    { name: 'Sludge Ball', speed: 0.6, dx: -0.9, dy: -2.4, wobble: 0.8, stamina: 8, special: 'poison' },
+  shadow:    { name: 'Shadow Ball', speed: 1.0, dx: 0.9,  dy: -0.9, wobble: 0,   stamina: 9, special: 'ghost', vanish: true },
+  fury:      { name: 'Fury Cutter', speed: 1.06, dx: 2.0, dy: -0.3, wobble: 0,   stamina: 8, special: 'bug' },
+  drill:     { name: 'Drill Peck', speed: 1.12, dx: -0.7, dy: 0.3,  wobble: 1.2, stamina: 8, special: 'flying' },
 };
 
-export const SPECIAL_BY_TYPE = { fire: 'flame', water: 'bubble', grass: 'vine', electric: 'thunder', normal: 'tackle' };
+export const SPECIAL_BY_TYPE = {
+  fire: 'flame', water: 'bubble', grass: 'vine', electric: 'thunder', normal: 'tackle',
+  fighting: 'megapunch', ground: 'dig', rock: 'rockslide', poison: 'sludge', ghost: 'shadow', bug: 'fury', flying: 'drill',
+};
 
 export const TYPE_COLORS = {
   fire: [240, 100, 40], water: [70, 140, 230], grass: [90, 190, 90], electric: [250, 210, 50], normal: [190, 180, 160],
+  fighting: [190, 60, 50], ground: [210, 170, 90], rock: [160, 140, 100], poison: [160, 80, 180], ghost: [110, 70, 160],
+  bug: [150, 190, 60], flying: [150, 170, 230],
 };

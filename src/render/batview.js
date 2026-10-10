@@ -92,7 +92,8 @@ export function drawBatView(play) {
     ctx.globalAlpha = 0.3; misc('shadow', sh.sx - 3, sh.sy - 1); ctx.globalAlpha = 1;
     const size = p.z > 36 ? 'ball8' : p.z > 18 ? 'ball6' : p.z > 5 ? 'ball4' : 'ball3';
     const ms = misc(size, 0, -100); // measure
-    misc(size, pr.sx - ms.w / 2, pr.sy - ms.h / 2);
+    const vanished = p.def.vanish && p.z < 34 && p.z > 12;   // Shadow Ball disappears mid-flight
+    if (!vanished) misc(size, pr.sx - ms.w / 2, pr.sy - ms.h / 2);
   } else if (play.phase === 'callout' && play.pitch === null) {
     // nothing
   }
