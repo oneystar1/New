@@ -1,0 +1,797 @@
+{
+ "body": {
+  "cell": [
+   32,
+   32
+  ],
+  "frames": {
+   "bat_stance": {
+    "index": 0,
+    "headX": 13,
+    "headY": 18,
+    "flipHead": false,
+    "backHead": false
+   },
+   "bat_load": {
+    "index": 1,
+    "headX": 14,
+    "headY": 19,
+    "flipHead": false,
+    "backHead": false
+   },
+   "bat_swing": {
+    "index": 2,
+    "headX": 15,
+    "headY": 19,
+    "flipHead": false,
+    "backHead": false
+   },
+   "bat_follow": {
+    "index": 3,
+    "headX": 14,
+    "headY": 19,
+    "flipHead": false,
+    "backHead": false
+   },
+   "run1": {
+    "index": 4,
+    "headX": 13,
+    "headY": 19,
+    "flipHead": false,
+    "backHead": false
+   },
+   "run2": {
+    "index": 5,
+    "headX": 13,
+    "headY": 19,
+    "flipHead": false,
+    "backHead": false
+   },
+   "run3": {
+    "index": 6,
+    "headX": 13,
+    "headY": 19,
+    "flipHead": false,
+    "backHead": false
+   },
+   "run4": {
+    "index": 7,
+    "headX": 13,
+    "headY": 19,
+    "flipHead": false,
+    "backHead": false
+   },
+   "throw_side": {
+    "index": 8,
+    "headX": 14,
+    "headY": 19,
+    "flipHead": false,
+    "backHead": false
+   },
+   "idle_front": {
+    "index": 9,
+    "headX": 13,
+    "headY": 18,
+    "flipHead": false,
+    "backHead": false
+   },
+   "catch_front": {
+    "index": 10,
+    "headX": 13,
+    "headY": 19,
+    "flipHead": false,
+    "backHead": false
+   },
+   "crouch_front": {
+    "index": 11,
+    "headX": 13,
+    "headY": 22,
+    "flipHead": false,
+    "backHead": false
+   },
+   "pitch_set": {
+    "index": 12,
+    "headX": 13,
+    "headY": 18,
+    "flipHead": false,
+    "backHead": true
+   },
+   "pitch_windup": {
+    "index": 13,
+    "headX": 13,
+    "headY": 19,
+    "flipHead": false,
+    "backHead": true
+   },
+   "pitch_release": {
+    "index": 14,
+    "headX": 13,
+    "headY": 19,
+    "flipHead": false,
+    "backHead": true
+   }
+  }
+ },
+ "heads": {
+  "size": 16,
+  "cols": 9,
+  "heads": {
+   "pikachu": {
+    "index": 0,
+    "primary": [
+     250,
+     220,
+     60
+    ],
+    "shade": [
+     210,
+     170,
+     30
+    ]
+   },
+   "raichu": {
+    "index": 1,
+    "primary": [
+     235,
+     140,
+     50
+    ],
+    "shade": [
+     190,
+     100,
+     30
+    ]
+   },
+   "eevee": {
+    "index": 2,
+    "primary": [
+     200,
+     140,
+     70
+    ],
+    "shade": [
+     150,
+     95,
+     40
+    ]
+   },
+   "jigglypuff": {
+    "index": 3,
+    "primary": [
+     250,
+     170,
+     200
+    ],
+    "shade": [
+     220,
+     120,
+     160
+    ]
+   },
+   "meowth": {
+    "index": 4,
+    "primary": [
+     245,
+     230,
+     190
+    ],
+    "shade": [
+     200,
+     180,
+     130
+    ]
+   },
+   "snorlax": {
+    "index": 5,
+    "primary": [
+     40,
+     80,
+     110
+    ],
+    "shade": [
+     25,
+     55,
+     80
+    ]
+   },
+   "clefairy": {
+    "index": 6,
+    "primary": [
+     250,
+     190,
+     210
+    ],
+    "shade": [
+     220,
+     140,
+     170
+    ]
+   },
+   "magnemite": {
+    "index": 7,
+    "primary": [
+     170,
+     180,
+     200
+    ],
+    "shade": [
+     110,
+     120,
+     140
+    ]
+   },
+   "electabuzz": {
+    "index": 8,
+    "primary": [
+     250,
+     210,
+     60
+    ],
+    "shade": [
+     210,
+     160,
+     30
+    ]
+   },
+   "charmander": {
+    "index": 9,
+    "primary": [
+     245,
+     150,
+     60
+    ],
+    "shade": [
+     200,
+     100,
+     30
+    ]
+   },
+   "charmeleon": {
+    "index": 10,
+    "primary": [
+     225,
+     85,
+     55
+    ],
+    "shade": [
+     170,
+     50,
+     30
+    ]
+   },
+   "charizard": {
+    "index": 11,
+    "primary": [
+     240,
+     140,
+     50
+    ],
+    "shade": [
+     190,
+     90,
+     20
+    ]
+   },
+   "vulpix": {
+    "index": 12,
+    "primary": [
+     205,
+     105,
+     60
+    ],
+    "shade": [
+     160,
+     70,
+     35
+    ]
+   },
+   "growlithe": {
+    "index": 13,
+    "primary": [
+     240,
+     140,
+     60
+    ],
+    "shade": [
+     190,
+     90,
+     30
+    ]
+   },
+   "ponyta": {
+    "index": 14,
+    "primary": [
+     240,
+     220,
+     180
+    ],
+    "shade": [
+     200,
+     170,
+     120
+    ]
+   },
+   "magmar": {
+    "index": 15,
+    "primary": [
+     240,
+     180,
+     60
+    ],
+    "shade": [
+     200,
+     130,
+     30
+    ]
+   },
+   "flareon": {
+    "index": 16,
+    "primary": [
+     240,
+     120,
+     40
+    ],
+    "shade": [
+     190,
+     80,
+     20
+    ]
+   },
+   "cyndaquil": {
+    "index": 17,
+    "primary": [
+     50,
+     80,
+     110
+    ],
+    "shade": [
+     30,
+     55,
+     80
+    ]
+   },
+   "squirtle": {
+    "index": 18,
+    "primary": [
+     120,
+     190,
+     230
+    ],
+    "shade": [
+     80,
+     140,
+     190
+    ]
+   },
+   "wartortle": {
+    "index": 19,
+    "primary": [
+     100,
+     160,
+     220
+    ],
+    "shade": [
+     60,
+     110,
+     170
+    ]
+   },
+   "blastoise": {
+    "index": 20,
+    "primary": [
+     60,
+     110,
+     180
+    ],
+    "shade": [
+     35,
+     75,
+     130
+    ]
+   },
+   "psyduck": {
+    "index": 21,
+    "primary": [
+     245,
+     215,
+     80
+    ],
+    "shade": [
+     200,
+     165,
+     40
+    ]
+   },
+   "poliwag": {
+    "index": 22,
+    "primary": [
+     90,
+     140,
+     220
+    ],
+    "shade": [
+     60,
+     100,
+     170
+    ]
+   },
+   "staryu": {
+    "index": 23,
+    "primary": [
+     205,
+     160,
+     95
+    ],
+    "shade": [
+     160,
+     115,
+     55
+    ]
+   },
+   "lapras": {
+    "index": 24,
+    "primary": [
+     80,
+     140,
+     200
+    ],
+    "shade": [
+     50,
+     100,
+     150
+    ]
+   },
+   "vaporeon": {
+    "index": 25,
+    "primary": [
+     120,
+     200,
+     220
+    ],
+    "shade": [
+     80,
+     150,
+     180
+    ]
+   },
+   "magikarp": {
+    "index": 26,
+    "primary": [
+     230,
+     90,
+     50
+    ],
+    "shade": [
+     180,
+     55,
+     25
+    ]
+   },
+   "bulbasaur": {
+    "index": 27,
+    "primary": [
+     110,
+     190,
+     150
+    ],
+    "shade": [
+     70,
+     140,
+     110
+    ]
+   },
+   "ivysaur": {
+    "index": 28,
+    "primary": [
+     90,
+     170,
+     130
+    ],
+    "shade": [
+     55,
+     120,
+     90
+    ]
+   },
+   "venusaur": {
+    "index": 29,
+    "primary": [
+     80,
+     150,
+     120
+    ],
+    "shade": [
+     45,
+     105,
+     80
+    ]
+   },
+   "oddish": {
+    "index": 30,
+    "primary": [
+     80,
+     100,
+     200
+    ],
+    "shade": [
+     50,
+     65,
+     150
+    ]
+   },
+   "bellsprout": {
+    "index": 31,
+    "primary": [
+     240,
+     220,
+     100
+    ],
+    "shade": [
+     200,
+     175,
+     60
+    ]
+   },
+   "exeggutor": {
+    "index": 32,
+    "primary": [
+     230,
+     200,
+     140
+    ],
+    "shade": [
+     180,
+     150,
+     90
+    ]
+   },
+   "tangela": {
+    "index": 33,
+    "primary": [
+     60,
+     100,
+     200
+    ],
+    "shade": [
+     40,
+     70,
+     160
+    ]
+   },
+   "chikorita": {
+    "index": 34,
+    "primary": [
+     150,
+     220,
+     120
+    ],
+    "shade": [
+     100,
+     170,
+     80
+    ]
+   },
+   "weepinbell": {
+    "index": 35,
+    "primary": [
+     240,
+     220,
+     90
+    ],
+    "shade": [
+     200,
+     175,
+     50
+    ]
+   },
+   "umpire": {
+    "index": 36,
+    "primary": [
+     235,
+     190,
+     150
+    ],
+    "shade": [
+     190,
+     140,
+     100
+    ]
+   }
+  }
+ },
+ "misc": {
+  "ball1": {
+   "x": 1,
+   "y": 1,
+   "w": 1,
+   "h": 1
+  },
+  "ball2": {
+   "x": 3,
+   "y": 0,
+   "w": 4,
+   "h": 4
+  },
+  "ball3": {
+   "x": 7,
+   "y": 0,
+   "w": 5,
+   "h": 5
+  },
+  "ball4": {
+   "x": 12,
+   "y": 0,
+   "w": 6,
+   "h": 6
+  },
+  "ball6": {
+   "x": 18,
+   "y": 0,
+   "w": 8,
+   "h": 8
+  },
+  "ball8": {
+   "x": 26,
+   "y": 0,
+   "w": 10,
+   "h": 10
+  },
+  "shadow": {
+   "x": 37,
+   "y": 1,
+   "w": 6,
+   "h": 3
+  },
+  "base": {
+   "x": 44,
+   "y": 0,
+   "w": 8,
+   "h": 7
+  },
+  "homeplate": {
+   "x": 52,
+   "y": 0,
+   "w": 9,
+   "h": 7
+  },
+  "mound": {
+   "x": 62,
+   "y": 1,
+   "w": 12,
+   "h": 6
+  },
+  "glove_icon": {
+   "x": 75,
+   "y": 0,
+   "w": 7,
+   "h": 7
+  },
+  "bat_icon": {
+   "x": 82,
+   "y": 0,
+   "w": 10,
+   "h": 9
+  },
+  "pokeball": {
+   "x": 93,
+   "y": 1,
+   "w": 12,
+   "h": 11
+  },
+  "cursor": {
+   "x": 107,
+   "y": 1,
+   "w": 8,
+   "h": 8
+  },
+  "arrow_up": {
+   "x": 117,
+   "y": 1,
+   "w": 8,
+   "h": 7
+  },
+  "zone_corner": {
+   "x": 127,
+   "y": 1,
+   "w": 3,
+   "h": 3
+  },
+  "cloud": {
+   "x": 132,
+   "y": 1,
+   "w": 14,
+   "h": 5
+  },
+  "tree": {
+   "x": 148,
+   "y": 1,
+   "w": 8,
+   "h": 8
+  },
+  "flag": {
+   "x": 158,
+   "y": 1,
+   "w": 6,
+   "h": 7
+  },
+  "star": {
+   "x": 166,
+   "y": 1,
+   "w": 7,
+   "h": 6
+  }
+ },
+ "font": {
+  "chars": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,:!?-/'()><+#*%_",
+  "w": 5,
+  "h": 7,
+  "stride": 6
+ },
+ "bodyPalette": {
+  "S": [
+   255,
+   0,
+   255
+  ],
+  "s": [
+   200,
+   0,
+   200
+  ],
+  "J": [
+   0,
+   255,
+   0
+  ],
+  "j": [
+   0,
+   180,
+   0
+  ],
+  "P": [
+   236,
+   236,
+   236
+  ],
+  "p": [
+   170,
+   170,
+   180
+  ],
+  "G": [
+   170,
+   100,
+   40
+  ],
+  "g": [
+   110,
+   60,
+   20
+  ],
+  "B": [
+   222,
+   184,
+   110
+  ],
+  "b": [
+   150,
+   110,
+   60
+  ],
+  "K": [
+   24,
+   24,
+   32
+  ],
+  "W": [
+   255,
+   255,
+   255
+  ],
+  "R": [
+   220,
+   40,
+   40
+  ]
+ }
+}

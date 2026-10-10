@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Poké Ball Park</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #101018; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; font-family: monospace; color: #ddd; }
+  #game { image-rendering: pixelated; image-rendering: crisp-edges; background: #000; }
+  #hint { position: fixed; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 12px; color: #889; }
+  #hint kbd { background: #223; border: 1px solid #556; border-radius: 3px; padding: 0 4px; color: #eee; }
+</style>
+</head>
+<body>
+<canvas id="game" width="320" height="240"></canvas>
+<div id="hint">
+  P1: <kbd>WASD</kbd> move · <kbd>J</kbd> A (swing/pitch/throw) · <kbd>K</kbd> B (power/pitch type) ·
+  P2: <kbd>Arrows</kbd> · <kbd>,</kbd> A · <kbd>.</kbd> B · <kbd>Enter</kbd> start/pause · Gamepads supported
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

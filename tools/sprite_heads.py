@@ -1,0 +1,797 @@
+"""16x16 front-facing heads, one per Pokemon species.
+
+Palette letters: A main colour (required), a shade, B/b secondary,
+C tertiary, plus defaults from build_sprites.HEAD_DEFAULT
+(K black, W white, E eye highlight, R red, P pink, O orange, Y yellow,
+N cream, T light tan, G green, U blue, D dark grey, L light grey,
+M purple, X brown).
+"""
+
+HEAD_SIZE = 16
+
+HEADS = {
+    # ============================================================ ELECTRIC / NORMAL
+    "pikachu": {
+        "palette": {"A": (250, 220, 60), "a": (210, 170, 30), "B": (30, 30, 36)},
+        "art": """
+..KK........KK..
+..KBK......KBK..
+..KBBK....KBBK..
+...KAAK..KAAK...
+...KAAK..KAAK...
+....KAAKKAAK....
+....KAAAAAAK....
+...KAAAAAAAAK...
+..KAAAAAAAAAAK..
+..KAKEAAAAKEAK..
+.KARKKAAAAKKRAK.
+.KARRAAKAAARRAK.
+..KAAAKAKAAAAK..
+...KAAAAAAAAK...
+....KAAAAAAK....
+.....KKKKKK.....
+""",
+    },
+    "raichu": {
+        "palette": {"A": (235, 140, 50), "a": (190, 100, 30), "B": (250, 220, 60)},
+        "art": """
+KKK..........KKK
+KBBK........KBBK
+KBBBK......KBBBK
+.KBBAK....KABBK.
+..KAAK....KAAK..
+...KAAKKKKAAK...
+...KAAAAAAAAK...
+..KAAAAAAAAAAK..
+..KAKEAAAAKEAK..
+.KABKKAAAAKKBAK.
+.KABBAAKAAABBAK.
+.KAAAAKAAKAAAAK.
+..KAAAAKKAAAAK..
+...KAAAAAAAAK...
+....KAAAAAAK....
+.....KKKKKK.....
+""",
+    },
+    "eevee": {
+        "palette": {"A": (200, 140, 70), "a": (150, 95, 40), "B": (90, 55, 30), "N": (245, 230, 190)},
+        "art": """
+.KK..........KK.
+KBBK........KBBK
+KBBAK......KABBK
+KBAAK......KAABK
+.KAAAK....KAAAK.
+.KAAAKKKKKKAAAK.
+..KAAAAAAAAAAK..
+..KAAAAAAAAAAK..
+.KAAKEAAAAKEAAK.
+.KAAKKAAAAKKAAK.
+.KAAKKAAAAKKAAK.
+.KAAAAAKKAAAAAK.
+..KNNNAAAANNNK..
+.KNNNNNNNNNNNNK.
+.KNNNNNNNNNNNNK.
+..KKKKKKKKKKKK..
+""",
+    },
+    "jigglypuff": {
+        "palette": {"A": (250, 170, 200), "a": (220, 120, 160), "B": (60, 170, 180), "b": (30, 110, 130)},
+        "art": """
+......KKK.......
+.....KAAAK......
+....KAAAKAK.....
+..KKKAAAAKKK....
+.KAAAAAAAAAAK...
+KAAAAAAAAAAAAK..
+KAAAAAAAAAAAAAK.
+KAKBBKAAAAKBBKAK
+KKBBEBKAAKBBEBKK
+KKBBBBKAAKBBBBKK
+KAKBBKAAAAKBBKAK
+KAAKKAAAAAAKKAAK
+KAAAAAAKKAAAAAAK
+.KAAAAAAAAAAAAK.
+..KAAAAAAAAAAK..
+...KKKKKKKKKK...
+""",
+    },
+    "meowth": {
+        "palette": {"A": (245, 230, 190), "a": (200, 180, 130), "B": (60, 40, 30), "Y": (240, 200, 60)},
+        "art": """
+.KK..........KK.
+KBBK........KBBK
+KBAAK......KAABK
+KAAAAK.KK.KAAAAK
+.KAAAAKYYKAAAAK.
+.KAAAAKYYKAAAAK.
+..KAAAAKKAAAAK..
+..KAAAAAAAAAAK..
+.KAAKKAAAAKKAAK.
+.KAAKEAAAAKEAAK.
+KKAAKKAAAAKKAAKK
+.KKAAAAAKKAAAAKK
+KKAAAAKAAAAKAAKK
+.KAAAAAKKKKAAAK.
+..KAAAAAAAAAAK..
+...KKKKKKKKKK...
+""",
+    },
+    "snorlax": {
+        "palette": {"A": (40, 80, 110), "a": (25, 55, 80), "N": (245, 230, 190)},
+        "art": """
+.KK..........KK.
+KAAK........KAAK
+KAAAKKKKKKKKAAAK
+KAAAAAAAAAAAAAAK
+.KAAAAAAAAAAAAK.
+.KAAAAAAAAAAAAK.
+.KAAAAAAAAAAAAK.
+.KAANNNNNNNNAAK.
+.KANNNNNNNNNNAK.
+.KANKKNNNNKKNAK.
+.KANNNNNNNNNNAK.
+.KANNNNKKNNNNAK.
+.KANNKNNNNKNNAK.
+..KANNKKKKNNAK..
+...KANNNNNNAK...
+....KKKKKKKK....
+""",
+    },
+    "clefairy": {
+        "palette": {"A": (250, 190, 210), "a": (220, 140, 170), "X": (120, 70, 40)},
+        "art": """
+.......KK.......
+..KK..KAAK..KK..
+.KXXK.KAAK.KXXK.
+.KXAAKKAAKKAAXK.
+.KAAAAKAAKAAAAK.
+..KAAAAKKAAAAK..
+..KAAAAAAAAAAK..
+.KAAAAAAAAAAAAK.
+.KAAKKAAAAKKAAK.
+.KAAKEAAAAKEAAK.
+.KAAKKAAAAKKAAK.
+.KAAAAAAAAAAAAK.
+.KAAAAAKKKAAAAK.
+..KAAAAAAAAAAK..
+...KAAAAAAAAK...
+....KKKKKKKK....
+""",
+    },
+    "magnemite": {
+        "palette": {"A": (170, 180, 200), "a": (110, 120, 140), "B": (80, 100, 230), "R": (220, 60, 60)},
+        "art": """
+.......KK.......
+......KDDK......
+......KDDK......
+.KKK.KKKKKK.KKK.
+KRRRKKAAAAKKUUUK
+KRRRKAAAAAAKUUUK
+KRRRKAKKKKAKUUUK
+KDDDKAKWWWKKDDDK
+KDDDKAKWKWKKDDDK
+KDDDKAKWWWKKDDDK
+.KKK.KAKKKAK.KK.
+.....KAAAAAK....
+....KKAAAAKK....
+...KDDKKKKDDK...
+...KDDK..KDDK...
+....KK....KK....
+""",
+    },
+    "electabuzz": {
+        "palette": {"A": (250, 210, 60), "a": (210, 160, 30), "B": (30, 30, 36)},
+        "art": """
+.K............K.
+KAK....KK....KAK
+KAAK..KAAK..KAAK
+.KAAKKAAAAKKAAK.
+.KAAAAAAAAAAAAK.
+..KAAAAAAAAAAK..
+..KBAAAAAAAABK..
+.KABBAAAAAABBAK.
+.KAAKKAAAAKKAAK.
+.KAAKEAAAAKEAAK.
+.KABAAAAAAAABAK.
+.KABBAKKKKABBAK.
+.KAAAKWWWWKAAAK.
+..KAAAKKKKAAAK..
+...KAAAAAAAAK...
+....KKKKKKKK....
+""",
+    },
+
+    # ============================================================ FIRE
+    "charmander": {
+        "palette": {"A": (245, 150, 60), "a": (200, 100, 30)},
+        "art": """
+................
+.....KKKKKK.....
+...KKAAAAAAKK...
+..KAAAAAAAAAAK..
+.KAAAAAAAAAAAAK.
+.KAAAAAAAAAAAAK.
+KAAAKKAAAAKKAAAK
+KAAAKEAAAAKEAAAK
+KAAAKKAAAAKKAAAK
+KAAAAAAAAAAAAAAK
+KAAAAAAKKAAAAAAK
+.KAAAKKAAKKAAAK.
+.KAAAAAAAAAAAAK.
+..KAAAAAAAAAAK..
+...KKAAAAAAKK...
+.....KKKKKK.....
+""",
+    },
+    "charmeleon": {
+        "palette": {"A": (225, 85, 55), "a": (170, 50, 30)},
+        "art": """
+...........KK...
+..........KAAK..
+.....KKKKKKAAK..
+...KKAAAAAAAAK..
+..KAAAAAAAAAAK..
+.KAAAAAAAAAAAAK.
+.KAAKKAAAAKKAAK.
+KAAAKEAAAAKEAAAK
+KAAAKKAAAAKKAAAK
+KAAAAAAAAAAAAAAK
+KAAAAAAKKAAAAAAK
+.KAAKKKAAKKKAAK.
+.KAAAAAAAAAAAAK.
+..KAAAAAAAAAAK..
+...KKAAAAAAKK...
+.....KKKKKK.....
+""",
+    },
+    "charizard": {
+        "palette": {"A": (240, 140, 50), "a": (190, 90, 20), "N": (245, 225, 170)},
+        "art": """
+.KK..........KK.
+KAAK........KAAK
+KAAAK......KAAAK
+.KAAKKKKKKKKAAK.
+.KAAAAAAAAAAAAK.
+..KAAAAAAAAAAK..
+..KAKKAAAAKKAK..
+.KAAKEAAAAKEAAK.
+.KAAKKAAAAKKAAK.
+.KAAAAAAAAAAAAK.
+KAAAAAAAAAAAAAAK
+KAAAAAAAAAAAAAAK
+KANNNNAAAANNNNAK
+.KNNNNNNNNNNNNK.
+..KNNNNNNNNNNK..
+...KKKKKKKKKK...
+""",
+    },
+    "vulpix": {
+        "palette": {"A": (205, 105, 60), "a": (160, 70, 35), "B": (235, 150, 80)},
+        "art": """
+....KKK.KKK.....
+...KBBBKBBBK....
+..KBBBBBBBBBK...
+.KK.KBBBBBBK.KK.
+KAAKKAAAAAAKKAAK
+KAAAKAAAAAAKAAAK
+KAAAAAAAAAAAAAAK
+.KAAAAAAAAAAAAK.
+.KAAKKAAAAKKAAK.
+.KAAKEAAAAKEAAK.
+.KAAKKAAAAKKAAK.
+.KAAAAAAAAAAAAK.
+..KAAAAKKAAAAK..
+...KAAAAAAAAK...
+....KAAAAAAK....
+.....KKKKKK.....
+""",
+    },
+    "growlithe": {
+        "palette": {"A": (240, 140, 60), "a": (190, 90, 30), "B": (40, 30, 30), "N": (250, 235, 190)},
+        "art": """
+......KNNK......
+.....KNNNNK.....
+....KNNNNNNK....
+.KKKKNNNNNNKKKK.
+KAAAKKNNNNKKAAAK
+KAAAAKAAAAKAAAAK
+KAAAAAAAAAAAAAAK
+.KAAKKAAAAKKAAK.
+.KAAKEAAAAKEAAK.
+.KAAKKAAAAKKAAK.
+.KABAAAAAAAABAK.
+.KABBAAKKAAABBAK
+.KAAAAKNNKAAAAK.
+..KAAANNNNAAAK..
+...KAAAAAAAAK...
+....KKKKKKKK....
+""",
+    },
+    "ponyta": {
+        "palette": {"A": (240, 220, 180), "a": (200, 170, 120), "O": (255, 140, 40), "Y": (255, 220, 80)},
+        "art": """
+.....K.KOOK.....
+....KOKORROK....
+...KORROOYYOK...
+...KOOYYOOOOK...
+..KOOYYOOYYOOK..
+..KKOOOKKOOOKK..
+..KAAAKAAAAAAK..
+.KAAAAAAAAAAAAK.
+.KAAKKAAAAKKAAK.
+.KAAKEAAAAKEAAK.
+.KAAKKAAAAKKAAK.
+.KAAAAAAAAAAAAK.
+..KAAAAKKAAAAK..
+..KAAAAAAAAAAK..
+...KAKAAAAKAK...
+....KKKKKKKK....
+""",
+    },
+    "magmar": {
+        "palette": {"A": (240, 180, 60), "a": (200, 130, 30), "R": (230, 60, 40), "O": (255, 150, 40), "Y": (255, 230, 120)},
+        "art": """
+.....KRRRK......
+....KRRRRRK.....
+...KRRORRRRK....
+..KRRRRRRRRRK...
+.KRRRRKKKKRRRK..
+.KRKKKAAAAKKKRK.
+.KKAAAAAAAAAAKK.
+KAAAKKAAAAKKAAAK
+KAAAKEAAAAKEAAAK
+KAAAKKAAAAKKAAAK
+KAAAAAAAAAAAAAAK
+.KAAKYYYYYYKAAK.
+.KAAKYYYYYYKAAK.
+..KAAKKKKKKAAK..
+...KAAAAAAAAK...
+....KKKKKKKK....
+""",
+    },
+    "flareon": {
+        "palette": {"A": (240, 120, 40), "a": (190, 80, 20), "B": (200, 90, 30), "N": (250, 230, 170)},
+        "art": """
+.KK....KK....KK.
+KBBK..KNNK..KBBK
+KBAAK.KNNK.KAABK
+KAAAAKKNNKKAAAAK
+.KAAAAKNNKAAAAK.
+.KAAAAAAAAAAAAK.
+..KAAAAAAAAAAK..
+..KAAAAAAAAAAK..
+.KAAKKAAAAKKAAK.
+.KAAKEAAAAKEAAK.
+.KAAKKAAAAKKAAK.
+.KAAAAAKKAAAAAK.
+..KNNNAAAANNNK..
+.KNNNNNNNNNNNNK.
+.KNNNNNNNNNNNNK.
+..KKKKKKKKKKKK..
+""",
+    },
+    "cyndaquil": {
+        "palette": {"A": (50, 80, 110), "a": (30, 55, 80), "N": (250, 230, 180)},
+        "art": """
+................
+.....KKKKKK.....
+...KKAAAAAAKK...
+..KAAAAAAAAAAK..
+.KAAAAAAAAAAAAK.
+.KAAAAAAAAAAAAK.
+.KAAAAAAAAAAAAK.
+KAAANNNNNNNNAAAK
+KAANNNNNNNNNNAAK
+KANNKKNNNNKKNNAK
+KANNNNNNNNNNNNAK
+.KNNNNNNKKNNNNK.
+.KNNNNNKNNKNNNK.
+..KNNNNNNNNNNK..
+...KKNNNNNNKK...
+.....KKKKKK.....
+""",
+    },
+    # ============================================================ WATER
+    "squirtle": {
+        "palette": {"A": (120, 190, 230), "a": (80, 140, 190)},
+        "art": """
+................
+.....KKKKKK.....
+...KKAAAAAAKK...
+..KAAAAAAAAAAK..
+.KAAAAAAAAAAAAK.
+.KAAAAAAAAAAAAK.
+KAAAKKAAAAKKAAAK
+KAAKKEKAAKKEKAAK
+KAAKKKKAAKKKKAAK
+KAAAKKAAAAKKAAAK
+KAAAAAAAAAAAAAAK
+.KAAAAKKKKAAAAK.
+.KAAAAAAAAAAAAK.
+..KAAAAAAAAAAK..
+...KKAAAAAAKK...
+.....KKKKKK.....
+""",
+    },
+    "wartortle": {
+        "palette": {"A": (100, 160, 220), "a": (60, 110, 170), "B": (170, 210, 240)},
+        "art": """
+.KK..........KK.
+KBBK........KBBK
+KBBBK......KBBBK
+.KBBBKKKKKKBBBK.
+..KKAAAAAAAAKK..
+.KAAAAAAAAAAAAK.
+KAAAKKAAAAKKAAAK
+KAAKKEKAAKKEKAAK
+KAAKKKKAAKKKKAAK
+KAAAKKAAAAKKAAAK
+KAAAAAAAAAAAAAAK
+.KAAAAKKKKAAAAK.
+.KAAAAAAAAAAAAK.
+..KAAAAAAAAAAK..
+...KKAAAAAAKK...
+.....KKKKKK.....
+""",
+    },
+    "blastoise": {
+        "palette": {"A": (60, 110, 180), "a": (35, 75, 130), "N": (240, 225, 180)},
+        "art": """
+..KK........KK..
+.KAAK......KAAK.
+.KAAAKKKKKKAAAK.
+..KAAAAAAAAAAK..
+.KAAAAAAAAAAAAK.
+.KAKKAAAAAAKKAK.
+KAAAKKAAAAKKAAAK
+KAAAKEAAAAKEAAAK
+KAAAKKAAAAKKAAAK
+KAAAAAAAAAAAAAAK
+KAAAAAAAAAAAAAAK
+KANNNNNNNNNNNNAK
+.KNNNNNNNNNNNNK.
+.KNNNNNNNNNNNNK.
+..KKNNNNNNNNKK..
+....KKKKKKKK....
+""",
+    },
+    "psyduck": {
+        "palette": {"A": (245, 215, 80), "a": (200, 165, 40), "N": (250, 235, 190)},
+        "art": """
+......K.K.K.....
+.....K.K.K......
+.....KKKKKK.....
+...KKAAAAAAKK...
+..KAAAAAAAAAAK..
+.KAAAAAAAAAAAAK.
+.KAAWWAAAAWWAAK.
+KAAWKWAAAAWKWAAK
+KAAWWWAAAAWWWAAK
+KAAAAAAAAAAAAAAK
+KAAKNNNNNNNNKAAK
+.KNNNNNNNNNNNNK.
+.KNNNNNNNNNNNNK.
+..KNNNNNNNNNNK..
+...KKNNNNNNKK...
+.....KKKKKK.....
+""",
+    },
+    "poliwag": {
+        "palette": {"A": (90, 140, 220), "a": (60, 100, 170), "P": (250, 150, 180)},
+        "art": """
+................
+.....KKKKKK.....
+...KKAAAAAAKK...
+..KAAAAAAAAAAK..
+.KAAKKAAAAKKAAK.
+.KAKWWKAAKWWKAK.
+KAAKWKKAAKKWKAAK
+KAAKKKKAAKKKKAAK
+KAAAAAAAAAAAAAAK
+KAAAPPPPPPPPAAAK
+KAAWWWWWWWWWWAAK
+.KAWWKKKKKKWWAK.
+.KAWWWWWWKKWWAK.
+..KWWKKKKKKWWK..
+...KKWWWWWWKK...
+.....KKKKKK.....
+""",
+    },
+    "staryu": {
+        "palette": {"A": (205, 160, 95), "a": (160, 115, 55), "R": (230, 70, 60)},
+        "art": """
+.......KK.......
+......KAAK......
+......KAAK......
+.....KAAAAK.....
+.....KAAAAK.....
+KKKKKKAAAAKKKKKK
+KAAAAAAAAAAAAAAK
+.KAAAAAKKAAAAAK.
+..KAAAKRRKAAAK..
+...KAAKRRKAAK...
+...KAAAKKAAAK...
+..KAAAAAAAAAAK..
+..KAAAAKKAAAAK..
+.KAAAAK..KAAAAK.
+.KAAAK....KAAAK.
+.KKKK......KKKK.
+""",
+    },
+    "lapras": {
+        "palette": {"A": (80, 140, 200), "a": (50, 100, 150), "N": (245, 230, 190), "L": (200, 200, 210)},
+        "art": """
+.......KK.......
+......KLLK......
+......KLLK......
+.KK..KAAAAK..KK.
+KAAKKAAAAAAKKAAK
+KAAAKAAAAAAKAAAK
+.KAAAAAAAAAAAAK.
+.KAAAAAAAAAAAAK.
+.KAAKKAAAAKKAAK.
+.KAAKEAAAAKEAAK.
+.KAAKKAAAAKKAAK.
+.KAAAAAAAAAAAAK.
+..KANNNNNNNNAK..
+..KNNNNKKNNNNK..
+...KNNNNNNNNK...
+....KKKKKKKK....
+""",
+    },
+    "vaporeon": {
+        "palette": {"A": (120, 200, 220), "a": (80, 150, 180), "B": (90, 150, 190), "N": (250, 240, 200)},
+        "art": """
+.KK..........KK.
+KBBK........KBBK
+KBBBK......KBBBK
+KBBBBK....KBBBBK
+.KBBBAK..KABBBK.
+.KAAAAKKKKAAAAK.
+..KAAAAAAAAAAK..
+..KAAAAAAAAAAK..
+.KAAKKAAAAKKAAK.
+.KAAKEAAAAKEAAK.
+.KAAKKAAAAKKAAK.
+.KAAAAAKKAAAAAK.
+..KNNNAAAANNNK..
+.KNNNNNNNNNNNNK.
+.KNNNNNNNNNNNNK.
+..KKKKKKKKKKKK..
+""",
+    },
+    "magikarp": {
+        "palette": {"A": (230, 90, 50), "a": (180, 55, 25), "Y": (250, 220, 100), "P": (240, 150, 170)},
+        "art": """
+.....KKKKKK.....
+...KKAAAAAAKK...
+..KAAAAAAAAAAK..
+.KAAAAAAAAAAAAK.
+.KAWWWAAAAWWWAK.
+KAAWKWAAAAWKWAAK
+KAAWWWAAAAWWWAAK
+KAAAAAAAAAAAAAAK
+KAAAAKKKKKKAAAAK
+KAAAKPPPPPPKAAAK
+KAAAKPPPPPPKAAAK
+.KYYKKKKKKKKYYK.
+.KYYAAAAAAAAYYK.
+..KYAAAAAAAAYK..
+...KKAAAAAAKK...
+.....KKKKKK.....
+""",
+    },
+    # ============================================================ GRASS
+    "bulbasaur": {
+        "palette": {"A": (110, 190, 150), "a": (70, 140, 110), "B": (50, 120, 100), "R": (220, 60, 60)},
+        "art": """
+................
+....KKKKKKKK....
+..KKAAAAAAAAKK..
+.KAABBAAAAABBAK.
+.KABBAAAAAAABBK.
+KAAAAAAAAAAAAAAK
+KAAKKKAAAAKKKAAK
+KAAKRRKAAKRRKAAK
+KAAKRWKAAKRWKAAK
+KAAAKKAAAAKKAAAK
+KAAAAAAAAAAAAAAK
+.KAAAAAAAAAAAAK.
+.KAAAKKKKKKAAAK.
+..KAABAAAABAAK..
+...KKAAAAAAKK...
+.....KKKKKK.....
+""",
+    },
+    "ivysaur": {
+        "palette": {"A": (90, 170, 130), "a": (55, 120, 90), "B": (40, 110, 90), "R": (220, 60, 60), "P": (250, 150, 190), "G": (70, 160, 70)},
+        "art": """
+......KPPK......
+.....KPPPPK.....
+....KGKPPKGK....
+...KGGGKKGGGK...
+..KKAAAAAAAAKK..
+.KAABBAAAAABBAK.
+KAAAAAAAAAAAAAAK
+KAAKKKAAAAKKKAAK
+KAAKRRKAAKRRKAAK
+KAAKRWKAAKRWKAAK
+KAAAKKAAAAKKAAAK
+KAAAAAAAAAAAAAAK
+.KAAAAAAAAAAAAK.
+.KAAAKKKKKKAAAK.
+..KKAAAAAAAAKK..
+....KKKKKKKK....
+""",
+    },
+    "venusaur": {
+        "palette": {"A": (80, 150, 120), "a": (45, 105, 80), "R": (220, 60, 60), "P": (250, 140, 180), "Y": (250, 220, 90)},
+        "art": """
+..KPPK....KPPK..
+.KPPPPKPPKPPPPK.
+.KPPPKPPPPKPPPK.
+..KPPKPYYPKPPK..
+.KKPPPKPPKPPPKK.
+KAAKKKKKKKKKKAAK
+KAAAAAAAAAAAAAAK
+KAAKKKAAAAKKKAAK
+KAAKRRKAAKRRKAAK
+KAAKRWKAAKRWKAAK
+KAAAKKAAAAKKAAAK
+KAAAAAAAAAAAAAAK
+.KAAAAAAAAAAAAK.
+.KAAAKKKKKKAAAK.
+..KKAAAAAAAAKK..
+....KKKKKKKK....
+""",
+    },
+    "oddish": {
+        "palette": {"A": (80, 100, 200), "a": (50, 65, 150), "G": (80, 180, 80), "R": (230, 60, 60)},
+        "art": """
+..KK..KKKK..KK..
+.KGGKKGGGGKKGGK.
+KGGGGKGGGGKGGGGK
+KGGGGGKGGKGGGGGK
+.KGGGGGGGGGGGGK.
+..KKGGGGGGGGKK..
+...KKKKKKKKKK...
+..KAAAAAAAAAAK..
+.KAAAAAAAAAAAAK.
+.KAAKKAAAAKKAAK.
+KAAKRRKAAKRRKAAK
+KAAKRWKAAKRWKAAK
+KAAAKKAAAAKKAAAK
+.KAAAAAKKAAAAAK.
+..KAAAAAAAAAAK..
+...KKKKKKKKKK...
+""",
+    },
+    "bellsprout": {
+        "palette": {"A": (240, 220, 100), "a": (200, 175, 60), "P": (250, 160, 170), "G": (80, 170, 70)},
+        "art": """
+.....KKKKKK.....
+...KKAAAAAAKK...
+..KAAAAAAAAAAK..
+.KAAAAAAAAAAAAK.
+.KAAKKAAAAKKAAK.
+KAAAKKAAAAKKAAAK
+KAAAAAAAAAAAAAAK
+KAAAKKKKKKKKAAAK
+KAAKPPPPPPPPKAAK
+KAAKPPPPPPPPKAAK
+.KAAKKKKKKKKAAK.
+.KAAAAAAAAAAAAK.
+..KKAAAAAAAAKK..
+....KKGGGGKK....
+.....KGGGGK.....
+......KKKK......
+""",
+    },
+    "exeggutor": {
+        "palette": {"A": (230, 200, 140), "a": (180, 150, 90), "G": (70, 170, 70)},
+        "art": """
+..KG..KGGK..GK..
+.KGGK.KGGK.KGGK.
+.KGGGKKGGKKGGGK.
+..KGGGGGGGGGGK..
+...KKGGGGGGKK...
+....KKKKKKKK....
+...KAAAAAAAAK...
+..KAAAAAAAAAAK..
+.KAAKKAAAAKKAAK.
+.KAAKEAAAAKEAAK.
+.KAAKKAAAAKKAAK.
+.KAAAAAAAAAAAAK.
+.KAAAAKKKKAAAAK.
+..KAAAKWWKAAAK..
+...KAAAKKAAAK...
+....KKKKKKKK....
+""",
+    },
+    "tangela": {
+        "palette": {"A": (60, 100, 200), "a": (40, 70, 160)},
+        "art": """
+..KKK..KK..KK...
+.KAAAKKAAKKAAK..
+KAAAAAAAAAAAAAK.
+KAAAKAAAAAAKAAAK
+.KAAAAKAAAKAAAAK
+KAAAAAAAAAAAAAAK
+KAAKAAAAAAAAKAAK
+KAAAKKKAAAKKKAAK
+KAAAKWWKAAKWWKAK
+.KAAKWKKAAKKWKAK
+KAAAAKKKAAKKKAAK
+KAAKAAAAAAAAKAAK
+KAAAAAKAAAAKAAAK
+.KAAAAAAAKAAAAK.
+.KKAAAKKAAAAKKK.
+..KKKKK.KKKKK...
+""",
+    },
+    "chikorita": {
+        "palette": {"A": (150, 220, 120), "a": (100, 170, 80), "G": (60, 160, 60), "R": (220, 60, 60)},
+        "art": """
+.........KGGK...
+........KGGGGK..
+.......KGGGGGK..
+......KGGGGGK...
+.....KKGGGKK....
+...KKAAKKKAAKK..
+..KAAAAAAAAAAK..
+.KAAAAAAAAAAAAK.
+.KAAKKAAAAKKAAK.
+KAAKRRKAAKRRKAAK
+KAAKRWKAAKRWKAAK
+KAAAKKAAAAKKAAAK
+KAAAAAAAAAAAAAAK
+.KAAAAAKKAAAAAK.
+..KGAAAAAAAAGK..
+...KKGGKKGGKK...
+""",
+    },
+    "weepinbell": {
+        "palette": {"A": (240, 220, 90), "a": (200, 175, 50), "P": (250, 160, 170), "G": (80, 170, 70)},
+        "art": """
+......KGGK......
+......KGGK......
+.KKK..KGGK..KKK.
+KGGGKKAAAAKKGGGK
+KGGGGKAAAAKGGGGK
+.KGGKAAAAAAKGGK.
+..KKAAAAAAAAKK..
+.KAAKKAAAAKKAAK.
+.KAAKEAAAAKEAAK.
+.KAAKKAAAAKKAAK.
+KAAAAAAAAAAAAAAK
+KAAKPPPPPPPPKAAK
+KAAKPPKKKKPPKAAK
+KAAAKPPPPPPKAAAK
+.KAAAKKKKKKAAAK.
+..KKKKKKKKKKKK..
+""",
+    },
+
+    # ============================================================ NON-PLAYERS
+    "umpire": {
+        "palette": {"A": (235, 190, 150), "a": (190, 140, 100), "B": (40, 40, 70), "L": (120, 120, 140)},
+        "art": """
+................
+....KKKKKKKK....
+..KKBBBBBBBBKK..
+.KBBBBBBBBBBBBK.
+.KBBBBBBBBBBBBK.
+KKKKKKKKKKKKKKKK
+.KLKLKLKLKLKLKK.
+.KAAAAAAAAAAAAK.
+.KLKKLKLKLKKLKK.
+.KAAAAAAAAAAAAK.
+.KLKLKLKLKLKLKK.
+.KAAAAAKKAAAAAK.
+.KLKLKLKLKLKLKK.
+..KAAAAAAAAAAK..
+...KKAAAAAAKK...
+.....KKKKKK.....
+""",
+    },
+}

@@ -1,0 +1,14 @@
+{
+  "name": "poke-ball-park",
+  "version": "0.1.0",
+  "description": "Pokemon baseball game in the style of Ken Griffey Jr. Presents Major League Baseball (SNES), built with HTML5 canvas and sprite sheets.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "npx --yes serve -l 8080 .",
+    "sprites": "python3 tools/build_sprites.py",
+    "test": "node tests/sim.test.mjs",
+    "smoke": "node tests/smoke.mjs"
+  },
+  "license": "MIT"
+}
