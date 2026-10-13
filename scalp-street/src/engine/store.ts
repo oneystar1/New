@@ -239,7 +239,7 @@ export const useGame = create<GameStore>((set, get) => {
         const kinds: Record<MarketEventKind, string> = { drop: '🔥', viral: '📱', holiday: '🎄', restock: '🌊', crackdown: '🚫' };
         toast(`Market event: ${res.eventStarted.toUpperCase()}`, kinds[res.eventStarted], res.eventStarted === 'restock' || res.eventStarted === 'crackdown' ? 'bad' : 'good');
       }
-      if (res.offerArrived) { toast(`${res.offerArrived.buyer} messaged you about your ${ITEM_BY_ID[res.offerArrived.itemId]?.name ?? 'listing'}. Tap to open Deals.`, '💬', 'info', 'deals'); sfx.message(); }
+      if (res.offerArrived) { toast(`${res.offerArrived.buyer} messaged you about your ${ITEM_BY_ID[res.offerArrived.itemId]?.name ?? 'listing'}. Tap to open Messages.`, '💬', 'info', 'deals'); sfx.message(); }
       if (res.calledOut) { toast('CALLED OUT. The group posted your listings. Profit x0.4 for 3 min.', '📸', 'bad'); sfx.calledOut(); fx({ kind: 'shake' }); fx({ kind: 'flash', color: '#ff6b6b' }); }
       for (const id of res.tutorialDone) { const t = TUTORIAL.find((x) => x.id === id); toast(`Tutorial: ${t?.text} (+${t?.clout} Clout)`, '✅', 'good'); sfx.achievement(); }
       for (const id of res.overtook) { const r = RANKED_RIVALS.find((x) => x.id === id); toast(`You passed ${r?.name} in the local rankings! +${r?.clout} Clout`, r?.icon ?? '🏆', 'rare'); sfx.rare(); fx({ kind: 'confetti', intensity: 1 }); }
