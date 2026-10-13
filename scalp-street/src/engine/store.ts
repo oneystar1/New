@@ -11,6 +11,7 @@ import { MANAGER_BY_STORE } from './data/managers';
 import { UPGRADE_BY_ID } from './data/upgrades';
 import { CLOUT_COSTS, PRODUCTS, VIP } from './data/shop';
 import { ACHIEVEMENTS } from './data/achievements';
+import { acceptOffer, counterOffer, declineOffer, apologize, tossFake, flipFake, fakeRoll } from './deals';
 import { unitCost, maxAffordable, todayKey } from './math';
 import { AD_RULES, type AdPlacement, type MonetizationProvider } from '../monetization/provider';
 
@@ -60,6 +61,12 @@ interface GameStore {
   spendClout: (what: keyof typeof CLOUT_COSTS) => void;
   breakPiggy: () => void;
   dismissPulls: () => void;
+  dealAccept: (id: number) => void;
+  dealCounter: (id: number) => void;
+  dealDecline: (id: number) => void;
+  apologize: () => void;
+  fakeToss: (idx: number) => void;
+  fakeFlip: (idx: number) => void;
   toast: (text: string, icon?: string, kind?: Toast['kind']) => void;
   dismissToast: (id: number) => void;
   setSetting: <K extends keyof GameState['settings']>(k: K, v: GameState['settings'][K]) => void;
@@ -196,6 +203,8 @@ export const useGame = create<GameStore>((set, get) => {
         const kinds: Record<MarketEventKind, string> = { drop: '🔥', viral: '📱', holiday: '🎄', restock: '🌊', crackdown: '🚫' };
         toast(`Market event: ${res.eventStarted.toUpperCase()}`, kinds[res.eventStarted], res.eventStarted === 'restock' || res.eventStarted === 'crackdown' ? 'bad' : 'good');
       }
+      if (res.offerArrived) toast(`New message from ${res.offerArrived.buyer}`, '💬', 'info');
+      if (res.calledOut) toast('CALLED OUT. The group posted your listings. Profit x0.4 for 3 min.', '📸', 'bad');
       for (const id of res.achievementsUnlocked) {
         const a = ACHIEVEMENTS.find((x) => x.id === id);
         toast(`Achievement: ${a?.name ?? id} (+${a?.clout ?? 0} Clout)`, a?.icon ?? '🏅', 'rare');
@@ -269,7 +278,8 @@ export const useGame = create<GameStore>((set, get) => {
       if (s[wallet] < u.cost) return;
       s[wallet] -= u.cost;
       s.upgrades.push(id);
-      toast(`${u.name}`, u.icon, 'good');
+      if (u.heat) s.heat = Math.min(100, s.heat + u.heat);
+      toast(u.heat ? `${u.name} (+${u.heat} heat)` : u.name, u.icon, u.heat ? 'bad' : 'good');
       track('buy_upgrade', { id, currency: wallet });
       set({ s: { ...s } });
     },
@@ -284,8 +294,20 @@ export const useGame = create<GameStore>((set, get) => {
       }
       const m = computeModifiers(s, st.now);
       const results: ItemDef[] = [];
-      for (let i = 0; i < count; i++) results.push(pullItem(s, highestUnlockedStore(s), m.pullLuck, rand));
-      track('pull', { count, free });
+      const storeId = highestUnlockedStore(s);
+      let fakes = 0;
+      for (let i = 0; i < count; i++) {
+        if (fakeRoll(storeId, m, rand)) { fakes++; continue; }
+        results.push(pullItem(s, storeId, m.pullLuck, rand));
+      }
+      for (let i = 0; i < fakes; i++) {
+        const it = pullItem(s, storeId, m.pullLuck, rand);
+        s.shelf[it.id] -= 1; // not a real one: goes to the fakes pile instead
+        s.stats.pulls -= 1;
+        s.fakes.push(it.id);
+      }
+      if (fakes) toast(`${fakes} of those were counterfeit. Check the Deals tab.`, '🔦', 'bad');
+      track('pull', { count, free, fakes });
       set({ s: { ...s }, lastPulls: results });
     },
 
@@ -440,6 +462,24 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     dismissPulls: () => set({ lastPulls: null }),
+    dealAccept: (id) => {
+      const st = get();
+      const r = acceptOffer(st.s, id, Date.now(), rand);
+      if (r) toast(r.text, r.icon, r.kind);
+      track('deal', { action: 'accept' });
+      set({ s: { ...st.s }, ...(r?.item ? { lastPulls: [r.item] } : {}) });
+    },
+    dealCounter: (id) => {
+      const st = get();
+      const r = counterOffer(st.s, id, Date.now(), rand);
+      if (r) toast(r.text, r.icon, r.kind);
+      track('deal', { action: 'counter' });
+      set({ s: { ...st.s }, ...(r?.item ? { lastPulls: [r.item] } : {}) });
+    },
+    dealDecline: (id) => mutate((s) => { const r = declineOffer(s, id); if (r) toast(r.text, r.icon, r.kind); }),
+    apologize: () => mutate((s) => { if (apologize(s)) toast('Apology video posted. Heat reset.', '📝', 'good'); else toast('Not enough Clout', '💠', 'bad'); }),
+    fakeToss: (idx) => mutate((s) => { tossFake(s, idx); toast('Tossed. Integrity intact.', '🗑️'); }),
+    fakeFlip: (idx) => mutate((s) => { const v = flipFake(s, idx, Date.now()); if (v > 0) toast('Sold a fake as real. +8 heat.', '😬', 'bad'); }),
     toast,
     dismissToast: (id) => set((st) => ({ toasts: st.toasts.filter((t) => t.id !== id) })),
     setSetting: (k, v) => mutate((s) => { s.settings = { ...s.settings, [k]: v }; }),

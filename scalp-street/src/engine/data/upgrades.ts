@@ -62,5 +62,28 @@ const prestige: UpgradeDef[] = [
   { id: 'c_profit3', name: 'Reputation III', blurb: 'All profit x5.', icon: '💫', cost: 1_000, currency: 'cred', effect: { kind: 'globalProfit', mult: 5 }, minPrestige: 5 },
 ];
 
-export const UPGRADES: UpgradeDef[] = [...storeUpgrades, ...globalCash, ...premium, ...prestige];
+// Sketchy tactics: big multipliers, but each one adds Heat. Heat at 100 gets
+// you Called Out by the community (profit x0.4 for a while).
+const sketchy: UpgradeDef[] = [
+  { id: 'k_emptybox', name: 'Return the Empty Box', blurb: 'Keep the Kube, return the packaging. The shelf tag now says SEALED ONLY.', icon: '📦', cost: 40_000, currency: 'cash', effect: { kind: 'globalProfit', mult: 1.5 }, heat: 20, group: 'sketchy' },
+ { id: 'k_hookup', name: 'Employee Hookup', blurb: 'Your cousin holds the restock in the back. Bullseye cycles 2x faster.', icon: '🤫', cost: 150_000, currency: 'cash', effect: { kind: 'storeSpeed', storeId: 'bullseye', mult: 2 }, heat: 15, group: 'sketchy' },
+  { id: 'k_sweep', name: 'Shelf-Clearing Sweep', blurb: 'Arm across the endcap, everything into the cart. Profit x1.5. People film you.', icon: '🛒', cost: 2_000_000, currency: 'cash', effect: { kind: 'globalProfit', mult: 1.5 }, heat: 25, group: 'sketchy' },
+  { id: 'k_openbox', name: '"Sealed" (It Is Not Sealed)', blurb: 'A hair dryer, some glue, a clean conscience. Profit x1.4.', icon: '🔥', cost: 30_000_000, currency: 'cash', effect: { kind: 'globalProfit', mult: 1.4 }, heat: 30, group: 'sketchy' },
+  { id: 'k_captcha', name: 'Captcha Farm', blurb: 'Pay strangers overseas to click the buses. Bot Farm cycles 2x faster.', icon: '🚌', cost: 500_000_000, currency: 'cash', effect: { kind: 'storeSpeed', storeId: 'botfarm', mult: 2 }, heat: 25, group: 'sketchy' },
+  { id: 'k_fakehaul', name: 'Fake Haul Video', blurb: 'Film the same 3 Kubes from 12 angles. Hype never decays below 1.2. Profit x1.3.', icon: '🎥', cost: 8_000_000_000, currency: 'cash', effect: { kind: 'globalProfit', mult: 1.3 }, heat: 35, group: 'sketchy' },
+];
+
+// Selling channels change how the Deals feed behaves.
+const channels: UpgradeDef[] = [
+  { id: 'ch_fleabay', name: 'FleaBay Store', blurb: 'Buyers from everywhere. Offers are worth 30% more (after fees, somehow).', icon: '🏷️', cost: 25_000, currency: 'cash', effect: { kind: 'offerValue', mult: 1.3 }, group: 'channel' },
+  { id: 'ch_mercarry', name: 'Mercarry Listings', blurb: 'Cross-list everything. Offers arrive 40% more often.', icon: '📱', cost: 300_000, currency: 'cash', effect: { kind: 'offerRate', mult: 1.4 }, group: 'channel' },
+  { id: 'ch_whatnow', name: 'WhatNow Live Shows', blurb: '"GOING ONCE" at 1am to 30 viewers. Offers arrive 50% more often and pay 50% more.', icon: '📺', cost: 20_000_000, currency: 'cash', effect: { kind: 'offerRate', mult: 1.5 }, group: 'channel' },
+  { id: 'ch_whatnow2', name: 'WhatNow Hype Mode', blurb: 'Confetti cannon. Offers pay 50% more.', icon: '🎉', cost: 60_000_000, currency: 'cash', effect: { kind: 'offerValue', mult: 1.5 }, group: 'channel' },
+  { id: 'ch_radar', name: 'Scam Radar', blurb: '"Hi dear" and "send your email for the invoice" get a red flag in the feed.', icon: '🚩', cost: 10_000, currency: 'cash', effect: { kind: 'scamRadar' }, group: 'channel' },
+  { id: 'ch_gands', name: 'Goods & Services Only', blurb: 'No Friends & Family, no Zelle, no checks. Scams can no longer cost you money.', icon: '🛡️', cost: 2_000_000, currency: 'cash', effect: { kind: 'scamShield' }, group: 'channel' },
+  { id: 'ch_uv', name: 'UV Tag Light', blurb: 'Spot the wrong font and the gasoline smell before you pay. No more counterfeit pulls.', icon: '🔦', cost: 5_000_000, currency: 'cash', effect: { kind: 'fakeShield' }, group: 'channel' },
+  { id: 'ch_pr', name: 'PR Apology Template', blurb: '"I\'ve grown as a person." Heat cools twice as fast.', icon: '📝', cost: 50_000_000, currency: 'cash', effect: { kind: 'heatDecay', mult: 2 }, group: 'channel' },
+];
+
+export const UPGRADES: UpgradeDef[] = [...storeUpgrades, ...globalCash, ...sketchy, ...channels, ...premium, ...prestige];
 export const UPGRADE_BY_ID: Record<string, UpgradeDef> = Object.fromEntries(UPGRADES.map((u) => [u.id, u]));

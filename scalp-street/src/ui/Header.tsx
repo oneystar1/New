@@ -22,6 +22,7 @@ export function Header() {
         </div>
         <span className="pill clout">💠 {formatNumber(s.clout)}</span>
         {s.cred > 0 && <span className="pill cred">⭐ {formatNumber(s.cred)}</span>}
+        {s.heat >= 40 && <span className="pill" style={{ color: s.heat >= 75 ? 'var(--red)' : 'var(--gold)' }}>🔥 {Math.floor(s.heat)}</span>}
       </div>
       {ev && (
         <div className={`banner ${ev.profitMult >= 1 && ev.speedMult >= 1 ? 'good' : 'bad'}`}>

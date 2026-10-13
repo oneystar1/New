@@ -13,7 +13,7 @@ export function BoostTab() {
   const s = useGame((g) => g.s);
   const buyUpgrade = useGame((g) => g.buyUpgrade);
   const doPrestige = useGame((g) => g.doPrestige);
-  const [view, setView] = useState<'cash' | 'clout' | 'cred' | 'ach' | 'settings'>('cash');
+  const [view, setView] = useState<'cash' | 'sketchy' | 'clout' | 'cred' | 'ach' | 'settings'>('cash');
   const gain = credForRun(s.stats.totalCashEarned);
 
   const visible = (u: UpgradeDef): boolean => {
@@ -30,7 +30,12 @@ export function BoostTab() {
     if (u.requires && (s.stores[u.requires.storeId]?.units ?? 0) < u.requires.units) return false;
     return s[u.currency] >= u.cost;
   };
-  const list = UPGRADES.filter((u) => u.currency === view && visible(u)).sort((a, b) => a.cost - b.cost);
+  const list = UPGRADES.filter((u) => {
+    if (!visible(u)) return false;
+    if (view === 'sketchy') return u.group === 'sketchy';
+    if (view === 'cash') return u.currency === 'cash' && !u.group;
+    return u.currency === view;
+  }).sort((a, b) => a.cost - b.cost);
 
   return (
     <div>
@@ -52,6 +57,7 @@ export function BoostTab() {
 
       <div className="seg">
         <button className={view === 'cash' ? 'active' : ''} onClick={() => setView('cash')}>$ Gear</button>
+        <button className={view === 'sketchy' ? 'active' : ''} onClick={() => setView('sketchy')}>😈</button>
         <button className={view === 'clout' ? 'active' : ''} onClick={() => setView('clout')}>💠 Perks</button>
         <button className={view === 'cred' ? 'active' : ''} onClick={() => setView('cred')}>⭐ Rep</button>
         <button className={view === 'ach' ? 'active' : ''} onClick={() => setView('ach')}>🏅</button>
@@ -60,7 +66,8 @@ export function BoostTab() {
 
       {view === 'ach' && <Achievements />}
       {view === 'settings' && <Settings />}
-      {(view === 'cash' || view === 'clout' || view === 'cred') && (
+      {view === 'sketchy' && <div className="card sub" style={{ borderColor: 'var(--red)' }}>😈 Sketchy tactics pay big and add 🔥 Heat. At 100 Heat the community posts your listings and profit drops to x0.4 for three minutes. Heat cools over time, or buy an apology video in Deals.</div>}
+      {(view === 'cash' || view === 'sketchy' || view === 'clout' || view === 'cred') && (
         <>
           {list.length === 0 && <div className="card center sub">{view === 'cred' ? 'Relocate at least once to unlock Reputation upgrades.' : 'Nothing left to buy here right now.'}</div>}
           {list.map((u) => (
@@ -71,6 +78,7 @@ export function BoostTab() {
                 <div className="sub">
                   {u.blurb}
                   {u.requires && ` · needs ${u.requires.units} ${STORE_BY_ID[u.requires.storeId].name}`}
+                  {u.heat && <span style={{ color: 'var(--red)' }}> · 🔥 +{u.heat} heat</span>}
                 </div>
               </div>
               <button className={`btn ${u.currency === 'cash' ? 'primary' : u.currency === 'clout' ? '' : 'gold'}`} disabled={!affordable(u)} onClick={() => buyUpgrade(u.id)}>

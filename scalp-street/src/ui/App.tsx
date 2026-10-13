@@ -5,6 +5,7 @@ import type { AdPlacement } from '../monetization';
 import { Header } from './Header';
 import { HuntTab } from './HuntTab';
 import { StoresTab } from './StoresTab';
+import { DealsTab } from './DealsTab';
 import { ShelfTab } from './ShelfTab';
 import { BoostTab } from './BoostTab';
 import { ShopTab } from './ShopTab';
@@ -12,11 +13,12 @@ import { Overlays, AdOverlay, PurchaseOverlay } from './Overlays';
 import { dailyAvailable } from '../engine/sim';
 import { MISSION_POOL } from '../engine/data/missions';
 
-export type Tab = 'hunt' | 'stores' | 'shelf' | 'boost' | 'shop';
+export type Tab = 'hunt' | 'stores' | 'deals' | 'shelf' | 'boost' | 'shop';
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'hunt', label: 'Hunt', icon: '🍌' },
   { id: 'stores', label: 'Routes', icon: '🛒' },
+  { id: 'deals', label: 'Deals', icon: '🤝' },
   { id: 'shelf', label: 'Shelf', icon: '📒' },
   { id: 'boost', label: 'Hustle', icon: '⚡' },
   { id: 'shop', label: 'Shop', icon: '💠' },
@@ -56,11 +58,13 @@ export function App() {
     };
     document.addEventListener('visibilitychange', onVis);
     window.addEventListener('pagehide', save);
+    window.addEventListener('scalp-save', save);
     return () => {
       clearInterval(loop);
       clearInterval(saver);
       document.removeEventListener('visibilitychange', onVis);
       window.removeEventListener('pagehide', save);
+      window.removeEventListener('scalp-save', save);
     };
   }, [load, save, frame, setProvider]);
 
@@ -69,7 +73,7 @@ export function App() {
       const d = MISSION_POOL.find((x) => x.id === m.id);
       return d && !m.claimed && m.progress >= d.target;
     });
-    return { hunt, shop: !s.iap.starterPackBought } as Partial<Record<Tab, boolean>>;
+    return { hunt, deals: s.offers.length > 0 || s.fakes.length > 0, shop: !s.iap.starterPackBought } as Partial<Record<Tab, boolean>>;
   }, [s, now]);
 
   return (
@@ -78,6 +82,7 @@ export function App() {
       <main className="main">
         {tab === 'hunt' && <HuntTab />}
         {tab === 'stores' && <StoresTab />}
+        {tab === 'deals' && <DealsTab />}
         {tab === 'shelf' && <ShelfTab />}
         {tab === 'boost' && <BoostTab />}
         {tab === 'shop' && <ShopTab />}

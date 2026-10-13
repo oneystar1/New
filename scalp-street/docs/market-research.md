@@ -118,6 +118,10 @@ genres because the core loop already implies waiting.
    at 100x to 335x retail. Fania's re-release story is the Ultra Rare owl's
    flavour text.
 6. Full hybrid monetization stack as specified in `docs/monetization.md`.
+7. The Deals feed, Heat meter, sketchy tactics and counterfeit pile turn the
+   resale-culture findings (Marketplace lowballs, ghosting, Friends & Family
+   and fake-courier scams, Karens, employee hookups, empty-box returns,
+   wrong-font fakes, bot farms) into systems with real trade-offs.
 
 ## Sources
 

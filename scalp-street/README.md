@@ -6,7 +6,7 @@ sticks and blind-box dumplings. Camp the drops, hoard the bananas, flip the
 dohs, get found out, relocate, repeat.
 Web first (PWA), built to wrap into an iOS app with Capacitor.
 
-![hunt](docs/screenshots/01-hunt.png) ![routes](docs/screenshots/02-routes.png) ![shop](docs/screenshots/05-shop.png)
+![hunt](docs/screenshots/01-hunt.png) ![deals](docs/screenshots/03-deals.png) ![shop](docs/screenshots/06-shop.png)
 
 ## Run it
 
@@ -27,17 +27,33 @@ npm run balance 8  # greedy-bot economy sim for 8 simulated hours
 - **52 collectible items** in two families (Dohs and Squishies) and six
   rarity tiers, a mystery pull gacha with published odds, a shelf bonus,
   duplicate flipping.
-- **Live market**: squish and doh hype meters plus five timed events
+- **Deals feed**: a Facebook-Marketplace-style stream of buyers for the
+  items on your shelf. Fair buyers, lowballers, "is this available?"
+  ghosts, Zelle and Friends & Family scammers, trade offers and angry
+  community members. Accept, counter or decline. Selling channels (FleaBay,
+  Mercarry, WhatNow live shows, Scam Radar, Goods & Services only, UV tag
+  light) change how the feed behaves.
+- **Heat and sketchy tactics**: Return the Empty Box, Employee Hookup,
+  Shelf-Clearing Sweep, "Sealed" (It Is Not Sealed), Captcha Farm, Fake
+  Haul Video. Big multipliers, each adds community Heat. At 100 Heat the
+  group screenshots you and profit drops to x0.4 for three minutes. Cool
+  off over time or buy an apology video with Clout.
+- **Counterfeits**: some pulls from sketchier stores are fakes. Toss them,
+  or flip them anyway for cash and Heat.
+- **Community drama ticker** with ISO posts, restock sightings, scam PSAs
+  and group-rule reminders.
+- **Live market**: squishy and doh hype meters plus five timed events
   (Drop Day, Viral Video, Squishmas Drop, Restock Flood, Limit Crackdown).
 - **Relocate** prestige for Street Cred (+2% profit per point forever) and
   a Reputation shop.
 - **Offline earnings** with an upgradeable cap and a watch-to-double offer.
 - **Retention**: daily login streak, daily missions, 30-tier Hustle Pass,
-  25 achievements, piggy bank, red-dot badges.
+  piggy bank, red-dot badges.
 - **Monetization** (simulated on web, real SDKs on iOS): six rewarded
   video placements with cooldowns and a daily cap, one interstitial slot
   (after prestige), starter pack, remove ads, weekly VIP subscription,
   premium pass, five Clout packs, a bundle, Clout sinks.
+- 35 achievements, 11 daily mission types.
 - Versioned local save with export/import codes, autosave, PWA service
   worker, safe-area aware mobile layout, haptics.
 

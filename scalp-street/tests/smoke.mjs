@@ -33,21 +33,34 @@ try {
   await page.locator('.card .ico-lg').first().click();
   await page.waitForTimeout(600);
   await shot('02-routes.png');
+  await tab('Deals');
+  // Force the feed: fast-forward the offer timer through the save and reload.
+  await page.evaluate(() => window.dispatchEvent(new Event('scalp-save')));
+  await page.evaluate(() => { const k = 'scalp-street-save-v1'; const s = JSON.parse(localStorage.getItem(k)); if (!s) throw new Error('no save yet'); s.nextOfferAt = 0; s.heat = 62; s.shelf = { doh_kube: 2, sq_nana: 1 }; localStorage.setItem(k, JSON.stringify(s)); });
+  await page.reload();
+  await page.waitForSelector('.shelf');
+  await tab('Deals');
+  await page.waitForSelector('.offer', { timeout: 30000 }); // feed starts 15s after load
+  await shot('03-deals.png');
+  const n0 = await page.locator('.offer').count();
+  await page.locator('.offer .btn').first().click();
+  await page.waitForTimeout(200);
+  if ((await page.locator('.offer').count()) !== n0 - 1) throw new Error('offer did not resolve');
   await tab('Shelf');
-  await shot('03-shelf.png');
+  await shot('04-shelf.png');
   await tab('Hustle');
-  await shot('04-hustle.png');
+  await shot('05-hustle.png');
   await tab('Shop');
-  await shot('05-shop.png');
+  await shot('06-shop.png');
   // Simulated rewarded ad then purchase flow.
   await page.getByRole('button', { name: /Watch/ }).first().click();
   await page.waitForTimeout(500);
-  await shot('06-ad.png');
+  await shot('07-ad.png');
   await page.getByRole('button', { name: /Claim reward/ }).click({ timeout: 8000 });
   await page.waitForTimeout(300);
   await page.locator('.card.starter .btn.primary').click();
   await page.waitForTimeout(300);
-  await shot('07-purchase.png');
+  await shot('08-purchase.png');
   await page.getByRole('button', { name: 'Confirm purchase' }).click();
   await page.waitForTimeout(400);
   const cash = await page.locator('.wallet .cash').innerText();

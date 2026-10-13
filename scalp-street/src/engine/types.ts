@@ -63,7 +63,13 @@ export type UpgradeEffect =
   | { kind: 'offlineRate'; add: number }
   | { kind: 'pullLuck'; add: number }
   | { kind: 'hypeDecay'; mult: number }
-  | { kind: 'familyProfit'; family: ItemFamily; mult: number };
+  | { kind: 'familyProfit'; family: ItemFamily; mult: number }
+  | { kind: 'offerRate'; mult: number }
+  | { kind: 'offerValue'; mult: number }
+  | { kind: 'scamRadar' }
+  | { kind: 'scamShield' }
+  | { kind: 'fakeShield' }
+  | { kind: 'heatDecay'; mult: number };
 
 export type Currency = 'cash' | 'clout' | 'cred';
 
@@ -81,6 +87,31 @@ export interface UpgradeDef {
   minPrestige?: number;
   /** Upgrades with a tier group are shown in order; only the next one is purchasable. */
   tier?: number;
+  /** Heat added when bought (sketchy tactics). */
+  heat?: number;
+  /** Grouping for the Hustle tab. */
+  group?: 'gear' | 'sketchy' | 'channel';
+}
+
+export type OfferKind = 'fair' | 'lowball' | 'scam' | 'ghost' | 'trade' | 'karen';
+
+export interface Offer {
+  id: number;
+  kind: OfferKind;
+  buyer: string;
+  avatar: string;
+  itemId: string;
+  message: string;
+  /** Cash offered (0 for karen/trade). */
+  amount: number;
+  /** Whether the UI should show the scam flag (Scam Radar owned). */
+  flagged: boolean;
+  expiresAt: number;
+}
+
+export interface PullResult {
+  item: ItemDef;
+  fake: boolean;
 }
 
 export interface AchievementDef {
@@ -134,7 +165,7 @@ export interface MissionDef {
   blurb: string;
   /** Target measured against the mission's counter. */
   target: number;
-  counter: 'taps' | 'cashEarned' | 'unitsBought' | 'pulls' | 'adsWatched' | 'sales';
+  counter: 'taps' | 'cashEarned' | 'unitsBought' | 'pulls' | 'adsWatched' | 'sales' | 'deals';
   rewardClout: number;
   rewardPassXp: number;
 }
@@ -188,6 +219,17 @@ export interface Stats {
   prestiges: number;
   playSeconds: number;
   bestCash: number;
+  offersAccepted: number;
+  offersDeclined: number;
+  lowballsAccepted: number;
+  scamsDodged: number;
+  scamsFell: number;
+  ghosted: number;
+  karensBlocked: number;
+  fakesTossed: number;
+  fakesFlipped: number;
+  calledOut: number;
+  tradesDone: number;
 }
 
 export interface GameState {
@@ -221,6 +263,12 @@ export interface GameState {
   adCooldowns: Record<string, number>; // placement -> epoch ms when available again
   adsToday: { date: string; count: number };
   interstitialSeenAt: number;
+  /** Community heat 0..100. At 100 you get Called Out. */
+  heat: number;
+  offers: Offer[];
+  nextOfferAt: number;
+  /** Counterfeits pulled but not yet tossed or flipped. */
+  fakes: string[];
   stats: Stats;
   settings: { sfx: boolean; haptics: boolean; notation: 'short' | 'scientific' };
 }

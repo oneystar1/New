@@ -1,4 +1,5 @@
-import type { GameState, ItemFamily, MarketEventKind, Rarity, ItemDef, Reward } from './types';
+import type { GameState, ItemFamily, MarketEventKind, Rarity, ItemDef, Reward, Offer } from './types';
+import { tickOffers, tickHeat } from './deals';
 import { STORES, STORE_BY_ID } from './data/stores';
 import { UPGRADE_BY_ID } from './data/upgrades';
 import { EVENTS, EVENT_WEIGHTS } from './data/events';
@@ -31,6 +32,12 @@ export interface Modifiers {
   eventSpeed: Record<ItemFamily, number>;
   boostMult: number;
   vip: boolean;
+  offerRate: number;
+  offerValue: number;
+  scamRadar: boolean;
+  scamShield: boolean;
+  fakeShield: boolean;
+  heatDecay: number;
 }
 
 export const BASE_OFFLINE_CAP_HOURS = 2;
@@ -64,6 +71,12 @@ export function computeModifiers(s: GameState, now: number): Modifiers {
     eventSpeed: { squish: 1, doh: 1 },
     boostMult: 1,
     vip: isVip(s, now),
+    offerRate: 1,
+    offerValue: 1,
+    scamRadar: false,
+    scamShield: false,
+    fakeShield: false,
+    heatDecay: 1,
   };
   for (const st of STORES) {
     m.storeProfit[st.id] = 1;
@@ -84,6 +97,12 @@ export function computeModifiers(s: GameState, now: number): Modifiers {
       case 'pullLuck': m.pullLuck += e.add; break;
       case 'hypeDecay': m.hypeRecovery *= e.mult; break;
       case 'familyProfit': m.familyProfit[e.family] *= e.mult; break;
+      case 'offerRate': m.offerRate *= e.mult; break;
+      case 'offerValue': m.offerValue *= e.mult; break;
+      case 'scamRadar': m.scamRadar = true; break;
+      case 'scamShield': m.scamShield = true; break;
+      case 'fakeShield': m.fakeShield = true; break;
+      case 'heatDecay': m.heatDecay *= e.mult; break;
     }
   }
   // Shelf (collection) bonus: each unique item owned adds a small % to profit.
@@ -187,10 +206,12 @@ export interface TickResult {
   completedCycles: number;
   eventStarted: MarketEventKind | null;
   achievementsUnlocked: string[];
+  offerArrived: Offer | null;
+  calledOut: boolean;
 }
 
 export function tick(s: GameState, dt: number, now: number, rand: () => number = Math.random): TickResult {
-  const res: TickResult = { completedCycles: 0, eventStarted: null, achievementsUnlocked: [] };
+  const res: TickResult = { completedCycles: 0, eventStarted: null, achievementsUnlocked: [], offerArrived: null, calledOut: false };
   if (dt <= 0) return res;
   const m = computeModifiers(s, now);
   s.stats.playSeconds += dt;
@@ -212,12 +233,18 @@ export function tick(s: GameState, dt: number, now: number, rand: () => number =
     }
   }
 
-  // Hype drifts back to 1 after events push it around.
+  // Hype drifts back to 1 after events push it around (1.2 with a Fake Haul Video).
+  const floor = s.upgrades.includes('k_fakehaul') ? 1.2 : 1;
   for (const f of ['squish', 'doh'] as ItemFamily[]) {
     const h = s.hype[f];
     const rate = 0.02 * m.hypeRecovery * dt;
-    s.hype[f] = h > 1 ? Math.max(1, h - rate) : Math.min(1, h + rate);
+    s.hype[f] = h > floor ? Math.max(floor, h - rate) : Math.min(floor, h + rate);
   }
+
+  // Deals feed and community heat.
+  const newOffer = tickOffers(s, m, now, rand);
+  if (newOffer) res.offerArrived = newOffer;
+  if (tickHeat(s, m, dt, now)) res.calledOut = true;
 
   // Events
   if (s.event && s.event.endsAt <= now) {
@@ -275,6 +302,8 @@ export function applyOfflineOnLoad(s: GameState, now: number): void {
     const ss = s.stores[st.id];
     if (ss && !ss.manager) ss.progress = 0;
   }
+  s.offers = [];
+  s.nextOfferAt = now + 15_000;
   s.lastSeen = now;
 }
 
@@ -387,6 +416,10 @@ export function prestige(s: GameState, now: number): number {
   s.hype = { squish: 1, doh: 1 };
   s.stats.totalCashEarned = 0;
   s.stats.prestiges += 1;
+  s.heat = 0;
+  s.offers = [];
+  s.fakes = [];
+  s.boosts = s.boosts.filter((b) => b.id !== 'called_out');
   s.pendingOffline = null;
   s.lastSeen = now;
   return gained;

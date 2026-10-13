@@ -48,6 +48,45 @@ pulls ──────┘             │                       └─> buy ma
    pass, achievements. The Reputation shop spends Cred on x2/x3/x5 profit,
    +50% speed, grail odds, seed money.
 
+## The sketchy side: Deals, Heat, counterfeits
+
+The research kept surfacing the same resale-culture beats: Facebook
+Marketplace lowballs, "Is this available?" and never replying, meetups in
+police station lots, Friends & Family scams, "hi dear" cheque overpayment
+scams, fake-courier Zelle invoices, community groups policing "retail only",
+Karens reporting listings, employees holding stock, empty-box returns,
+counterfeit cubes with the wrong font, bot farms with the same shipping
+address, live-stream sellers double-selling. All of it is in the game.
+
+**Deals feed.** While the player is active, a buyer message arrives roughly
+every 30 seconds (faster with channels), up to three open at once, each
+expiring after 90 seconds. Offers are sized in seconds of current income so
+they matter at every stage:
+
+| Kind | Weight | Worth | Accept | Counter | Decline |
+| --- | --- | --- | --- | --- | --- |
+| Fair buyer | 30 | 60-120s income | paid | 50% paid x1.35, 50% ghosted | nothing |
+| Lowball | 28 | 12-30s | paid (counts toward "Lowballed") | 50% paid x2.2, 50% ghosted | nothing |
+| "Is this available?" | 16 | 60-120s | 70% no-show, 30% paid | same as fair | nothing |
+| Scam | 12 | 240-480s (too good) | lose that much cash (0 with Goods & Services) | they vanish | blocked, +scams dodged |
+| Trade | 6 | an item | random pull with +0.2 luck | same | nothing |
+| Karen | 8 | nothing | clap back: +10 pass XP, +6 Heat | same | block |
+
+Channels: FleaBay (+30% value), Mercarry (+40% rate), WhatNow Live (+50%
+rate) and Hype Mode (+50% value), Scam Radar (flags scams), Goods &
+Services Only (scams cost nothing and stop appearing), UV Tag Light (no
+counterfeits), PR Apology Template (Heat cools 2x).
+
+**Heat.** 0 to 100. Sketchy tactics add 15 to 35 each, clapping back +6,
+flipping a fake +8, the Drop Bot Farm adds 0.0004 per unit per second. It
+cools 0.02 per second. At 100: Called Out, profit x0.4 for three minutes,
+Heat resets to 45. An apology video (30 Clout) clears it. Relocate resets it.
+
+**Counterfeits.** Pulls from WallyMart (6%), Claw Arcade (5%), Bot Farm
+(12%), Convention (8%) and Factory (5%) can be fakes. Fakes sit in a pile on
+the Deals tab: toss for an achievement, or flip for 20 seconds of income and
++8 Heat.
+
 ## Economy tuning
 
 Store table (cost x16 per store, profit/cost ratio falls 38% per store,
@@ -88,7 +127,7 @@ offline modal with a "watch to double" offer.
   boost) and a streak counter.
 - **Daily missions** (3 per day from a pool of 9) feeding Clout and pass XP.
 - **Hustle Pass** (30 tiers, free and premium tracks, seasonal).
-- **Achievements** (25) that pay Clout.
+- **Achievements** (35) that pay Clout.
 - **Piggy bank** collecting 2% of all earnings.
 - **Market events** that reward checking in.
 - Red-dot badges on tabs when something is claimable.
@@ -100,11 +139,13 @@ Bottom tab bar, portrait, 520px max width centred on desktop:
 1. **Hunt** - tap shelf, hunt meter, daily login, missions.
 2. **Routes** - store list with buy x1/x10/x100/max, progress bars,
    managers.
-3. **Shelf** - mystery pulls (Clout or free video), rarity odds, 4-column
+3. **Deals** - Heat meter and apology button, drama ticker, buyer messages
+   with Accept / Counter / Decline, counterfeit pile, selling channels.
+4. **Shelf** - mystery pulls (Clout or free video), rarity odds, 4-column
    binder with rarity borders, item detail sheet with duplicate flipping.
-4. **Hustle** - Relocate card, cash gear, Clout perks, Reputation,
+5. **Hustle** - Relocate card, cash gear, sketchy tactics, Clout perks, Reputation,
    achievements, settings (save export/import, reset).
-5. **Shop** - starter pack, VIP, free rewarded boosts with cooldowns,
+6. **Shop** - starter pack, VIP, free rewarded boosts with cooldowns,
    piggy bank, Hustle Pass track, Clout sinks, Clout packs, remove ads.
 
 ## Content roadmap

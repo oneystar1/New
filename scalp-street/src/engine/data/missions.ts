@@ -11,5 +11,7 @@ export const MISSION_POOL: MissionDef[] = [
   { id: 'q_pull10', name: 'Rip Session', blurb: 'Open 10 mystery pulls.', target: 10, counter: 'pulls', rewardClout: 8, rewardPassXp: 120 },
   { id: 'q_ads2', name: 'Sponsored Hustle', blurb: 'Watch 2 boost videos.', target: 2, counter: 'adsWatched', rewardClout: 5, rewardPassXp: 60 },
   { id: 'q_sales100', name: 'Hundred Sales', blurb: 'Complete 100 store cycles.', target: 100, counter: 'sales', rewardClout: 4, rewardPassXp: 60 },
+  { id: 'q_deals5', name: 'Close the Deal', blurb: 'Accept 5 offers in the Deals feed.', target: 5, counter: 'deals', rewardClout: 4, rewardPassXp: 60 },
+  { id: 'q_deals15', name: 'Marketplace Grind', blurb: 'Accept 15 offers in the Deals feed.', target: 15, counter: 'deals', rewardClout: 8, rewardPassXp: 120 },
   { id: 'q_sales500', name: 'Volume Seller', blurb: 'Complete 500 store cycles.', target: 500, counter: 'sales', rewardClout: 8, rewardPassXp: 120 },
 ];
