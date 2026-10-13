@@ -6,7 +6,9 @@ sticks and blind-box dumplings. Camp the drops, hoard the bananas, flip the
 dohs, get found out, relocate, repeat.
 Web first (PWA), built to wrap into an iOS app with Capacitor.
 
-![line](docs/screenshots/03-line.png) ![deals](docs/screenshots/06-deals.png)
+![art](docs/screenshots/art-sheet.png)
+
+![line](docs/screenshots/03-line.png) ![shelf](docs/screenshots/07-shelf.png) ![deals](docs/screenshots/06-deals.png)
 
 ## Run it
 
@@ -27,6 +29,12 @@ npm run balance 8  # greedy-bot economy sim for 8 simulated hours
 - **72 collectible items** in two families (Dohs and Squishies) and six
   rarity tiers, a mystery pull gacha with published odds, a shelf bonus,
   duplicate flipping.
+- **Original art**: every item, rival, buyer and storefront is an original
+  vector sprite composed at runtime from a shape library (`src/art/`):
+  jelly gradients, highlights, glitter, glow, holo, chrome and gold
+  finishes, seven kawaii face types, and character portraits for NeeDoh
+  Moms, kids, sneaker bros, Karens, scammers and the manager. Zero image
+  files, crisp at any size, and the whole set is reviewable at `/#art`.
 - **Feel**: synthesized sound effects (Web Audio, no asset files) for
   taps, cash, buys, pulls by rarity, grabs, doors, deals and getting Called
   Out, plus confetti on rare pulls and overtakes, screen shake and flashes.
@@ -105,7 +113,8 @@ npm run balance 8  # greedy-bot economy sim for 8 simulated hours
 ```
 src/engine/        pure TS game engine (types, data tables, math, sim, prestige, zustand store)
 src/monetization/  provider interface + simulated web provider
-src/ui/            React screens: Hunt, Routes, Shelf, Hustle, Shop, overlays
+src/art/           vector sprite system: shapes, per-item art table, Sprite, Portrait, StoreSprite, contact sheet
+src/ui/            React screens: Hunt, Routes, Deals, Shelf, Hustle, Shop, overlays
 tests/             vitest engine tests + Playwright smoke test
 tools/balance.ts   economy simulation used to tune the store table
 docs/              research, design, monetization, iOS plan, screenshots

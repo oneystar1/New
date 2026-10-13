@@ -7,6 +7,8 @@ import { restockReady, isBanned } from '../engine/restock';
 import { formatDuration } from '../engine/math';
 import { TUTORIAL } from '../engine/data/tutorial';
 import { isConWeekend } from '../engine/sim';
+import { Sprite } from '../art/Sprite';
+import { StoreSprite } from '../art/Portrait';
 import { ITEMS } from '../engine/data/items';
 import { formatCash } from '../engine/math';
 import type { Reward } from '../engine/types';
@@ -33,7 +35,7 @@ export function HuntTab() {
   const m = computeModifiers(s, now);
   const tv = tapValue(s, m);
   const hunting = STORE_BY_ID[highestUnlockedStore(s)];
-  const bg = ITEMS.filter((i) => i.storeId === hunting.id).map((i) => i.icon);
+  const bgItems = ITEMS.filter((i) => i.storeId === hunting.id);
   const daily = dailyAvailable(s, now);
   const nextDay = (s.dailyStreak % DAILY_REWARDS.length) + 1;
 
@@ -75,15 +77,15 @@ export function HuntTab() {
       )}
       <div className="row between">
         <div>
-          <h3 style={{ margin: 0 }}>Hunting at {hunting.icon} {hunting.name}</h3>
+          <h3 style={{ margin: 0 }} className="row"><StoreSprite id={hunting.id} size={26} /> Hunting at {hunting.name}</h3>
           <div className="small">Tap the shelf: +{formatCash(tv)} per grab. Fill the meter for a free pull.</div>
         </div>
       </div>
       <div className="shelf" onPointerDown={onTap}>
         <div className="pile-bg" aria-hidden>
-          {Array.from({ length: 24 }, (_, i) => <span key={i}>{bg[(i + 1) % bg.length] ?? '🍌'}</span>)}
+          {Array.from({ length: 24 }, (_, i) => <span key={i}><Sprite id={bgItems[(i + 1) % bgItems.length]?.id ?? 'sq_nana'} size={34} /></span>)}
         </div>
-        <div className="pile">{bg[0] ?? '🍌'}</div>
+        <div className="pile"><Sprite id={bgItems[0]?.id ?? 'sq_nana'} size={140} /></div>
         {floats.map((f) => (
           <span key={f.id} className="float" style={{ left: f.x - 20, top: f.y - 20 }}>{f.text}</span>
         ))}
@@ -99,7 +101,7 @@ export function HuntTab() {
         const until = banned ? s.bannedUntil[st.id] : s.restockReadyAt[st.id] ?? 0;
         return (
           <div className="card row" key={st.id}>
-            <div className="ico-lg">{st.icon}</div>
+            <div className="ico-lg"><StoreSprite id={st.id} size={44} /></div>
             <div className="grow">
               <h3>{st.name}</h3>
               <div className="sub">{banned ? `BANNED · ${formatDuration((until - now) / 1000)} left` : ready ? 'Truck spotted. Line is forming. Grab what the moms leave.' : `Next restock in ${formatDuration((until - now) / 1000)}`}</div>

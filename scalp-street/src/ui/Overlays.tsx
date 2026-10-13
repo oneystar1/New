@@ -4,6 +4,7 @@ import { formatCash, formatDuration } from '../engine/math';
 import { RARITY_LABEL } from '../engine/data/items';
 import { PRODUCTS } from '../engine/data/shop';
 import { isAdFree } from '../engine/sim';
+import { Sprite } from '../art/Sprite';
 import type { AdPlacement } from '../monetization';
 
 /** Offline earnings, pull results, and toasts. */
@@ -40,7 +41,7 @@ export function Overlays() {
             <div className="pulls">
               {lastPulls.map((it, i) => (
                 <div className={`pull`} key={i} style={{ animationDelay: `${i * 0.08}s` }}>
-                  <div className="i">{it.icon}</div>
+                  <div className="i"><Sprite id={it.id} size={64} /></div>
                   <div className="n">{it.name}</div>
                   <span className={`tag ${it.rarity}`}>{RARITY_LABEL[it.rarity]}</span>
                 </div>

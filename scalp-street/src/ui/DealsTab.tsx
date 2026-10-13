@@ -4,10 +4,11 @@ import { UPGRADES } from '../engine/data/upgrades';
 import { ITEM_BY_ID } from '../engine/data/items';
 import { DRAMA_FEED } from '../engine/data/offers';
 import { APOLOGY_CLOUT, CALLED_OUT_SECONDS, PRICING } from '../engine/deals';
-import type { Pricing } from '../engine/types';
+import type { Pricing, OfferKind } from '../engine/types';
+import { Sprite } from '../art/Sprite';
+import { Portrait, type PortraitKind } from '../art/Portrait';
 import { computeModifiers } from '../engine/sim';
 import { formatCash, formatDuration, formatNumber } from '../engine/math';
-import type { OfferKind } from '../engine/types';
 
 const KIND_TAG: Record<OfferKind, { label: string; cls: string }> = {
   fair: { label: 'Buyer', cls: 'uncommon' },
@@ -18,6 +19,8 @@ const KIND_TAG: Record<OfferKind, { label: string; cls: string }> = {
   karen: { label: 'Not a buyer', cls: 'select' },
   sneakerbro: { label: 'Sneaker bro', cls: 'ultra' },
 };
+
+const KIND_PORTRAIT: Record<OfferKind, PortraitKind> = { fair: 'buyer', lowball: 'kid', ghost: 'ghost', scam: 'scammer', trade: 'trader', karen: 'karen', sneakerbro: 'sneakerbro' };
 
 export function DealsTab() {
   const s = useGame((g) => g.s);
@@ -76,11 +79,11 @@ export function DealsTab() {
         return (
           <div className={`card offer ${o.flagged ? 'flagged' : ''}`} key={o.id}>
             <div className="row">
-              <div className="ico-lg">{o.avatar}</div>
+              <div className="ico-lg"><Portrait kind={o.flagged || o.kind !== 'scam' ? KIND_PORTRAIT[o.kind] : 'buyer'} size={44} seed={o.id} /></div>
               <div className="grow">
                 <div className="row between">
                   <b>{o.buyer}</b>
-                  <span className="small">{it.icon} {it.name} · {formatDuration((o.expiresAt - now) / 1000)}</span>
+                  <span className="small row" style={{ gap: 4 }}><Sprite id={it.id} size={18} /> {it.name} · {formatDuration((o.expiresAt - now) / 1000)}</span>
                 </div>
                 <div className="msg">{o.message}</div>
                 <div className="row" style={{ gap: 6, marginTop: 4 }}>
@@ -120,7 +123,7 @@ export function DealsTab() {
             const it = ITEM_BY_ID[id];
             return (
               <div className="card row" key={`${id}-${idx}`}>
-                <div className="ico-lg" style={{ filter: 'hue-rotate(60deg)' }}>{it.icon}</div>
+                <div className="ico-lg" style={{ filter: 'hue-rotate(60deg) saturate(0.6)' }}><Sprite id={it.id} size={44} /></div>
                 <div className="grow">
                   <h3>"{it.name}"</h3>
                   <div className="sub">Wrong font on the tag. Smells like gasoline. Definitely not real.</div>

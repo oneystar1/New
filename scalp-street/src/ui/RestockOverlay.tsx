@@ -4,6 +4,8 @@ import { RIVALS } from '../engine/data/restock';
 import { encounterDef, DOORS_SECONDS } from '../engine/restock';
 import { RARITY_LABEL } from '../engine/data/items';
 import { formatCash } from '../engine/math';
+import { Sprite } from '../art/Sprite';
+import { Portrait, StoreSprite } from '../art/Portrait';
 
 /** Full-screen restock run: line phase, doors phase (mash GRAB), results. */
 export function RestockOverlay() {
@@ -25,7 +27,7 @@ export function RestockOverlay() {
           <div className="pulls">
             {result.items.map((it, i) => (
               <div className="pull" key={i} style={{ animationDelay: `${i * 0.06}s` }}>
-                <div className="i">{it.icon}</div>
+                <div className="i"><Sprite id={it.id} size={56} /></div>
                 <div className="n">{it.name}</div>
                 <span className={`tag ${it.rarity}`}>{RARITY_LABEL[it.rarity]}</span>
               </div>
@@ -45,7 +47,7 @@ export function RestockOverlay() {
     <div className="overlay run">
       <div className="modal">
         <div className="row between">
-          <h2>{st.icon} {st.name} restock</h2>
+          <h2 className="row" style={{ gap: 8 }}><StoreSprite id={st.id} size={32} /> {st.name} restock</h2>
           <span className="pill">{run.phase === 'line' ? '6:40am' : run.phase === 'doors' ? `${Math.ceil(run.timeLeft)}s` : 'done'}</span>
         </div>
 
@@ -55,17 +57,17 @@ export function RestockOverlay() {
             <div className="line">
               {run.rivals.map((r, i) => (
                 <div className="rival" key={i} title={RIVALS[r.kind].blurb}>
-                  <span className="i">{r.icon}</span>
+                  <span className="i"><Portrait kind={r.kind} size={28} seed={i} /></span>
                   <span className="n">{r.name}</span>
                   <span className="t">takes {r.takes}</span>
                 </div>
               ))}
-              <div className="rival you"><span className="i">🫵</span><span className="n">You</span><span className="t">carry up to {run.carry}</span></div>
+              <div className="rival you"><span className="i"><Portrait kind="you" size={28} /></span><span className="n">You</span><span className="t">carry up to {run.carry}</span></div>
             </div>
             <p className="small">Shelf has {run.stock}. People ahead will take {taken}. About <b>{run.remaining}</b> left for you when the doors open. Gear (chair, tent) moves you up the line.</p>
             {enc ? (
               <div className="encounter">
-                <div className="row"><span style={{ fontSize: 28 }}>{enc.icon}</span><div className="grow">{enc.text}</div></div>
+                <div className="row"><Portrait kind={enc.kind} size={40} seed={3} /><div className="grow">{enc.text}</div></div>
                 <div className="row mt">
                   {enc.choices.map((c, i) => <button key={i} className="btn grow" onClick={() => restockChoose(i)}>{c.label}</button>)}
                 </div>
@@ -85,7 +87,7 @@ export function RestockOverlay() {
             <div className="progress mt"><i style={{ width: `${(run.timeLeft / DOORS_SECONDS) * 100}%` }} /></div>
             {enc ? (
               <div className="encounter mt">
-                <div className="row"><span style={{ fontSize: 28 }}>{enc.icon}</span><div className="grow">{enc.text}</div></div>
+                <div className="row"><Portrait kind={enc.kind === 'employee' ? 'manager' : enc.kind} size={40} seed={5} /><div className="grow">{enc.text}</div></div>
                 <div className="row mt" style={{ flexWrap: 'wrap' }}>
                   {enc.choices.map((c, i) => <button key={i} className="btn grow" onClick={() => restockChoose(i)}>{c.label}</button>)}
                 </div>

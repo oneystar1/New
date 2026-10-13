@@ -218,4 +218,6 @@ Bottom tab bar, portrait, 520px max width centred on desktop:
 - Weekend "Con Weekend" live event with a leaderboard (needs a backend).
 - Trade board: swap duplicates with other players (needs accounts).
 - Cosmetics: shelf backgrounds, tap effects (pure monetization, no power).
-- Art pass: replace emoji placeholders with original plush/fidget sprites.
+- Art pass v2: hand-tuned paths for the hero items, idle wobble animations
+  on the shelf pile, and themed backgrounds per city. (v1, the procedural
+  vector sprite system, shipped: see `src/art/`.)

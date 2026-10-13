@@ -4,6 +4,7 @@ import { MANAGER_BY_STORE } from '../engine/data/managers';
 import { computeModifiers, storeCycleProfit, storeCycleSeconds, storeUnlocked } from '../engine/sim';
 import { unitCost, maxAffordable, formatCash, formatDuration, milestoneMult, nextMilestone } from '../engine/math';
 import { isBanned } from '../engine/restock';
+import { StoreSprite } from '../art/Portrait';
 
 const AMOUNTS: BuyAmount[] = [1, 10, 100, 'max'];
 
@@ -47,7 +48,7 @@ export function StoresTab() {
                 onClick={() => startStore(st.id)}
                 title="Run a cycle"
               >
-                {st.icon}
+                <StoreSprite id={st.id} size={44} />
               </button>
               <div className="grow">
                 <div className="row between">

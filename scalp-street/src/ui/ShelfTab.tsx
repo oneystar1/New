@@ -6,6 +6,7 @@ import { dupeSaleValue, computeModifiers, highestUnlockedStore, rollRarity } fro
 import { STORE_BY_ID } from '../engine/data/stores';
 import { formatCash } from '../engine/math';
 import type { ItemFamily } from '../engine/types';
+import { Sprite } from '../art/Sprite';
 
 export function ShelfTab() {
   const s = useGame((g) => g.s);
@@ -69,7 +70,7 @@ export function ShelfTab() {
           const c = s.shelf[it.id] ?? 0;
           return (
             <button className={`item r-${it.rarity} ${c > 0 ? '' : 'unknown'}`} key={it.id} onClick={() => setSel(it.id)}>
-              <div className="i">{it.icon}</div>
+              <div className="i"><Sprite id={it.id} size={44} /></div>
               <div className="n">{c > 0 ? it.name : '???'}</div>
               {c > 0 && <span className="c">×{c}</span>}
             </button>
@@ -80,7 +81,7 @@ export function ShelfTab() {
       {selected && (
         <div className="overlay" onClick={() => setSel(null)}>
           <div className="modal center" onClick={(e) => e.stopPropagation()}>
-            <div style={{ fontSize: 56 }}>{selected.icon}</div>
+            <div className="center"><Sprite id={selected.id} size={110} /></div>
             <h2>{(s.shelf[selected.id] ?? 0) > 0 ? selected.name : 'Unknown item'}</h2>
             <span className={`tag ${selected.rarity}`}>{RARITY_LABEL[selected.rarity]}</span>
             <p>{(s.shelf[selected.id] ?? 0) > 0 ? selected.blurb : `Drops from ${STORE_BY_ID[selected.storeId].name}.`}</p>
