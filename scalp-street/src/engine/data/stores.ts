@@ -7,7 +7,7 @@ export const STORES: StoreDef[] = [
   {
     id: 'dollar',
     name: 'Dollar Dohjo',
-    tagline: 'Bins of off-brand squeezies. Somebody has to start somewhere.',
+    tagline: 'Bins of off-brand dough balls and mochi minis. Somebody has to start somewhere.',
     icon: '🏪',
     family: 'doh',
     baseCost: 4,
@@ -33,7 +33,7 @@ export const STORES: StoreDef[] = [
   {
     id: 'bullseye',
     name: 'Bullseye',
-    tagline: 'Endcap squishes restock Tuesdays at 7am. You know this. Everyone knows this.',
+    tagline: 'Jumbo bananas restock Tuesdays at 7am. You know this. Everyone knows this.',
     icon: '🎯',
     family: 'squish',
     baseCost: 1_024,
@@ -46,7 +46,7 @@ export const STORES: StoreDef[] = [
   {
     id: 'wallymart',
     name: 'WallyMart',
-    tagline: 'Twenty-four hour squish aisle. Twenty-four hour you.',
+    tagline: 'Twenty-four hour fidget aisle. Twenty-four hour you.',
     icon: '🏬',
     family: 'mixed',
     baseCost: 16_384,
@@ -72,7 +72,7 @@ export const STORES: StoreDef[] = [
   {
     id: 'wholesale',
     name: 'Wholesale Club',
-    tagline: 'Eight-packs of 16-inch squishes on a pallet. Bring the minivan.',
+    tagline: '17-inch bananas and Smusher 5-packs by the pallet. Bring the minivan.',
     icon: '📦',
     family: 'squish',
     baseCost: 4_194_304,
@@ -85,7 +85,7 @@ export const STORES: StoreDef[] = [
   {
     id: 'claw',
     name: 'Claw Arcade',
-    tagline: 'Rigged machines full of 5-inch squishes. You are more rigged.',
+    tagline: 'Rigged machines full of mochi cats and glow globs. You are more rigged.',
     icon: '🕹️',
     family: 'squish',
     baseCost: 67_108_864,

@@ -54,9 +54,9 @@ export function HuntTab() {
       </div>
       <div className="shelf" onPointerDown={onTap}>
         <div className="pile-bg" aria-hidden>
-          {Array.from({ length: 24 }, (_, i) => <span key={i}>{bg[i % bg.length] ?? '🧸'}</span>)}
+          {Array.from({ length: 24 }, (_, i) => <span key={i}>{bg[(i + 1) % bg.length] ?? '🍌'}</span>)}
         </div>
-        <div className="pile">🧸</div>
+        <div className="pile">{bg[0] ?? '🍌'}</div>
         {floats.map((f) => (
           <span key={f.id} className="float" style={{ left: f.x - 20, top: f.y - 20 }}>{f.text}</span>
         ))}

@@ -20,7 +20,21 @@ stores. Third-party trackers (Needoh Tracker, TrackaLacker) exist purely to
 alert buyers to restocks. By autumn, prices had started drifting down as
 restocks landed, which is the "Restock Flood" event in the game.
 
-**Squishes (plush).** The squish plush market is older and tiered. Rough
+**Squishies (slow-rise and jumbo squeezies).** The second family in the
+game is the wave of squishy toys that filled shelves while dohs were sold
+out. The viral jumbo bananas lead it: Sunny Days "Squeeezy" 14-inch
+bananas list around $13, the 17-inch "Banana Laffy Snacks" ended at $19
+marked sold out, and the RMS "SmushMart" 17-inch banana lists at $24 to
+$25 with "sold out on TikTok" in the listing title. ORB "Smusher" 5-packs
+sold for $117.50 and show out of stock in 2026. Cheese-cube squishies are
+climbing Amazon's charts, butter-stick slow-rises remain a staple,
+blind-box dumplings in tiny steamers are one of the strongest sellers in
+the category, mochi minis sell as 30-packs under $8, and "Taba" pillowy
+squishies are pitched as the doh alternative. These became the Squishies
+family: bananas at Bullseye, WallyMart and the Wholesale Club, cheese and
+dumplings at Five & Under, mochi at the dollar store and the claw arcade.
+
+**Plush collectibles (background only).** The squish plush market is older and tiered. Rough
 secondary bands reported in 2026: Select Series and Founders Edition at
 $1,000 to $6,700+, Ultra Rare characters at $500 to $1,500, retired standard
 characters with tags at $100 to $500. The highest confirmed sale is $6,700
@@ -88,15 +102,15 @@ genres because the core loop already implies waiting.
 
 ## 4. Design decisions taken from the research
 
-1. Two product families (squishes, dohs) with separate hype meters so events
-   can hit one market without the other, mirroring 2026 where dohs spiked
-   while squishes were a mature market.
+1. Two product families (dohs, squishies) with separate hype meters so events
+   can hit one market without the other, mirroring 2026 where dohs sold out
+   and the jumbo squishies rose to fill the gap.
 2. Store list follows the real retail map: dollar store, Five Below style
    discounter, Target style big box (Tuesday restocks), 24-hour Walmart,
    Hallmark style card shop (secretly first to get the Swirl Cube), Costco
    style wholesale club, claw arcade, bot farm, convention floor, factory
    back door.
-3. Events: Drop Day, Viral Video (doh), Holiday Squad (squish), Restock
+3. Events: Drop Day, Viral Video (doh), Squishmas Drop (squishy), Restock
    Flood (price crash), Limit Crackdown (speed halved).
 4. Prestige is "Relocate": the community finds your listings, you move to a
    new city and keep Street Cred.
@@ -122,6 +136,14 @@ genres because the core loop already implies waiting.
   Squishmallow ever sold"
 - SquishyTrade, "Most valuable Squishmallows" and "Most valuable Nee-Doh"
 - comGateway blogs on the 2026 Easter squish exclusives
+- eBay listings for Squeeezy, Laffy Snacks and SmushMart jumbo bananas, Mega
+  Squeezy Ball and ORB Smusher 5-packs (asking prices, sold-out status)
+- Therapy Shoppe, "21 popular squishy fidgets (2026)"; Bubblegum Stuff,
+  "Best squishy toys 2026"; Wishrag, "Viral fidget & squishy toys (2026)";
+  AsInsight squishy sales rankings
+- Needoh Tracker catalog, needohss.com Needohween guide, typa.app
+  Needohween + Squishmas lineup, TrackaLacker buying guide (2026 NeeDoh
+  styles and seasonal drops)
 - Card Codex, "Can anything stop the Pokémon scalping machine?" (bots, line
   camping, 42k checkouts)
 - The Independent SG on Pop Mart Labubu reseller pricing and limits

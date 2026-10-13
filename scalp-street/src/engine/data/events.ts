@@ -16,7 +16,7 @@ export const EVENTS: Record<MarketEventKind, MarketEventDef> = {
   viral: {
     kind: 'viral',
     name: 'Viral Video',
-    blurb: 'A teen squeezed a Nice Kube on camera. Doh demand doubles.',
+    blurb: 'A teen squeezed a Nice Kube on camera for 40 seconds. Doh demand doubles.',
     icon: '📱',
     durationSeconds: 180,
     profitMult: 2,
@@ -25,8 +25,8 @@ export const EVENTS: Record<MarketEventKind, MarketEventDef> = {
   },
   holiday: {
     kind: 'holiday',
-    name: 'Holiday Squad',
-    blurb: 'Seasonal squishes land. Squish resale doubles and moves faster.',
+    name: 'Squishmas Drop',
+    blurb: 'Seasonal jumbo bananas and glow squishies land. Squishy resale doubles and moves faster.',
     icon: '🎄',
     durationSeconds: 180,
     profitMult: 2,

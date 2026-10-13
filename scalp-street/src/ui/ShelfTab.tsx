@@ -60,7 +60,7 @@ export function ShelfTab() {
       <div className="seg">
         {(['all', 'squish', 'doh'] as const).map((f) => (
           <button key={f} className={fam === f ? 'active' : ''} onClick={() => setFam(f)}>
-            {f === 'all' ? 'All' : f === 'squish' ? '🧸 Squishes' : '🫧 Dohs'}
+            {f === 'all' ? 'All' : f === 'squish' ? '🍌 Squishies' : '🧊 Dohs'}
           </button>
         ))}
       </div>

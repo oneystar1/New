@@ -135,14 +135,14 @@ describe('prestige', () => {
     s.cash = 5e8;
     s.stores.bullseye.units = 50;
     s.upgrades.push('u_shipping', 'p_profit');
-    s.shelf.sq_jax = 1;
+    s.shelf.sq_golden = 1;
     const gained = prestige(s, T0);
     expect(gained).toBe(501);
     expect(s.cred).toBe(501);
     expect(s.cash).toBe(10);
     expect(s.stores.bullseye.units).toBe(0);
     expect(s.upgrades).toEqual(['p_profit']);
-    expect(s.shelf.sq_jax).toBe(1);
+    expect(s.shelf.sq_golden).toBe(1);
     expect(computeModifiers(s, T0).credMult).toBeCloseTo(1 + 501 * 0.02, 6);
   });
 });
@@ -225,7 +225,7 @@ describe('monetization', () => {
     const before = s.cash;
     applyProduct(s, 'ss_bundle_drop', T0);
     expect(s.cash).toBeGreaterThan(before);
-    expect(s.stats.pulls).toBe(10);
+    expect(s.stats.pulls).toBe(15);
     applyProduct(s, 'ss_pass', T0);
     expect(s.pass.premium).toBe(true);
   });

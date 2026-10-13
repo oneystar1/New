@@ -15,7 +15,7 @@ import { MISSION_POOL } from '../engine/data/missions';
 export type Tab = 'hunt' | 'stores' | 'shelf' | 'boost' | 'shop';
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'hunt', label: 'Hunt', icon: '🧸' },
+  { id: 'hunt', label: 'Hunt', icon: '🍌' },
   { id: 'stores', label: 'Routes', icon: '🛒' },
   { id: 'shelf', label: 'Shelf', icon: '📒' },
   { id: 'boost', label: 'Hustle', icon: '⚡' },

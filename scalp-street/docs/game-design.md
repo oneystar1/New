@@ -1,8 +1,8 @@
 # Scalp Street: game design document
 
-**Elevator pitch.** You are a toy scalper. Camp the drops, hoard the
-squishes, flip the dohs, get found out, move to a new city, do it again
-bigger. An idle tycoon with a collection binder and a dynamic resale market.
+**Elevator pitch.** You are a fidget-toy scalper. Camp the drops, hoard the
+jumbo bananas, flip the dough cubes, get found out, move to a new city, do
+it again bigger. An idle tycoon with a collection binder and a dynamic resale market.
 
 **Tone.** Affectionate satire. The game never pretends scalping is noble;
 every manager, upgrade and event is a joke at the player's expense ("Banned
@@ -31,12 +31,14 @@ pulls ──────┘             │                       └─> buy ma
 3. **Upgrades.** Three per store (x2 profit each, gated on unit counts),
    global cash upgrades (shipping supplies, storage unit, label printer,
    cargo van, LLC, warehouse), tap upgrades, family specialisations.
-4. **Shelf (collection).** 36 items across two families and six rarity
-   tiers. Each unique item adds a permanent profit bonus (0.5% common to
+4. **Shelf (collection).** 52 items across two families (Dohs: stretchy
+   dough cubes and globs, Squishies: slow-rise and jumbo squeezies such as
+   the viral bananas, cheese cubes, butter sticks, dumplings, mochi,
+   Smushers) and six rarity tiers. Each unique item adds a permanent profit bonus (0.5% common to
    20% grail). Duplicates "flip" for a rarity-scaled number of seconds of
    income, so the gacha always pays even on repeats.
 5. **Market.** Two hype meters (squish, doh) multiply profit. Events push
-   them: Drop Day x3, Viral Video (doh x2, faster), Holiday Squad (squish
+   them: Drop Day x3, Viral Video (doh x2, faster), Squishmas Drop (squishy
    x2, faster), Restock Flood x0.5, Limit Crackdown (half speed). Events
    fire every 6-12 minutes of play, last 90-180 seconds, and leave hype
    above or below 1 afterwards, decaying back over time.

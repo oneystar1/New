@@ -1,7 +1,9 @@
 # Scalp Street: Idle Flip Tycoon
 
-An idle tycoon about scalping squish plush and doh fidget toys. Camp the
-drops, hoard the squishes, flip the dohs, get found out, relocate, repeat.
+An idle tycoon about scalping squeezy fidget toys: NeeDoh-style dough
+cubes and globs, and the viral jumbo squishy bananas, cheese cubes, butter
+sticks and blind-box dumplings. Camp the drops, hoard the bananas, flip the
+dohs, get found out, relocate, repeat.
 Web first (PWA), built to wrap into an iOS app with Capacitor.
 
 ![hunt](docs/screenshots/01-hunt.png) ![routes](docs/screenshots/02-routes.png) ![shop](docs/screenshots/05-shop.png)
@@ -22,10 +24,11 @@ npm run balance 8  # greedy-bot economy sim for 8 simulated hours
 
 - **10 stores** (Dollar Dohjo through the Factory Back Door) with unit
   milestones, managers that automate, and 3 upgrades each.
-- **36 collectible items** in two families and six rarity tiers, a mystery
-  pull gacha with published odds, a shelf bonus, duplicate flipping.
+- **52 collectible items** in two families (Dohs and Squishies) and six
+  rarity tiers, a mystery pull gacha with published odds, a shelf bonus,
+  duplicate flipping.
 - **Live market**: squish and doh hype meters plus five timed events
-  (Drop Day, Viral Video, Holiday Squad, Restock Flood, Limit Crackdown).
+  (Drop Day, Viral Video, Squishmas Drop, Restock Flood, Limit Crackdown).
 - **Relocate** prestige for Street Cred (+2% profit per point forever) and
   a Reputation shop.
 - **Offline earnings** with an upgradeable cap and a watch-to-double offer.
