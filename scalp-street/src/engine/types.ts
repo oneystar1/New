@@ -95,7 +95,7 @@ export interface UpgradeDef {
   group?: 'gear' | 'sketchy' | 'channel';
 }
 
-export type OfferKind = 'fair' | 'lowball' | 'scam' | 'ghost' | 'trade' | 'karen';
+export type OfferKind = 'fair' | 'lowball' | 'scam' | 'ghost' | 'trade' | 'karen' | 'sneakerbro';
 
 export interface Offer {
   id: number;
@@ -111,7 +111,7 @@ export interface Offer {
   expiresAt: number;
 }
 
-export type RivalKind = 'mom' | 'kid' | 'reseller' | 'grandpa' | 'employee';
+export type RivalKind = 'mom' | 'kid' | 'reseller' | 'grandpa' | 'employee' | 'sneakerbro';
 
 export interface Rival {
   kind: RivalKind;
@@ -137,6 +137,7 @@ export interface RestockRun {
   kidsSpared: number;
   kidsSnatched: number;
   momsArgued: number;
+  brosRaced: number;
   log: string[];
   carry: number;
 }
@@ -264,6 +265,9 @@ export interface Stats {
   fakesFlipped: number;
   calledOut: number;
   tradesDone: number;
+  broDeals: number;
+  broBackouts: number;
+  broRaces: number;
   restocks: number;
   restockUnits: number;
   bestRestock: number;

@@ -16,6 +16,7 @@ const KIND_TAG: Record<OfferKind, { label: string; cls: string }> = {
   scam: { label: 'Too good', cls: 'grail' },
   trade: { label: 'Trade', cls: 'ultra' },
   karen: { label: 'Not a buyer', cls: 'select' },
+  sneakerbro: { label: 'Sneaker bro', cls: 'ultra' },
 };
 
 export function DealsTab() {
@@ -71,7 +72,7 @@ export function DealsTab() {
       {s.offers.map((o) => {
         const it = ITEM_BY_ID[o.itemId];
         const tag = KIND_TAG[o.kind];
-        const showTag = o.kind === 'karen' || o.kind === 'trade' || o.kind === 'lowball' || (o.kind === 'scam' && o.flagged);
+        const showTag = o.kind === 'karen' || o.kind === 'trade' || o.kind === 'lowball' || o.kind === 'sneakerbro' || (o.kind === 'scam' && o.flagged);
         return (
           <div className={`card offer ${o.flagged ? 'flagged' : ''}`} key={o.id}>
             <div className="row">

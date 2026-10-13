@@ -31,7 +31,7 @@ pulls ──────┘             │                       └─> buy ma
 3. **Upgrades.** Three per store (x2 profit each, gated on unit counts),
    global cash upgrades (shipping supplies, storage unit, label printer,
    cargo van, LLC, warehouse), tap upgrades, family specialisations.
-4. **Shelf (collection).** 52 items across two families (Dohs: stretchy
+4. **Shelf (collection).** 72 items across two families (Dohs: stretchy
    dough cubes and globs, Squishies: slow-rise and jumbo squeezies such as
    the viral bananas, cheese cubes, butter sticks, dumplings, mochi,
    Smushers) and six rarity tiers. Each unique item adds a permanent profit bonus (0.5% common to
@@ -71,6 +71,7 @@ they matter at every stage:
 | Scam | 12 | 240-480s (too good) | lose that much cash (0 with Goods & Services) | they vanish | blocked, +scams dodged |
 | Trade | 6 | an item | random pull with +0.2 luck | same | nothing |
 | Karen | 8 | nothing | clap back: +10 pass XP, +6 Heat | same | block |
+| Sneaker bro | 8 | 100-200s | 60% paid, 40% "the chart dipped" | 60% paid x1.2 | nothing |
 
 Channels: FleaBay (+30% value), Mercarry (+40% rate), WhatNow Live (+50%
 rate) and Hype Mode (+50% value), Scam Radar (flags scams), Goods &
@@ -96,6 +97,8 @@ three phases:
    skips 2, Overnight Tent 3). Rivals: NeeDoh Mom (takes 2 to 4), kid (1),
    other reseller (2 to 3), grandpa (1), employee holding stock (2). The
    shelf has 10 to 17 units; what the line leaves is what you fight for.
+   Sneaker bros (take 3 to 4) are the newest rivals: tent, speaker,
+   cook-group leak, duffel bag.
    60% of runs open with a line encounter (a mom asks to cut, a sleeping
    kid is ahead of you).
 2. **Doors.** 12 seconds. Three taps of GRAB secure one unit, up to your

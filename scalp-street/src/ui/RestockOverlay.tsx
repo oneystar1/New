@@ -106,7 +106,7 @@ export function RestockOverlay() {
         {run.phase === 'done' && (
           <>
             <p>{run.log[run.log.length - 1]}</p>
-            <p className="small">{run.grabbed} in the cart · heat {run.heat >= 0 ? '+' : ''}{run.heat} · kids spared {run.kidsSpared} · kids snatched {run.kidsSnatched} · moms argued {run.momsArgued}</p>
+            <p className="small">{run.grabbed} in the cart · heat {run.heat >= 0 ? '+' : ''}{run.heat} · kids spared {run.kidsSpared} · kids snatched {run.kidsSnatched} · moms argued {run.momsArgued} · bros raced {run.brosRaced}</p>
             <button className="btn mint block" onClick={restockFinish}>Check out</button>
           </>
         )}

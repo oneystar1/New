@@ -12,14 +12,14 @@ export const MAX_OFFERS = 3;
 export const OFFER_INTERVAL_SECONDS = 30;
 export const OFFER_TTL_SECONDS = 90;
 
-const KIND_WEIGHTS: Record<OfferKind, number> = { fair: 30, lowball: 28, ghost: 16, scam: 12, karen: 8, trade: 6 };
+const KIND_WEIGHTS: Record<OfferKind, number> = { fair: 28, lowball: 26, ghost: 14, scam: 11, karen: 8, trade: 5, sneakerbro: 8 };
 
 /** The Facebook pricing dial: how hard you scalp. */
 export const PRICING: Record<Pricing, { label: string; blurb: string; value: number; weights: Partial<Record<OfferKind, number>> }> = {
-  retail: { label: 'Retail', blurb: 'Group-approved. Fair buyers only, no Karens, offers worth 60%.', value: 0.6, weights: { fair: 60, lowball: 10, ghost: 10, scam: 6, karen: 0, trade: 8 } },
+  retail: { label: 'Retail', blurb: 'Group-approved. Fair buyers only, no Karens, offers worth 60%.', value: 0.6, weights: { fair: 60, lowball: 10, ghost: 10, scam: 6, karen: 0, trade: 8, sneakerbro: 2 } },
   fair: { label: 'Fair', blurb: 'A little over retail. The normal feed.', value: 1, weights: KIND_WEIGHTS },
-  scalper: { label: 'Scalper', blurb: 'Double retail. Offers worth 160%. More lowballs, twice the Karens.', value: 1.6, weights: { fair: 22, lowball: 36, ghost: 18, scam: 12, karen: 16, trade: 4 } },
-  insane: { label: 'Insane', blurb: '10x retail "firm". Offers worth 280%. Ghosts, Karens, slow heat gain.', value: 2.8, weights: { fair: 10, lowball: 30, ghost: 26, scam: 10, karen: 30, trade: 2 } },
+  scalper: { label: 'Scalper', blurb: 'Double retail. Offers worth 160%. More lowballs, twice the Karens, sneaker bros show up.', value: 1.6, weights: { fair: 20, lowball: 32, ghost: 16, scam: 12, karen: 16, trade: 4, sneakerbro: 14 } },
+  insane: { label: 'Insane', blurb: '10x retail "firm". Offers worth 280%. Ghosts, Karens, sneaker bros, slow heat gain.', value: 2.8, weights: { fair: 8, lowball: 26, ghost: 24, scam: 10, karen: 28, trade: 2, sneakerbro: 16 } },
 };
 
 /** Seconds of income an offer is worth, by kind. */
@@ -30,6 +30,7 @@ const KIND_SECONDS: Record<OfferKind, [number, number]> = {
   ghost: [60, 120],
   trade: [0, 0],
   karen: [0, 0],
+  sneakerbro: [100, 200],
 };
 
 const AVATARS = ['🧔', '👩', '🧑', '👨‍🦳', '👩‍🦰', '🧒', '👵', '🕶️', '🐶', '🌸', '🤖', '🧢'];
@@ -55,7 +56,8 @@ export function makeOffer(s: GameState, m: Modifiers, now: number, rand: () => n
   const message = tpl[Math.floor(rand() * tpl.length)]
     .replace('{item}', item.name)
     .replace('{price}', formatCash(amount));
-  const buyer = kind === 'karen' && rand() < 0.5 ? 'Karen_From_PTA' : BUYER_NAMES[Math.floor(rand() * BUYER_NAMES.length)];
+  const BROS = ['Hype Hank', 'DeadstockDrew', 'SZ10_Civic', 'kicks2kubes', 'Bro (matching hoodie)'];
+  const buyer = kind === 'karen' && rand() < 0.5 ? 'Karen_From_PTA' : kind === 'sneakerbro' ? BROS[Math.floor(rand() * BROS.length)] : BUYER_NAMES[Math.floor(rand() * BUYER_NAMES.length)];
   return {
     id: offerSeq++,
     kind,
@@ -135,6 +137,19 @@ export function acceptOffer(s: GameState, id: number, now: number, rand: () => n
       bumpMission(s, 'deals', 1);
       return { text: `Traded for a ${got.name}.`, icon: '🔄', kind: got.rarity === 'common' ? 'info' : 'rare', item: got };
     }
+    case 'sneakerbro': {
+      // Pays hype prices, but backs out when the chart dips.
+      if (rand() < 0.6) {
+        earn(s, o.amount);
+        s.stats.offersAccepted += 1;
+        s.stats.broDeals += 1;
+        bumpMission(s, 'deals', 1);
+        return { text: `${o.buyer} paid ${formatCash(o.amount)} in a Civic with the bass up. "W cop."`, icon: '👟', kind: 'good' };
+      }
+      s.stats.broBackouts += 1;
+      s.stats.ghosted += 1;
+      return { text: `${o.buyer}: "nah the chart dipped 4%, I'm out bro". Left on read.`, icon: '📉', kind: 'bad' };
+    }
     case 'karen': {
       // "Clap back": feels great, costs heat.
       s.heat = Math.min(100, s.heat + 6);
@@ -149,6 +164,19 @@ export function counterOffer(s: GameState, id: number, now: number, rand: () => 
   if (!o) return null;
   if (o.kind === 'karen' || o.kind === 'trade') return acceptOffer(s, id, now, rand);
   remove(s, id);
+  if (o.kind === 'sneakerbro') {
+    // Haggling is his native language.
+    if (rand() < 0.6) {
+      const v = o.amount * 1.2;
+      earn(s, v);
+      s.stats.offersAccepted += 1;
+      s.stats.broDeals += 1;
+      bumpMission(s, 'deals', 1);
+      return { text: `${o.buyer}: "respect the hustle". Paid ${formatCash(v)}.`, icon: '👟', kind: 'good' };
+    }
+    s.stats.broBackouts += 1;
+    return { text: `${o.buyer}: "that's not the StockyX price bro". Gone.`, icon: '📉', kind: 'bad' };
+  }
   if (o.kind === 'scam') {
     s.stats.scamsDodged += 1;
     return { text: 'You asked for Goods & Services. They vanished. Classic.', icon: '🚩', kind: 'info' };

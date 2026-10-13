@@ -47,6 +47,24 @@ designs hold value. Tags matter: an intact tag adds 50% to 100%. Spring
 drove freight-forwarder blogs for overseas collectors. Counterfeits are a
 growing problem at the high end.
 
+**Sneaker bros.** StockX now tracks NeeDoh and describes people flipping $5
+sensory toys "for prices that would make sneaker resellers jealous"; a
+Nike-bot vendor publishes NeeDoh restock guides and types-of-NeeDoh
+explainers, and resale guides compare the aftermarket to sneakers, Pokémon
+and designer toys. The game treats this as a migration: sneaker bros are a
+line rival, a buyer type and a doors-phase encounter, and the shelf has
+sneaker-style "colorways" (Bred, Panda, Triple White, Friends & Family,
+Sample Size).
+
+**The real catalog.** The official NeeDoh site lists Cloud Pleaser, Color
+Changing, Crunchy, Dream Drop, Glitter, Glow in the Dark, Marbleez, Nice
+Berg, Nice Cube, Nice Ice Baby, the Advent Calendar, Dippin' Dazzler, Fuzz
+Ball, Giant NeeDoh, Groovy Jewel, Hearts, Lava Squish n' Flow, Mini NeeDoh
+and Shaggy; press releases add Teenie Cool Cats and Teenie Funky Pup;
+retailers list Nice-Sicle, Squishmas Knittens, Jelly Hops, Gumdrop,
+Ripples, Press-Doh and Panic Pete. Every one has a satirical twin on the
+shelf.
+
 **Scalper culture.** Bots watch retail sites and clear online drops in
 seconds; one Pokémon pre-order rush saw scalping groups claim 42,000+
 checkouts. Line-camping outside Target at 5am, Discord "cook groups",
@@ -145,6 +163,10 @@ genres because the core loop already implies waiting.
 - Therapy Shoppe, "21 popular squishy fidgets (2026)"; Bubblegum Stuff,
   "Best squishy toys 2026"; Wishrag, "Viral fidget & squishy toys (2026)";
   AsInsight squishy sales rankings
+- StockX News and brand page for NeeDoh; nikeshoebot.com NeeDoh guides;
+  The Telegraph (Alton) on Funky Planet's purchase limits; needoh.org
+  catalog categories; Schylling press release on Teenie Cool Cats and
+  Funky Pup
 - Needoh Tracker catalog, needohss.com Needohween guide, typa.app
   Needohween + Squishmas lineup, TrackaLacker buying guide (2026 NeeDoh
   styles and seasonal drops)

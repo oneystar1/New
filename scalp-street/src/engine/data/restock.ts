@@ -25,6 +25,12 @@ export const RIVALS: Record<RivalKind, { names: string[]; icon: string; takes: [
     takes: [1, 1],
     blurb: 'Buying one for a grandkid. Protect at all costs.',
   },
+  sneakerbro: {
+    names: ['Sneaker Bro (pivoted from Dunks)', 'Hype Hank (matching hoodie)', 'Guy who camped for Jordans, now cubes', 'DeadstockDrew with a Bluetooth speaker', 'Three bros, one Civic'],
+    icon: '👟',
+    takes: [3, 4],
+    blurb: 'Used to camp for sneakers. Same tent, same bot, new product.',
+  },
   employee: {
     names: ['Employee "holding one for a friend"', 'Night stocker with a backpack'],
     icon: '🦺',
@@ -36,7 +42,7 @@ export const RIVALS: Record<RivalKind, { names: string[]; icon: string; takes: [
 export interface EncounterChoice {
   label: string;
   /** Effect applied when picked; `chance` is probability the good branch happens. */
-  effect: 'spareKid' | 'snatchKid' | 'argueMom' | 'complimentMom' | 'crawlMom' | 'splitShelf' | 'noSplit' | 'comply' | 'cousins' | 'letCut' | 'refuseCut';
+  effect: 'spareKid' | 'snatchKid' | 'argueMom' | 'complimentMom' | 'crawlMom' | 'splitShelf' | 'noSplit' | 'comply' | 'cousins' | 'letCut' | 'refuseCut' | 'raceBro' | 'fudBro' | 'halvesBro';
 }
 
 export interface EncounterDef {
@@ -100,6 +106,31 @@ export const ENCOUNTERS: EncounterDef[] = [
     ],
   },
   {
+    id: 'bro_row', kind: 'sneakerbro', icon: '👟',
+    text: 'A Sneaker Bro checks his phone: "Bro the Kube is at 4x on StockyX right now. I\'m taking the whole row." He has a duffel bag.',
+    choices: [
+      { label: 'Race him for the row', effect: 'raceBro' },
+      { label: '"It\'s dipping, check the chart"', effect: 'fudBro' },
+      { label: 'Offer to go halves', effect: 'halvesBro' },
+    ],
+  },
+  {
+    id: 'bro_legit', kind: 'sneakerbro', icon: '🔍',
+    text: 'Sneaker Bro grabs the cube out of YOUR cart to "legit check" it. He smells it. "Font looks off, bro."',
+    choices: [
+      { label: 'Take it back (+3 heat)', effect: 'crawlMom' },
+      { label: 'Let him keep it, grab another', effect: 'noSplit' },
+    ],
+  },
+  {
+    id: 'line_bro', kind: 'sneakerbro', icon: '🔊', line: true,
+    text: 'Three sneaker bros in matching hoodies arrive at 4am with a tent, a Bluetooth speaker and a cook-group leak of the restock time. The moms were already here.',
+    choices: [
+      { label: 'Let them vibe', effect: 'letCut' },
+      { label: '"Line\'s back there, bro" (+2 heat)', effect: 'refuseCut' },
+    ],
+  },
+  {
     id: 'line_cut', kind: 'mom', icon: '🚻', line: true,
     text: 'A NeeDoh Mom asks to cut in front of you. "My kid has to pee." The kid does not look like he has to pee.',
     choices: [
@@ -125,4 +156,6 @@ export const LINE_FLAVOR = [
   'Employee peeks through the door, counts heads, winces.',
   'A kid asks you what you are going to do with that many. You do not answer.',
   'Dalton pulls up in the cargo van. He is not even in line. He has a system.',
+  'A sneaker bro is explaining "the StockyX chart" to a NeeDoh Mom. She is not listening. She has a list.',
+  'Someone\'s Bluetooth speaker is playing a hype playlist at 6am. The bros. It is always the bros.',
 ];

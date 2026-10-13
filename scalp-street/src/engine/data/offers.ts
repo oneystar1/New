@@ -4,7 +4,7 @@ import type { OfferKind } from '../types';
 // replaced with the listed item's name and {price} with the offer amount.
 
 export const BUYER_NAMES = [
-  'Brayden K.', 'SquishMom2019', 'DealzDealzDealz', 'Tyler (no profile pic)', 'Kayleigh ✨', 'Grandpa Ron',
+  'Brayden K.', 'SquishMom2019', 'Hype Hank', 'DeadstockDrew', 'SZ10_Civic', 'kicks2kubes', 'DealzDealzDealz', 'Tyler (no profile pic)', 'Kayleigh ✨', 'Grandpa Ron',
   'ISO_Everything', 'Jess from the group', 'MarketplaceMike', 'Ashlee 🌸', 'Account created today', 'Big Dawg Flips',
   'Nana Pat', 'squeezyqueen', 'Dalton', 'the_other_reseller', 'Karen_From_PTA', 'Local Mom Collective', 'Chad', 'xX_FidgetLord_Xx',
 ];
@@ -44,6 +44,13 @@ export const OFFER_TEMPLATES: Record<OfferKind, string[]> = {
     'Trade? I have something you don\'t have on your shelf. Even swap for the {item}.',
     'Would you do a trade for the {item}? Got a doubles bin, pick anything.',
   ],
+  sneakerbro: [
+    'Yo what\'s the lowest on the {item}? It\'s at {price} on StockyX rn. Cash app ready. Also trade for size 10 Dunks?',
+    'Bro. {item}. {price}. Deadstock? Still in the bag? I need pics of the tag with today\'s date.',
+    'Copped 40 pairs of Pandas last year, now I\'m on dough. {price} for the {item}, I\'ll be there in the Civic.',
+    'Legit check on the {item}? If it passes I\'ll do {price}. My guy says the font looks off but my guy says that about everything.',
+    'The chart says {item} is up 12% this week. {price}, I\'m buying the dip bro.',
+  ],
   karen: [
     'You people are the reason my kids can\'t find a {item} at the store. Hope you\'re proud. Reported.',
     'Retail is $6. You\'re asking {price}?? I\'m posting this in the group.',
@@ -78,4 +85,9 @@ export const DRAMA_FEED = [
   'PSA: "I\'ll send my shipper" is a scam. "Confirm with this code" is a scam. "Hi dear" is a scam.',
   'Grandpa Ron just paid full asking for a Mochi Mini. Protect him at all costs.',
   'Group poll: is $25 for a jumbo banana "scalping" or "fair market value"? Comments locked after 400.',
+  'The sneaker bros found us. Three guys in Civics camped WallyMart overnight for cubes. They brought a tent AND a Bluetooth speaker.',
+  'StockyX now has a NeeDoh chart. A grown man said "buy the dip" about a $6 dough cube.',
+  'Sneaker Bro tried to "legit check" a Nice Kube by smelling it. Declared it fake. It was real. He bought it anyway.',
+  'Someone is calling the black-and-red cube the "Bred" colorway. We are not doing this. We are apparently doing this.',
+  'Cook group leaked the restock time. Sneaker bros showed up at 4am in matching hoodies. The moms were already there.',
 ];

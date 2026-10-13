@@ -16,7 +16,7 @@ export const DOORS_SECONDS = 12;
 export const TAPS_PER_UNIT = 3;
 export const ENCOUNTER_EVERY_SECONDS = 3;
 
-const RIVAL_WEIGHTS: Record<RivalKind, number> = { mom: 35, kid: 25, reseller: 22, grandpa: 12, employee: 6 };
+const RIVAL_WEIGHTS: Record<RivalKind, number> = { mom: 32, kid: 23, reseller: 18, grandpa: 11, employee: 6, sneakerbro: 10 };
 
 export function restockReady(s: GameState, storeId: string, now: number): boolean {
   return (s.stores[storeId]?.units ?? 0) > 0 && (s.restockReadyAt[storeId] ?? 0) <= now && (s.bannedUntil[storeId] ?? 0) <= now;
@@ -54,6 +54,7 @@ export function startRun(s: GameState, storeId: string, m: Modifiers, now: numbe
     kidsSpared: 0,
     kidsSnatched: 0,
     momsArgued: 0,
+    brosRaced: 0,
     log: [LINE_FLAVOR[Math.floor(rand() * LINE_FLAVOR.length)]],
     carry: 4 + m.carry,
   };
@@ -167,6 +168,22 @@ export function choose(run: RestockRun, choiceIdx: number, rand: () => number): 
         return msg;
       }
       break;
+    case 'raceBro':
+      run.brosRaced += 1;
+      if (rand() < 0.5) { run.grabbed = Math.min(run.carry, run.grabbed + 2); run.remaining = Math.max(0, run.remaining - 2); msg = 'You beat him to the row. +2. He calls it an "L" and films you.'; }
+      else { run.remaining = Math.max(0, run.remaining - 4); run.timeLeft -= 2; msg = 'He has camped for Jordans. He is faster. Row gone, 2 seconds gone.'; }
+      break;
+    case 'fudBro':
+      if (rand() < 0.7) { msg = 'He opens the app to check. He is gone for the rest of the restock. Bless the chart.'; }
+      else { run.remaining = Math.max(0, run.remaining - 3); msg = '"Nice try bro." He takes three and taps his phone at you.'; }
+      break;
+    case 'halvesBro': {
+      const half = Math.floor(run.remaining / 2);
+      run.grabbed = Math.min(run.carry, run.grabbed + Math.min(2, half));
+      run.remaining = Math.max(0, run.remaining - half);
+      msg = `"Respect the hustle." Halves. You secure ${Math.min(2, half)}, he secures a duffel bag.`;
+      break;
+    }
     case 'letCut':
       run.remaining = Math.max(1, run.remaining - 3);
       run.heat -= 3;
@@ -214,6 +231,7 @@ export function finishRun(s: GameState, run: RestockRun, now: number, rand: () =
   s.stats.kidsSpared += run.kidsSpared;
   s.stats.kidsSnatched += run.kidsSnatched;
   s.stats.momsArgued += run.momsArgued;
+  s.stats.broRaces += run.brosRaced;
   if (run.banned) s.stats.bans += 1;
   if (run.grabbed > s.stats.bestRestock) s.stats.bestRestock = run.grabbed;
   bumpMission(s, 'restocks', 1);

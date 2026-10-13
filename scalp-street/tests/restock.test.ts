@@ -3,6 +3,7 @@ import { initialState } from '../src/engine/state';
 import { computeModifiers, tick } from '../src/engine/sim';
 import { startRun, openDoors, grab, tickRun, choose, finishRun, restockReady, isBanned, TAPS_PER_UNIT, RESTOCK_COOLDOWN_SECONDS, BAN_SECONDS } from '../src/engine/restock';
 import { makeOffer, PRICING } from '../src/engine/deals';
+import { RIVALS } from '../src/engine/data/restock';
 import { makeRng } from '../src/engine/math';
 import type { RestockRun } from '../src/engine/types';
 
@@ -101,6 +102,25 @@ describe('restock runs', () => {
     expect(b.phase).toBe('done');
     b.encounter = 'manager_limit';
   });
+  it('sneaker bro encounters: race, FUD, halves', () => {
+    expect(RIVALS.sneakerbro.takes).toEqual([3, 4]);
+    const { run } = runWith(21);
+    run.encounter = null;
+    openDoors(run);
+    run.remaining = 8;
+    run.encounter = 'bro_row';
+    choose(run, 0, () => 0.1); // win the race
+    expect(run.grabbed).toBe(2);
+    expect(run.remaining).toBe(6);
+    expect(run.brosRaced).toBe(1);
+    run.encounter = 'bro_row';
+    choose(run, 1, () => 0.1); // he checks the chart and leaves
+    expect(run.remaining).toBe(6);
+    run.encounter = 'bro_row';
+    choose(run, 2, () => 0.1); // halves
+    expect(run.grabbed).toBe(4);
+    expect(run.remaining).toBe(3);
+  });
   it('comply caps the cart at two more', () => {
     const { run } = runWith(7);
     run.encounter = null;
@@ -155,13 +175,17 @@ describe('pricing dial', () => {
     let hostile = 0;
     for (let i = 0; i < 300; i++) { const k = makeOffer(s, m, T0, rng).kind; if (k === 'karen' || k === 'ghost') hostile++; }
     expect(hostile).toBeGreaterThan(120);
-    s.pricing = 'fair';
-    let fairAmt = 0;
-    for (let i = 0; i < 200; i++) { const o = makeOffer(s, m, T0, makeRng(500 + i)); if (o.kind === 'fair') { fairAmt = o.amount; break; } }
+    // Same seed, both fair: the only difference is the pricing multiplier.
+    let checked = false;
+    for (let i = 0; i < 400 && !checked; i++) {
+      s.pricing = 'fair';
+      const a = makeOffer(s, m, T0, makeRng(500 + i));
+      s.pricing = 'insane';
+      const b = makeOffer(s, m, T0, makeRng(500 + i));
+      if (a.kind === 'fair' && b.kind === 'fair') { expect(b.amount / a.amount).toBeCloseTo(PRICING.insane.value, 3); checked = true; }
+    }
+    expect(checked).toBe(true);
     s.pricing = 'insane';
-    let insaneAmt = 0;
-    for (let i = 0; i < 200; i++) { const o = makeOffer(s, m, T0, makeRng(500 + i)); if (o.kind === 'fair') { insaneAmt = o.amount; break; } }
-    expect(insaneAmt / fairAmt).toBeCloseTo(PRICING.insane.value, 1);
     // insane pricing slowly heats you up
     s.heat = 0;
     tick(s, 100, T0 + 100_000, makeRng(1));

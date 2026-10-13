@@ -86,6 +86,7 @@ const channels: UpgradeDef[] = [
   { id: 'ch_radar', name: 'Scam Radar', blurb: '"Hi dear" and "send your email for the invoice" get a red flag in the feed.', icon: '🚩', cost: 10_000, currency: 'cash', effect: { kind: 'scamRadar' }, group: 'channel' },
   { id: 'ch_gands', name: 'Goods & Services Only', blurb: 'No Friends & Family, no Zelle, no checks. Scams can no longer cost you money.', icon: '🛡️', cost: 2_000_000, currency: 'cash', effect: { kind: 'scamShield' }, group: 'channel' },
   { id: 'ch_uv', name: 'UV Tag Light', blurb: 'Spot the wrong font and the gasoline smell before you pay. No more counterfeit pulls.', icon: '🔦', cost: 5_000_000, currency: 'cash', effect: { kind: 'fakeShield' }, group: 'channel' },
+  { id: 'ch_stockyx', name: 'StockyX Listing', blurb: 'Authenticated by a guy who smells the cube. Hype buyers pay 25% more, minus a fee you do not read about.', icon: '📈', cost: 5_000_000, currency: 'cash', effect: { kind: 'offerValue', mult: 1.25 }, group: 'channel' },
   { id: 'ch_pr', name: 'PR Apology Template', blurb: '"I\'ve grown as a person." Heat cools twice as fast.', icon: '📝', cost: 50_000_000, currency: 'cash', effect: { kind: 'heatDecay', mult: 2 }, group: 'channel' },
 ];
 

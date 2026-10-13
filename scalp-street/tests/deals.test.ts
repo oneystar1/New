@@ -47,7 +47,9 @@ describe('offer feed', () => {
     const m = computeModifiers(s, T0);
     const o = makeOffer(s, m, T0, makeRng(2));
     expect(o.itemId).toBe('doh_kube');
-    expect(o.message).toContain('Nice Kube');
+    const fair = offerOfKind('fair', s).o;
+    expect(fair.message).toContain('Nice Kube');
+    expect(fair.amount).toBeGreaterThan(0);
   });
   it('fair and lowball offers pay, lowballs pay less', () => {
     const a = offerOfKind('fair');
@@ -116,6 +118,30 @@ describe('offer feed', () => {
     const m = computeModifiers(s, T0);
     expect(m.offerValue).toBeCloseTo(1.3, 6);
     expect(m.offerRate).toBeCloseTo(1.4, 6);
+  });
+});
+
+describe('sneaker bros', () => {
+  it('pay hype prices 60% of the time and back out otherwise', () => {
+    let paid = 0, backed = 0;
+    for (let i = 0; i < 40; i++) {
+      const { s, o } = offerOfKind('sneakerbro');
+      expect(o.amount).toBeGreaterThan(0);
+      const before = s.cash;
+      acceptOffer(s, o.id, T0, makeRng(300 + i));
+      if (s.cash > before) { paid++; expect(s.stats.broDeals).toBe(1); } else { backed++; expect(s.stats.broBackouts).toBe(1); }
+    }
+    expect(paid).toBeGreaterThan(10);
+    expect(backed).toBeGreaterThan(5);
+  });
+  it('countering a bro pays 1.2x when it lands', () => {
+    for (let i = 0; i < 40; i++) {
+      const { s, o } = offerOfKind('sneakerbro');
+      const before = s.cash;
+      counterOffer(s, o.id, T0, makeRng(400 + i));
+      if (s.cash > before) { expect(s.cash - before).toBeCloseTo(o.amount * 1.2, 3); return; }
+    }
+    throw new Error('no bro ever took the counter');
   });
 });
 

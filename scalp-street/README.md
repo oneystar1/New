@@ -24,7 +24,7 @@ npm run balance 8  # greedy-bot economy sim for 8 simulated hours
 
 - **10 stores** (Dollar Dohjo through the Factory Back Door) with unit
   milestones, managers that automate, and 3 upgrades each.
-- **52 collectible items** in two families (Dohs and Squishies) and six
+- **72 collectible items** in two families (Dohs and Squishies) and six
   rarity tiers, a mystery pull gacha with published odds, a shelf bonus,
   duplicate flipping.
 - **Restock runs**: stand in line at 6am behind NeeDoh Moms ("two per
@@ -36,6 +36,13 @@ npm run balance 8  # greedy-bot economy sim for 8 simulated hours
   customer." Spare the kid or step over him. Lie about cousins and risk a
   10-minute store ban. Gear (folding chair, tent, minivan, four "cousins")
   moves you up the line and raises your carry.
+- **Sneaker bros**: they pivoted from Dunks to dough. They camp the line
+  with a tent and a Bluetooth speaker (take 3 to 4 each), "legit check"
+  cubes by smelling them, race you for the row when the StockyX chart hits
+  4x, and show up in the Deals feed paying hype prices in a Civic, then
+  back out when "the chart dipped 4%". Sneaker-style colorways on the shelf:
+  "Bred" Nice Kube, "Panda" Dream Drip, Triple White Glob, Friends & Family
+  Kube, Sample Size Glob.
 - **Facebook pricing dial**: Retail, Fair, Scalper or Insane. Higher
   pricing makes offers worth up to 2.8x but floods the feed with lowballs,
   ghosts and Karens, and Insane slowly raises Heat.

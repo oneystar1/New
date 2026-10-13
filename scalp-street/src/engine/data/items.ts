@@ -69,6 +69,28 @@ export const ITEMS: ItemDef[] = [
   doh('doh_advent', 'Squish-O-Ween Countdown', 'select', '📅', 30, 15.0, 'con', '24 doors of dough. Scalpers open door one and relist the rest.'),
   doh('doh_holo', 'Holo Kube', 'select', '💎', 12, 25.0, 'con', 'Convention exclusive. 500 made. 499 flipped.'),
   doh('doh_proto', 'Prototype Kube', 'grail', '🏆', 6, 150.0, 'factory', 'Never released. Walked out of the factory in a coat pocket.'),
+  // The rest of the real catalog, satirized.
+  doh('doh_mini', 'Mini Doh', 'common', '🫘', 3, 1.2, 'dollar', 'Keychain-sized. Loses its keychain in a week.'),
+  doh('doh_pressdoh', 'Press-Doh', 'common', '🤏', 4, 1.3, 'dollar', 'Press it. It presses back. That is the whole product.'),
+  doh('doh_crunchy', 'Krunchy Kube', 'uncommon', '🧊', 7, 2.6, 'fiveunder', 'Filled with beads that crunch. The sound is the hype.'),
+  doh('doh_marbleez', 'Marbleezy', 'uncommon', '🔵', 7, 2.7, 'fiveunder', 'Swirled like a marble. Every one is "one of one" according to the listing.'),
+  doh('doh_hearts', 'Doh Heartz', 'common', '❤️', 5, 1.4, 'hallmarq', 'Card-shop checkout bait. Grandma buys six.'),
+  doh('doh_jewel', 'Groovy Jool', 'rare', '💠', 8, 3.8, 'hallmarq', 'Faceted like a gem. Priced like one on Marketplace.'),
+ doh('doh_lava', 'Lava Squish n\' Flow', 'rare', '🌋', 9, 3.6, 'wallymart', 'Glitter lava inside. Do not microwave. Someone microwaved it.'),
+  doh('doh_fuzz', 'Fuzz Baller', 'uncommon', '🧶', 7, 2.3, 'wallymart', 'Fuzzy on the outside, dough on the inside, lint forever.'),
+  doh('doh_shaggy', 'Shaggy Doh', 'uncommon', '🦁', 7, 2.4, 'wallymart', 'Long strands. Sheds on everything you own.'),
+  doh('doh_dazzler', 'Dippin\' Dazzlr', 'rare', '🍦', 9, 4.2, 'wholesale', 'Dipped in glitter. Looks like ice cream. Tastes like a lawsuit.'),
+  doh('doh_sicle', 'Nice-Sickle', 'rare', '🍡', 8, 4.0, 'wholesale', 'Popsicle-shaped. Summer exclusive. Melts in resale value by September.'),
+  doh('doh_jellyhops', 'Jelly Hopz', 'uncommon', '🐰', 6, 2.5, 'claw', 'Easter bunny dough. Hops once, then it is yours.'),
+  doh('doh_ripples', 'Ripplez', 'uncommon', '〰️', 6, 2.2, 'claw', 'Ridged for texture. Also for "ASMR content".'),
+  doh('doh_funkypup', 'Teenie Funky Pupper', 'rare', '🐶', 8, 3.5, 'claw', 'Sunglasses on a dough dog. The claw loves him. The claw lies.'),
+  doh('doh_giant', 'Giant Doh', 'ultra', '🟣', 25, 5.0, 'wholesale', 'The size of a cantaloupe. Pallet-only. Sold with a forklift.'),
+  // Sneaker-bro colorways: what happens when the Dunk guys discover dough.
+  doh('doh_bred', '"Bred" Nice Kube', 'ultra', '🟥', 6, 15.0, 'botfarm', 'Black and red colorway. The sneaker bros named it. The sneaker bros bought it.'),
+  doh('doh_panda', '"Panda" Dream Drip', 'rare', '🐼', 6, 6.0, 'botfarm', 'Black and white. Restocks monthly. Still "sold out" on the app.'),
+  doh('doh_tripwhite', 'Triple White Glob', 'ultra', '⬜', 7, 10.0, 'con', 'All white. Yellows in a year. Deadstock only, bro.'),
+  doh('doh_ff', 'Friends & Family Kube', 'select', '🤝', 6, 40.0, 'con', 'Never sold at retail. Gifted to "the team". On StockyX by Tuesday.'),
+  doh('doh_sample_sz', 'Sample Size Glob', 'grail', '👟', 7, 200.0, 'factory', 'Pre-production colorway. Comes with a "legit check" nobody can perform.'),
 
   // ---- Squishies (slow-rise and jumbo squeezies) ----
   squish('sq_mochi', 'Mochi Mini', 'common', '🍡', 0.3, 1.0, 'dollar', 'Thirty for eight bucks. Lose twenty-nine in the couch.'),
