@@ -1,4 +1,4 @@
-> This repo also holds **[Scalp Street](scalp-street/)**, an idle flipping tycoon about scalping squishes and dohs (web app, iOS-ready). See `scalp-street/README.md`.
+> This repo also holds **[Scalping Squishies](scalping-squishies/)**, an idle flipping tycoon about scalping squishes and dohs (web app, iOS-ready). See `scalping-squishies/README.md`.
 
 # Poké Ball Park
 

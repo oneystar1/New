@@ -1,4 +1,4 @@
-# Scalp Street: Idle Flip Tycoon
+# Scalping Squishies: Idle Flip Tycoon
 
 An idle tycoon about scalping squeezy fidget toys: NeeDoh-style dough
 cubes and globs, and the viral jumbo squishy bananas, cheese cubes, butter

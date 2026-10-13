@@ -1,6 +1,6 @@
 # Market research: scalping-themed idle games (October 2026)
 
-This document summarizes the research that shaped Scalp Street. Sources are
+This document summarizes the research that shaped Scalping Squishies. Sources are
 listed at the end. Where sources disagreed, the more conservative figure is
 used in the game's flavour text.
 

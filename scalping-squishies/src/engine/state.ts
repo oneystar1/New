@@ -3,6 +3,7 @@ import { STORES } from './data/stores';
 import { todayKey } from './math';
 
 export const SAVE_VERSION = 1;
+// Save key kept from the working title so existing players keep their progress.
 export const SAVE_KEY = 'scalp-street-save-v1';
 
 export function initialState(now = Date.now()): GameState {

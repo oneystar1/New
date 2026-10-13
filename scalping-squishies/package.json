@@ -1,8 +1,8 @@
 {
-  "name": "scalp-street",
+  "name": "scalping-squishies",
   "version": "0.1.0",
   "private": true,
-  "description": "Scalp Street — an idle flipping tycoon about scalping squishes and dohs. Web first, iOS via Capacitor.",
+  "description": "Scalping Squishies: an idle flipping tycoon about scalping squishy toys and dough cubes. Web first, iOS via Capacitor.",
   "type": "module",
   "scripts": {
     "dev": "vite",

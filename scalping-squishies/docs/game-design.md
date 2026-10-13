@@ -1,4 +1,4 @@
-# Scalp Street: game design document
+# Scalping Squishies: game design document
 
 **Elevator pitch.** You are a fidget-toy scalper. Camp the drops, hoard the
 jumbo bananas, flip the dough cubes, get found out, move to a new city, do

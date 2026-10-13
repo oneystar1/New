@@ -16,7 +16,7 @@ public/sw.js           PWA offline cache (web only)
 
 ```sh
 npm i @capacitor/core @capacitor/cli @capacitor/ios
-npx cap init "Scalp Street" com.yourstudio.scalpstreet --web-dir dist
+npx cap init "Scalping Squishies" com.yourstudio.scalpstreet --web-dir dist
 npm run build && npx cap add ios && npx cap sync
 npx cap open ios
 ```

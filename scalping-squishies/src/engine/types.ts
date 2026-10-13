@@ -1,4 +1,4 @@
-// Core data types for the Scalp Street engine. The engine is pure TypeScript
+// Core data types for the Scalping Squishies engine. The engine is pure TypeScript
 // with no React or DOM dependencies so it can be unit tested, simulated for
 // balance, and reused unchanged inside a Capacitor iOS shell.
 

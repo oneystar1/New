@@ -1,6 +1,6 @@
 # Monetization plan
 
-Scalp Street ships with the full hybrid stack used by top-grossing idle
+Scalping Squishies ships with the full hybrid stack used by top-grossing idle
 tycoons. Everything below is implemented in the web build behind the
 `MonetizationProvider` interface (`src/monetization/provider.ts`) with a
 simulated provider; the iOS build swaps in real SDKs (see `ios-plan.md`).
