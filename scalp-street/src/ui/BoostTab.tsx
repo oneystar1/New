@@ -4,6 +4,8 @@ import { UPGRADES } from '../engine/data/upgrades';
 import { ACHIEVEMENTS } from '../engine/data/achievements';
 import { STORE_BY_ID } from '../engine/data/stores';
 import { credForRun, PRESTIGE_MIN_EARNED, CRED_PER_POINT } from '../engine/sim';
+import { CITY_BY_ID } from '../engine/data/cities';
+import { RANKED_RIVALS } from '../engine/data/rivals';
 import { formatCash, formatNumber } from '../engine/math';
 import type { Currency, UpgradeDef } from '../engine/types';
 
@@ -12,7 +14,7 @@ const CUR_ICON: Record<Currency, string> = { cash: '$', clout: '💠', cred: '�
 export function BoostTab() {
   const s = useGame((g) => g.s);
   const buyUpgrade = useGame((g) => g.buyUpgrade);
-  const doPrestige = useGame((g) => g.doPrestige);
+  const openRelocate = useGame((g) => g.openRelocate);
   const [view, setView] = useState<'cash' | 'sketchy' | 'clout' | 'cred' | 'ach' | 'settings'>('cash');
   const gain = credForRun(s.stats.totalCashEarned);
 
@@ -43,17 +45,20 @@ export function BoostTab() {
         <div className="row">
           <div className="ico-lg">🚚</div>
           <div className="grow">
-            <h3>Relocate (prestige)</h3>
+            <h3>Relocate · 📍 {CITY_BY_ID[s.city]?.name ?? 'Dayton, OH'}</h3>
+            <div className="small" style={{ color: 'var(--mint)' }}>City perk: {CITY_BY_ID[s.city]?.perk}</div>
             <div className="sub">
               The community found your listings. Move to a new city, keep your Street Cred. Each ⭐ = +{CRED_PER_POINT * 100}% profit forever.
               {' '}You have ⭐{formatNumber(s.cred)} (x{(1 + s.cred * CRED_PER_POINT).toFixed(2)}).
             </div>
           </div>
         </div>
-        <button className="btn gold block mt" disabled={gain <= 0} onClick={() => void doPrestige()}>
+        <button className="btn gold block mt" disabled={gain <= 0} onClick={openRelocate}>
           {gain > 0 ? `Relocate for +⭐${formatNumber(gain)}` : `Earn ${formatCash(PRESTIGE_MIN_EARNED)} this run to relocate (${formatCash(s.stats.totalCashEarned)})`}
         </button>
       </div>
+
+      <Rankings />
 
       <div className="seg">
         <button className={view === 'cash' ? 'active' : ''} onClick={() => setView('cash')}>$ Gear</button>
@@ -87,6 +92,41 @@ export function BoostTab() {
             </div>
           ))}
         </>
+      )}
+    </div>
+  );
+}
+
+function Rankings() {
+  const s = useGame((g) => g.s);
+  const [open, setOpen] = useState(false);
+  const worth = s.stats.lifetimeCashEarned;
+  const passed = RANKED_RIVALS.filter((r) => worth >= r.netWorth).length;
+  const rank = RANKED_RIVALS.length - passed + 1;
+  const next = RANKED_RIVALS.find((r) => worth < r.netWorth);
+  return (
+    <div className="card" onClick={() => setOpen(!open)}>
+      <div className="row">
+        <div className="ico-lg">🏆</div>
+        <div className="grow">
+          <h3>Local scalper rankings · #{rank} of {RANKED_RIVALS.length + 1}</h3>
+          <div className="sub">{next ? `Next: ${next.icon} ${next.name} at ${formatCash(next.netWorth)} lifetime (you: ${formatCash(worth)})` : 'You are #1. The manufacturer is taking your calls.'}</div>
+        </div>
+        <span className="small">{open ? '▲' : '▼'}</span>
+      </div>
+      {open && (
+        <div className="mt">
+          {[...RANKED_RIVALS].reverse().map((r) => {
+            const beaten = worth >= r.netWorth;
+            return (
+              <div className={`row rank ${beaten ? 'beaten' : ''}`} key={r.id}>
+                <span>{r.icon}</span>
+                <div className="grow"><b>{r.name}</b><div className="small">{r.blurb}</div></div>
+                <span className="small">{formatCash(r.netWorth)}{beaten ? ' ✓' : ''}</span>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
@@ -126,6 +166,7 @@ function Settings() {
     <div>
       <div className="card">
         <div className="row between"><span>Haptics</span><button className="btn sm" onClick={() => setSetting('haptics', !s.settings.haptics)}>{s.settings.haptics ? 'On' : 'Off'}</button></div>
+        <div className="row between mt"><span>Sound effects</span><button className="btn sm" onClick={() => setSetting('sfx', !s.settings.sfx)}>{s.settings.sfx ? 'On' : 'Off'}</button></div>
         <div className="row between mt"><span>Number format</span><button className="btn sm" onClick={() => setSetting('notation', s.settings.notation === 'short' ? 'scientific' : 'short')}>{s.settings.notation}</button></div>
       </div>
       <div className="card">

@@ -5,6 +5,8 @@ import { MISSION_POOL } from '../engine/data/missions';
 import { STORE_BY_ID, STORES } from '../engine/data/stores';
 import { restockReady, isBanned } from '../engine/restock';
 import { formatDuration } from '../engine/math';
+import { TUTORIAL } from '../engine/data/tutorial';
+import { isConWeekend } from '../engine/sim';
 import { ITEMS } from '../engine/data/items';
 import { formatCash } from '../engine/math';
 import type { Reward } from '../engine/types';
@@ -47,8 +49,30 @@ export function HuntTab() {
     [tap, tv, s.settings.haptics],
   );
 
+  const nextStep = TUTORIAL.find((t) => !s.tutorialDone.includes(t.id));
+  const tutorialOpen = nextStep && s.tutorialDone.length < TUTORIAL.length - 1;
+
   return (
     <div>
+      {isConWeekend(now) && (
+        <div className="banner good" style={{ marginBottom: 10 }}>
+          <span style={{ fontSize: 22 }}>🎪</span>
+          <div className="t"><b>Con Weekend</b><span className="small">Restock trucks are 50% fuller all weekend. Camp everything.</span></div>
+        </div>
+      )}
+      {tutorialOpen && nextStep && (
+        <div className="card tutorial">
+          <div className="row">
+            <div className="ico-lg">🎓</div>
+            <div className="grow">
+              <h3>Step {s.tutorialDone.length + 1}/{TUTORIAL.length}: {nextStep.text}</h3>
+              <div className="sub">{nextStep.hint}</div>
+            </div>
+            <span className="pill clout">+{nextStep.clout}</span>
+          </div>
+          <div className="progress mt"><i style={{ width: `${(s.tutorialDone.length / TUTORIAL.length) * 100}%` }} /></div>
+        </div>
+      )}
       <div className="row between">
         <div>
           <h3 style={{ margin: 0 }}>Hunting at {hunting.icon} {hunting.name}</h3>

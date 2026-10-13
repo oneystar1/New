@@ -1,7 +1,7 @@
 import type { GameState, RestockRun, Rival, RivalKind, ItemDef } from './types';
 import { STORE_BY_ID } from './data/stores';
 import { RIVALS, ENCOUNTERS, LINE_FLAVOR, type EncounterDef } from './data/restock';
-import { computeModifiers, storeCycleProfit, pullItem, earn, bumpMission, type Modifiers } from './sim';
+import { computeModifiers, storeCycleProfit, pullItem, earn, bumpMission, isConWeekend, type Modifiers } from './sim';
 import { fakeRoll } from './deals';
 import { weightedPick } from './math';
 
@@ -30,7 +30,7 @@ export function makeRival(kind: RivalKind, rand: () => number): Rival {
 
 export function startRun(s: GameState, storeId: string, m: Modifiers, now: number, rand: () => number): RestockRun | null {
   if (!restockReady(s, storeId, now)) return null;
-  const stock = 10 + Math.floor(rand() * 8);
+  const stock = Math.round((10 + Math.floor(rand() * 8)) * (isConWeekend(now) ? 1.5 : 1));
   const ahead = Math.max(0, 4 + Math.floor(rand() * 4) - m.linePosition);
   const rivals: Rival[] = [];
   for (let i = 0; i < ahead; i++) rivals.push(makeRival(weightedPick(RIVAL_WEIGHTS, rand), rand));

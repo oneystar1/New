@@ -11,6 +11,8 @@ import { BoostTab } from './BoostTab';
 import { ShopTab } from './ShopTab';
 import { Overlays, AdOverlay, PurchaseOverlay } from './Overlays';
 import { RestockOverlay } from './RestockOverlay';
+import { RelocateOverlay } from './RelocateOverlay';
+import { Fx } from './Fx';
 import { dailyAvailable } from '../engine/sim';
 import { MISSION_POOL } from '../engine/data/missions';
 
@@ -99,6 +101,8 @@ export function App() {
       </nav>
       <Overlays />
       <RestockOverlay />
+      <RelocateOverlay />
+      <Fx />
       {adReq && (
         <AdOverlay
           placement={adReq.placement}

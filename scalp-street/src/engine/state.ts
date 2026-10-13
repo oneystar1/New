@@ -37,6 +37,10 @@ export function initialState(now = Date.now()): GameState {
     nextOfferAt: now + 20_000,
     fakes: [],
     pricing: 'fair',
+    city: 'dayton',
+    cityOffer: null,
+    tutorialDone: [],
+    rankRewarded: [],
     restockReadyAt: {},
     bannedUntil: {},
     stats: {
@@ -96,6 +100,9 @@ export function migrate(raw: unknown, now = Date.now()): GameState {
     offers: Array.isArray(s.offers) ? s.offers : [],
     fakes: Array.isArray(s.fakes) ? s.fakes : [],
     restockReadyAt: s.restockReadyAt ?? {},
+    tutorialDone: Array.isArray(s.tutorialDone) ? s.tutorialDone : [],
+    rankRewarded: Array.isArray(s.rankRewarded) ? s.rankRewarded : [],
+    city: typeof s.city === 'string' ? s.city : 'dayton',
     bannedUntil: s.bannedUntil ?? {},
     version: SAVE_VERSION,
   };

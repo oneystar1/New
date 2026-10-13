@@ -1,4 +1,4 @@
-import type { GameState, ItemFamily, MarketEventKind, Rarity, ItemDef, Reward, Offer } from './types';
+import type { GameState, ItemFamily, MarketEventKind, Rarity, ItemDef, Reward, Offer, UpgradeEffect } from './types';
 import { tickOffers, tickHeat } from './deals';
 import { STORES, STORE_BY_ID } from './data/stores';
 import { UPGRADE_BY_ID } from './data/upgrades';
@@ -8,6 +8,9 @@ import { ACHIEVEMENTS } from './data/achievements';
 import { MISSION_POOL } from './data/missions';
 import { PASS_TIERS } from './data/pass';
 import { VIP } from './data/shop';
+import { CITY_BY_ID, CITIES } from './data/cities';
+import { RANKED_RIVALS } from './data/rivals';
+import { TUTORIAL } from './data/tutorial';
 import { milestoneMult, todayKey, weightedPick, clamp } from './math';
 
 // ---------------------------------------------------------------------------
@@ -86,10 +89,10 @@ export function computeModifiers(s: GameState, now: number): Modifiers {
     m.storeProfit[st.id] = 1;
     m.storeSpeed[st.id] = 1;
   }
-  for (const id of s.upgrades) {
-    const u = UPGRADE_BY_ID[id];
-    if (!u) continue;
-    const e = u.effect;
+  const effects = s.upgrades.map((id) => UPGRADE_BY_ID[id]?.effect).filter(Boolean) as UpgradeEffect[];
+  const city = CITY_BY_ID[s.city];
+  if (city) effects.push(city.effect);
+  for (const e of effects) {
     switch (e.kind) {
       case 'storeProfit': m.storeProfit[e.storeId] *= e.mult; break;
       case 'storeSpeed': m.storeSpeed[e.storeId] *= e.mult; break;
@@ -214,10 +217,12 @@ export interface TickResult {
   achievementsUnlocked: string[];
   offerArrived: Offer | null;
   calledOut: boolean;
+  tutorialDone: string[];
+  overtook: string[];
 }
 
 export function tick(s: GameState, dt: number, now: number, rand: () => number = Math.random): TickResult {
-  const res: TickResult = { completedCycles: 0, eventStarted: null, achievementsUnlocked: [], offerArrived: null, calledOut: false };
+  const res: TickResult = { completedCycles: 0, eventStarted: null, achievementsUnlocked: [], offerArrived: null, calledOut: false, tutorialDone: [], overtook: [] };
   if (dt <= 0) return res;
   const m = computeModifiers(s, now);
   s.stats.playSeconds += dt;
@@ -271,6 +276,17 @@ export function tick(s: GameState, dt: number, now: number, rand: () => number =
 
   // Expire boosts
   s.boosts = s.boosts.filter((b) => b.endsAt > now);
+
+  // Tutorial steps complete themselves from state.
+  for (const t of TUTORIAL) {
+    if (s.tutorialDone.includes(t.id)) continue;
+    if (t.check(s)) { s.tutorialDone.push(t.id); s.clout += t.clout; res.tutorialDone.push(t.id); }
+  }
+  // Local rankings: overtaking a rival pays Clout.
+  for (const r of RANKED_RIVALS) {
+    if (s.rankRewarded.includes(r.id)) continue;
+    if (s.stats.lifetimeCashEarned >= r.netWorth) { s.rankRewarded.push(r.id); s.clout += r.clout; res.overtook.push(r.id); }
+  }
 
   // Achievements
   for (const a of ACHIEVEMENTS) {
@@ -404,6 +420,12 @@ export function sellDuplicate(s: GameState, itemId: string, now: number): number
 // Prestige ("Relocate")
 // ---------------------------------------------------------------------------
 
+/** Real-time weekend event: Saturday and Sunday in the player's local time. */
+export function isConWeekend(now: number): boolean {
+  const d = new Date(now).getDay();
+  return d === 0 || d === 6;
+}
+
 export const PRESTIGE_MIN_EARNED = 100_000_000;
 
 export function credForRun(totalCashEarnedThisRun: number): number {
@@ -411,9 +433,21 @@ export function credForRun(totalCashEarnedThisRun: number): number {
   return Math.floor(Math.pow(totalCashEarnedThisRun / 1e6, 0.45));
 }
 
-export function prestige(s: GameState, now: number): number {
+/** Two random cities (never the current one) offered for the next Relocate. */
+export function rollCityOffer(s: GameState, rand: () => number = Math.random): [string, string] {
+  const pool = CITIES.filter((c) => c.id !== s.city && c.id !== 'dayton');
+  const a = pool.splice(Math.floor(rand() * pool.length), 1)[0];
+  const b = pool.splice(Math.floor(rand() * pool.length), 1)[0];
+  const offer: [string, string] = [a.id, b.id];
+  s.cityOffer = offer;
+  return offer;
+}
+
+export function prestige(s: GameState, now: number, cityId?: string): number {
   const gained = credForRun(s.stats.totalCashEarned);
   if (gained <= 0) return 0;
+  if (cityId && CITY_BY_ID[cityId]) s.city = cityId;
+  s.cityOffer = null;
   const keepCash = s.upgrades.includes('c_start') ? 10_000 : 10;
   s.cred += gained;
   s.cash = keepCash;

@@ -123,6 +123,34 @@ three phases:
 | Scalper | 1.6x | more lowballs, twice the Karens |
 | Insane | 2.8x | mostly ghosts and Karens, +0.03 heat/sec |
 
+## Cities, rankings, tutorial, feel
+
+**Relocate picks a city.** When you prestige you are offered two of eleven
+cities (never the one you are in). Each carries a perk for the whole run:
+Fresno (stores 15% faster), Tampa (offers +40%), Las Vegas (+0.4 pull luck),
+Scranton (heat cools 2x), Austin (profit x1.3), Jersey City (offers 50%
+more often), Boise (skip 3 in line), Phoenix (carry +4), Orlando (profit
+x1.25), Seattle (bot farm 2x), New Orleans (convention 2x). Dayton is the
+starting city with no perk.
+
+**Local rankings.** Eleven rivals with fixed net worths from $500 (Little
+Timmy) to $1e18 (The Manufacturer). Passing one on lifetime earnings pays
+3 to 150 Clout. The ladder is visible on the Hustle tab.
+
+**Tutorial.** Nine steps (tap, buy a unit, hire a manager, camp a restock,
+answer a message, buy an upgrade, open a pull, claim a mission, relocate).
+Each completes from state and pays Clout. The card hides after step 8 so
+the prestige step does not nag.
+
+**Con Weekend.** Saturday and Sunday local time: restock stock x1.5 and a
+banner on the Hunt tab. This is the first real-time live event; a backend
+would add leaderboards on top.
+
+**Juice.** `src/ui/sfx.ts` synthesizes every sound with the Web Audio API
+(no files, works offline, portable to Capacitor). `src/ui/fxbus.ts` lets
+the store fire confetti, screen shake and color flashes without importing
+React. Pulls scale their celebration to the best rarity in the batch.
+
 ## Economy tuning
 
 Store table (cost x16 per store, profit/cost ratio falls 38% per store,

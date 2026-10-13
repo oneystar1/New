@@ -316,6 +316,11 @@ export interface GameState {
   fakes: string[];
   /** How hard you scalp on the Facebook listings. Shifts the Deals feed. */
   pricing: Pricing;
+  /** Current city (Relocate destination) and the two offered for the next move. */
+  city: string;
+  cityOffer: [string, string] | null;
+  tutorialDone: string[];
+  rankRewarded: string[];
   restockReadyAt: Record<string, number>;
   bannedUntil: Record<string, number>;
   stats: Stats;

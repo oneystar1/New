@@ -27,6 +27,18 @@ npm run balance 8  # greedy-bot economy sim for 8 simulated hours
 - **72 collectible items** in two families (Dohs and Squishies) and six
   rarity tiers, a mystery pull gacha with published odds, a shelf bonus,
   duplicate flipping.
+- **Feel**: synthesized sound effects (Web Audio, no asset files) for
+  taps, cash, buys, pulls by rarity, grabs, doors, deals and getting Called
+  Out, plus confetti on rare pulls and overtakes, screen shake and flashes.
+- **Tutorial**: a nine-step first-time checklist that completes itself from
+  play and pays Clout.
+- **Cities**: Relocate offers a choice of two cities, each with a perk
+  (Fresno: stores 15% faster, Tampa: offers worth 40% more, Vegas: pull
+  luck, Scranton: heat cools 2x, Boise: skip 3 in line, Phoenix: carry +4,
+  Seattle: bot farm 2x, ...). Your city shows in the header.
+- **Local scalper rankings**: eleven fake rivals from Little Timmy to The
+  Manufacturer. Overtake each one for Clout and confetti.
+- **Con Weekend**: every Saturday and Sunday, restock trucks are 50% fuller.
 - **Restock runs**: stand in line at 6am behind NeeDoh Moms ("two per
   FAMILY", she brought the family), little kids with birthday money, other
   resellers and the employee holding one for a friend. When the doors open

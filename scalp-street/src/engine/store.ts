@@ -1,11 +1,16 @@
 import { create } from 'zustand';
 import type { GameState, ItemDef, MarketEventKind, Reward, RestockRun, Pricing } from './types';
 import { startRun, openDoors, grab, tickRun, choose, finishRun } from './restock';
+import { sfx, setSfxEnabled } from '../ui/sfx';
+import { fx } from '../ui/fxbus';
+import { TUTORIAL } from './data/tutorial';
+import { RANKED_RIVALS } from './data/rivals';
+import { CITY_BY_ID } from './data/cities';
 import { initialState, deserialize, serialize, SAVE_KEY } from './state';
 import {
   tick, computeModifiers, applyOfflineOnLoad, claimOffline, storeUnlocked, startCycle, earn, tapValue,
   pullItem, highestUnlockedStore, sellDuplicate, prestige, credForRun, rollMissions, claimMission,
-  claimDaily, claimPassTier, addBoost, timeSkip, grantReward, bumpMission, isVip, isAdFree,
+  claimDaily, claimPassTier, addBoost, timeSkip, grantReward, bumpMission, isVip, isAdFree, rollCityOffer,
 } from './sim';
 import { STORE_BY_ID } from './data/stores';
 import { MANAGER_BY_STORE } from './data/managers';
@@ -52,7 +57,10 @@ interface GameStore {
   buyUpgrade: (id: string) => void;
   pull: (count: 1 | 10, free?: boolean) => void;
   sellDupe: (itemId: string) => void;
-  doPrestige: () => Promise<void>;
+  doPrestige: (cityId: string) => Promise<void>;
+  openRelocate: () => void;
+  closeRelocate: () => void;
+  relocating: boolean;
   claimOfflineNormal: () => void;
   claimOfflineDouble: () => Promise<void>;
   watchAd: (placement: AdPlacement) => Promise<void>;
@@ -148,6 +156,7 @@ export const useGame = create<GameStore>((set, get) => {
     huntMeter: 0,
     run: null,
     runResult: null,
+    relocating: false,
     provider: null,
     buyAmount: 1,
 
@@ -172,6 +181,7 @@ export const useGame = create<GameStore>((set, get) => {
           s.clout += VIP.dailyClout;
         }
       }
+      setSfxEnabled(s.settings.sfx);
       set({ s, now });
       track('session_start', { prestiges: s.stats.prestiges, cash: Math.round(s.cash) });
     },
@@ -220,11 +230,14 @@ export const useGame = create<GameStore>((set, get) => {
         const kinds: Record<MarketEventKind, string> = { drop: '🔥', viral: '📱', holiday: '🎄', restock: '🌊', crackdown: '🚫' };
         toast(`Market event: ${res.eventStarted.toUpperCase()}`, kinds[res.eventStarted], res.eventStarted === 'restock' || res.eventStarted === 'crackdown' ? 'bad' : 'good');
       }
-      if (res.offerArrived) toast(`New message from ${res.offerArrived.buyer}`, '💬', 'info');
-      if (res.calledOut) toast('CALLED OUT. The group posted your listings. Profit x0.4 for 3 min.', '📸', 'bad');
+      if (res.offerArrived) { toast(`New message from ${res.offerArrived.buyer}`, '💬', 'info'); sfx.message(); }
+      if (res.calledOut) { toast('CALLED OUT. The group posted your listings. Profit x0.4 for 3 min.', '📸', 'bad'); sfx.calledOut(); fx({ kind: 'shake' }); fx({ kind: 'flash', color: '#ff6b6b' }); }
+      for (const id of res.tutorialDone) { const t = TUTORIAL.find((x) => x.id === id); toast(`Tutorial: ${t?.text} (+${t?.clout} Clout)`, '✅', 'good'); sfx.achievement(); }
+      for (const id of res.overtook) { const r = RANKED_RIVALS.find((x) => x.id === id); toast(`You passed ${r?.name} in the local rankings! +${r?.clout} Clout`, r?.icon ?? '🏆', 'rare'); sfx.rare(); fx({ kind: 'confetti', intensity: 1 }); }
       for (const id of res.achievementsUnlocked) {
         const a = ACHIEVEMENTS.find((x) => x.id === id);
         toast(`Achievement: ${a?.name ?? id} (+${a?.clout ?? 0} Clout)`, a?.icon ?? '🏅', 'rare');
+        sfx.achievement();
       }
       set({ s: { ...s }, now });
     },
@@ -235,6 +248,7 @@ export const useGame = create<GameStore>((set, get) => {
       const s = st.s;
       const m = computeModifiers(s, now);
       earn(s, tapValue(s, m));
+      sfx.tap();
       s.stats.taps += 1;
       bumpMission(s, 'taps', 1);
       let meter = st.huntMeter + 1 / 60;
@@ -242,6 +256,7 @@ export const useGame = create<GameStore>((set, get) => {
       if (meter >= 1) {
         meter = 0;
         pulls = [pullItem(s, highestUnlockedStore(s), m.pullLuck, rand)];
+        pullFx(pulls);
       }
       set({ s: { ...s }, huntMeter: meter, ...(pulls ? { lastPulls: pulls } : {}) });
     },
@@ -262,6 +277,7 @@ export const useGame = create<GameStore>((set, get) => {
       ss.units += want;
       s.stats.unitsBought += want;
       bumpMission(s, 'unitsBought', want);
+      sfx.buy();
       track('buy_units', { storeId, count: want });
       set({ s: { ...s } });
     },
@@ -277,6 +293,7 @@ export const useGame = create<GameStore>((set, get) => {
       ss.manager = true;
       if (ss.progress <= 0) ss.progress = 1e-6;
       toast(`${mgr.name} hired!`, mgr.icon, 'good');
+      sfx.manager();
       track('hire_manager', { storeId });
       set({ s: { ...s } });
     },
@@ -297,6 +314,7 @@ export const useGame = create<GameStore>((set, get) => {
       s.upgrades.push(id);
       if (u.heat) s.heat = Math.min(100, s.heat + u.heat);
       toast(u.heat ? `${u.name} (+${u.heat} heat)` : u.name, u.icon, u.heat ? 'bad' : 'good');
+      if (u.heat) sfx.bad(); else sfx.buy();
       track('buy_upgrade', { id, currency: wallet });
       set({ s: { ...s } });
     },
@@ -324,6 +342,7 @@ export const useGame = create<GameStore>((set, get) => {
         s.fakes.push(it.id);
       }
       if (fakes) toast(`${fakes} of those were counterfeit. Check the Deals tab.`, '🔦', 'bad');
+      pullFx(results);
       track('pull', { count, free, fakes });
       set({ s: { ...s }, lastPulls: results });
     },
@@ -335,11 +354,14 @@ export const useGame = create<GameStore>((set, get) => {
       set({ s: { ...st.s } });
     },
 
-    doPrestige: async () => {
+    openRelocate: () => { const s = get().s; if (credForRun(s.stats.totalCashEarned) <= 0) return; if (!s.cityOffer) rollCityOffer(s, rand); set({ s: { ...s }, relocating: true }); },
+    closeRelocate: () => set({ relocating: false }),
+    doPrestige: async (cityId) => {
       const st = get();
       const s = st.s;
       const gained = credForRun(s.stats.totalCashEarned);
       if (gained <= 0) return;
+      set({ relocating: false });
       const now = Date.now();
       // Interstitial on prestige is the one forced ad placement, gated by
       // Remove Ads / VIP and a minimum gap.
@@ -348,8 +370,10 @@ export const useGame = create<GameStore>((set, get) => {
         s.interstitialSeenAt = now;
         await p.ads.showInterstitial('interstitial_prestige');
       }
-      prestige(s, now);
-      toast(`Relocated! +${gained} Street Cred`, '🚚', 'rare');
+      prestige(s, now, cityId);
+      toast(`Moved to ${CITY_BY_ID[s.city]?.name ?? 'a new city'}! +${gained} Street Cred`, '🚚', 'rare');
+      sfx.grail();
+      fx({ kind: 'confetti', intensity: 3 });
       track('prestige', { gained, total: s.cred });
       set({ s: { ...s }, huntMeter: 0 });
       get().save();
@@ -488,13 +512,13 @@ export const useGame = create<GameStore>((set, get) => {
       track('restock_start', { storeId });
       set({ run, runResult: null });
     },
-    restockOpen: () => { const r = get().run; if (!r) return; const run = { ...r }; openDoors(run); set({ run }); },
+    restockOpen: () => { const r = get().run; if (!r) return; const run = { ...r }; openDoors(run); sfx.doors(); fx({ kind: 'shake' }); set({ run }); },
     restockGrab: () => {
       const st = get();
       if (!st.run) return;
       const m = computeModifiers(st.s, st.now);
       const run = { ...st.run };
-      grab(run, m.tapPower);
+      if (grab(run, m.tapPower)) sfx.secured(); else sfx.grab();
       if (st.s.settings.haptics && 'vibrate' in navigator) navigator.vibrate?.(6);
       set({ run });
     },
@@ -511,6 +535,7 @@ export const useGame = create<GameStore>((set, get) => {
       if (!st.run || st.run.phase !== 'done') return;
       const s = st.s;
       const res = finishRun(s, st.run, Date.now(), rand);
+      if (res.banned) { sfx.bad(); fx({ kind: 'shake' }); } else pullFx(res.items);
       track('restock_done', { storeId: st.run.storeId, grabbed: st.run.grabbed, banned: res.banned });
       set({ s: { ...s }, run: null, runResult: { ...res, grabbed: st.run.grabbed } });
       get().save();
@@ -520,14 +545,14 @@ export const useGame = create<GameStore>((set, get) => {
     dealAccept: (id) => {
       const st = get();
       const r = acceptOffer(st.s, id, Date.now(), rand);
-      if (r) toast(r.text, r.icon, r.kind);
+      if (r) { toast(r.text, r.icon, r.kind); if (r.kind === 'good') sfx.deal(); else if (r.kind === 'bad') sfx.bad(); }
       track('deal', { action: 'accept' });
       set({ s: { ...st.s }, ...(r?.item ? { lastPulls: [r.item] } : {}) });
     },
     dealCounter: (id) => {
       const st = get();
       const r = counterOffer(st.s, id, Date.now(), rand);
-      if (r) toast(r.text, r.icon, r.kind);
+      if (r) { toast(r.text, r.icon, r.kind); if (r.kind === 'good') sfx.deal(); else if (r.kind === 'bad') sfx.bad(); }
       track('deal', { action: 'counter' });
       set({ s: { ...st.s }, ...(r?.item ? { lastPulls: [r.item] } : {}) });
     },
@@ -537,9 +562,20 @@ export const useGame = create<GameStore>((set, get) => {
     fakeFlip: (idx) => mutate((s) => { const v = flipFake(s, idx, Date.now()); if (v > 0) toast('Sold a fake as real. +8 heat.', '😬', 'bad'); }),
     toast,
     dismissToast: (id) => set((st) => ({ toasts: st.toasts.filter((t) => t.id !== id) })),
-    setSetting: (k, v) => mutate((s) => { s.settings = { ...s.settings, [k]: v }; }),
+    setSetting: (k, v) => mutate((s) => { s.settings = { ...s.settings, [k]: v }; if (k === 'sfx') setSfxEnabled(Boolean(v)); }),
   };
 });
+
+/** Sound + confetti for a batch of pulled items, scaled to the best rarity. */
+function pullFx(items: ItemDef[]): void {
+  const order = ['common', 'uncommon', 'rare', 'ultra', 'select', 'grail'];
+  const best = items.reduce((m, it) => Math.max(m, order.indexOf(it.rarity)), -1);
+  if (best < 0) return;
+  if (best >= 5) { sfx.grail(); fx({ kind: 'confetti', intensity: 4 }); fx({ kind: 'flash', color: '#ffe066' }); }
+  else if (best >= 3) { sfx.rare(); fx({ kind: 'confetti', intensity: 2 }); }
+  else if (best >= 2) { sfx.rare(); fx({ kind: 'confetti', intensity: 1 }); }
+  else sfx.pull();
+}
 
 /** Previous tier upgrade id for tiered store upgrades. */
 function UPGRADES_PREV(id: string): string | null {

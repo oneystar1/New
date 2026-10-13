@@ -2,6 +2,7 @@ import { useGame } from '../engine/store';
 import { computeModifiers, incomePerSecond } from '../engine/sim';
 import { EVENTS } from '../engine/data/events';
 import { formatCash, formatNumber, formatDuration } from '../engine/math';
+import { CITY_BY_ID } from '../engine/data/cities';
 
 export function Header() {
   const s = useGame((g) => g.s);
@@ -18,7 +19,7 @@ export function Header() {
       <div className="wallet">
         <div className="grow">
           <div className="cash">{formatCash(s.cash, s.settings.notation)}</div>
-          <div className="ips">{formatCash(ips, s.settings.notation)}/sec · hype 🍌{hypeS.toFixed(2)}x 🧊{hypeD.toFixed(2)}x</div>
+          <div className="ips">📍 {CITY_BY_ID[s.city]?.name.split(',')[0] ?? 'Dayton'} · {formatCash(ips, s.settings.notation)}/sec · hype 🍌{hypeS.toFixed(2)}x 🧊{hypeD.toFixed(2)}x</div>
         </div>
         <span className="pill clout">💠 {formatNumber(s.clout)}</span>
         {s.cred > 0 && <span className="pill cred">⭐ {formatNumber(s.cred)}</span>}
