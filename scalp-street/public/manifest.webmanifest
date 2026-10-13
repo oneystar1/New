@@ -1,0 +1,11 @@
+{
+  "name": "Scalp Street: Idle Flip Tycoon",
+  "short_name": "Scalp Street",
+  "description": "Camp the drops, hoard the squishes, flip the dohs. An idle tycoon.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1030",
+  "theme_color": "#1a1030",
+  "icons": [{ "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

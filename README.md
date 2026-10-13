@@ -1,3 +1,5 @@
+> This repo also holds **[Scalp Street](scalp-street/)**, an idle flipping tycoon about scalping squishes and dohs (web app, iOS-ready). See `scalp-street/README.md`.
+
 # Poké Ball Park
 
 A Pokémon baseball game that plays like **Ken Griffey Jr. Presents Major League
