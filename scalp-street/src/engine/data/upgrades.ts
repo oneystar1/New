@@ -79,14 +79,14 @@ const sketchy: UpgradeDef[] = [
 
 // Selling channels change how the Deals feed behaves.
 const channels: UpgradeDef[] = [
-  { id: 'ch_fleabay', name: 'FleaBay Store', blurb: 'Buyers from everywhere. Offers are worth 30% more (after fees, somehow).', icon: '🏷️', cost: 25_000, currency: 'cash', effect: { kind: 'offerValue', mult: 1.3 }, group: 'channel' },
-  { id: 'ch_mercarry', name: 'Mercarry Listings', blurb: 'Cross-list everything. Offers arrive 40% more often.', icon: '📱', cost: 300_000, currency: 'cash', effect: { kind: 'offerRate', mult: 1.4 }, group: 'channel' },
-  { id: 'ch_whatnow', name: 'WhatNow Live Shows', blurb: '"GOING ONCE" at 1am to 30 viewers. Offers arrive 50% more often and pay 50% more.', icon: '📺', cost: 20_000_000, currency: 'cash', effect: { kind: 'offerRate', mult: 1.5 }, group: 'channel' },
-  { id: 'ch_whatnow2', name: 'WhatNow Hype Mode', blurb: 'Confetti cannon. Offers pay 50% more.', icon: '🎉', cost: 60_000_000, currency: 'cash', effect: { kind: 'offerValue', mult: 1.5 }, group: 'channel' },
+  { id: 'ch_fleabay', name: 'FleaBay Store', blurb: 'Buyers from everywhere. Offers are worth 10% more (after fees, somehow).', icon: '🏷️', cost: 25_000, currency: 'cash', effect: { kind: 'offerValue', mult: 1.1 }, group: 'channel' },
+  { id: 'ch_mercarry', name: 'Mercarry Listings', blurb: 'Cross-list everything. Offers arrive 15% more often.', icon: '📱', cost: 300_000, currency: 'cash', effect: { kind: 'offerRate', mult: 1.15 }, group: 'channel' },
+  { id: 'ch_whatnow', name: 'WhatNow Live Shows', blurb: '"GOING ONCE" at 1am to 30 viewers. Offers arrive 15% more often.', icon: '📺', cost: 20_000_000, currency: 'cash', effect: { kind: 'offerRate', mult: 1.15 }, group: 'channel' },
+  { id: 'ch_whatnow2', name: 'WhatNow Hype Mode', blurb: 'Confetti cannon. Offers pay 10% more.', icon: '🎉', cost: 60_000_000, currency: 'cash', effect: { kind: 'offerValue', mult: 1.1 }, group: 'channel' },
   { id: 'ch_radar', name: 'Scam Radar', blurb: '"Hi dear" and "send your email for the invoice" get a red flag in the feed.', icon: '🚩', cost: 10_000, currency: 'cash', effect: { kind: 'scamRadar' }, group: 'channel' },
   { id: 'ch_gands', name: 'Goods & Services Only', blurb: 'No Friends & Family, no Zelle, no checks. Scams can no longer cost you money.', icon: '🛡️', cost: 2_000_000, currency: 'cash', effect: { kind: 'scamShield' }, group: 'channel' },
   { id: 'ch_uv', name: 'UV Tag Light', blurb: 'Spot the wrong font and the gasoline smell before you pay. No more counterfeit pulls.', icon: '🔦', cost: 5_000_000, currency: 'cash', effect: { kind: 'fakeShield' }, group: 'channel' },
-  { id: 'ch_stockyx', name: 'StockyX Listing', blurb: 'Authenticated by a guy who smells the cube. Hype buyers pay 25% more, minus a fee you do not read about.', icon: '📈', cost: 5_000_000, currency: 'cash', effect: { kind: 'offerValue', mult: 1.25 }, group: 'channel' },
+  { id: 'ch_stockyx', name: 'StockyX Listing', blurb: 'Authenticated by a guy who smells the cube. Hype buyers pay 10% more, minus a fee you do not read about.', icon: '📈', cost: 5_000_000, currency: 'cash', effect: { kind: 'offerValue', mult: 1.1 }, group: 'channel' },
   { id: 'ch_pr', name: 'PR Apology Template', blurb: '"I\'ve grown as a person." Heat cools twice as fast.', icon: '📝', cost: 50_000_000, currency: 'cash', effect: { kind: 'heatDecay', mult: 2 }, group: 'channel' },
 ];
 

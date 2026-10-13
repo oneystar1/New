@@ -65,21 +65,21 @@ they matter at every stage:
 
 | Kind | Weight | Worth | Accept | Counter | Decline |
 | --- | --- | --- | --- | --- | --- |
-| Fair buyer | 30 | 60-120s income | paid | 50% paid x1.35, 50% ghosted | nothing |
-| Lowball | 28 | 12-30s | paid (counts toward "Lowballed") | 50% paid x2.2, 50% ghosted | nothing |
-| "Is this available?" | 16 | 60-120s | 70% no-show, 30% paid | same as fair | nothing |
-| Scam | 12 | 240-480s (too good) | lose that much cash (0 with Goods & Services) | they vanish | blocked, +scams dodged |
+| Fair buyer | 28 | 12-24s income | paid | 50% paid x1.35, 50% ghosted | nothing |
+| Lowball | 26 | 3-6s | paid (counts toward "Lowballed") | 50% paid x2.2, 50% ghosted | nothing |
+| "Is this available?" | 14 | 12-24s | 70% no-show, 30% paid | same as fair | nothing |
+| Scam | 11 | 50-100s (too good) | lose that much cash (0 with Goods & Services) | they vanish | blocked, +scams dodged |
 | Trade | 6 | an item | random pull with +0.2 luck | same | nothing |
 | Karen | 8 | nothing | clap back: +10 pass XP, +6 Heat | same | block |
-| Sneaker bro | 8 | 100-200s | 60% paid, 40% "the chart dipped" | 60% paid x1.2 | nothing |
+| Sneaker bro | 8 | 20-40s | 60% paid, 40% "the chart dipped" | 60% paid x1.2 | nothing |
 
-Channels: FleaBay (+30% value), Mercarry (+40% rate), WhatNow Live (+50%
-rate) and Hype Mode (+50% value), Scam Radar (flags scams), Goods &
+Channels: FleaBay (+10% value), Mercarry (+15% rate), WhatNow Live (+15%
+rate), Hype Mode (+10% value), StockyX (+10% value), Scam Radar (flags scams), Goods &
 Services Only (scams cost nothing and stop appearing), UV Tag Light (no
 counterfeits), PR Apology Template (Heat cools 2x).
 
 **Heat.** 0 to 100. Sketchy tactics add 15 to 35 each, clapping back +6,
-flipping a fake +8, the Drop Bot Farm adds 0.0004 per unit per second. It
+flipping a fake +8, the Drop Bot Farm adds 0.0001 per unit per second. It
 cools 0.02 per second. At 100: Called Out, profit x0.4 for three minutes,
 Heat resets to 45. An apology video (30 Clout) clears it. Relocate resets it.
 
@@ -110,7 +110,7 @@ three phases:
    the limit (comply: 2 more max; "buying for my cousins": 60% works, 40%
    banned).
 3. **Checkout.** Each unit is a real pull from that store (counterfeit odds
-   apply), plus cash worth 3 cycles of that store per unit. Heat from the
+   apply), plus cash worth 30 seconds of that store's income per unit. Heat from the
    run is applied. A ban locks the store for 10 minutes: no cycles, no
    restocks, a BANNED badge on the Routes tab.
 
@@ -127,8 +127,8 @@ three phases:
 
 **Relocate picks a city.** When you prestige you are offered two of eleven
 cities (never the one you are in). Each carries a perk for the whole run:
-Fresno (stores 15% faster), Tampa (offers +40%), Las Vegas (+0.4 pull luck),
-Scranton (heat cools 2x), Austin (profit x1.3), Jersey City (offers 50%
+Fresno (stores 15% faster), Tampa (offers +25%), Las Vegas (+0.4 pull luck),
+Scranton (heat cools 2x), Austin (profit x1.3), Jersey City (offers 30%
 more often), Boise (skip 3 in line), Phoenix (carry +4), Orlando (profit
 x1.25), Seattle (bot farm 2x), New Orleans (convention 2x). Dayton is the
 starting city with no perk.
@@ -150,6 +150,18 @@ would add leaderboards on top.
 (no files, works offline, portable to Capacitor). `src/ui/fxbus.ts` lets
 the store fire confetti, screen shake and color flashes without importing
 React. Pulls scale their celebration to the best rarity in the batch.
+
+## Play-test log
+
+The economy bot (`npm run balance`) plays stores, deals and restocks
+greedily. Before the first rebalance the Deals feed and restock cash were
+95% of all income and every store unlocked in 16 minutes. After sizing
+offers at 3 to 24 seconds of income, restock cash at 30 seconds of the
+store's income per unit, and trimming channel and city multipliers to 10
+to 30%, a 6-hour perfect run splits 51% stores, 29% deals, 16% restocks,
+3% taps, reaches the Factory at 1h 12m and can first prestige at 17m. A
+human plays slower, so real numbers land later. The randomized browser
+soak (`npm run soak`) runs 150 seconds of random actions with no errors.
 
 ## Economy tuning
 

@@ -1,7 +1,7 @@
 import type { GameState, RestockRun, Rival, RivalKind, ItemDef } from './types';
 import { STORE_BY_ID } from './data/stores';
 import { RIVALS, ENCOUNTERS, LINE_FLAVOR, type EncounterDef } from './data/restock';
-import { computeModifiers, storeCycleProfit, pullItem, earn, bumpMission, isConWeekend, type Modifiers } from './sim';
+import { computeModifiers, storeCycleProfit, storeCycleSeconds, pullItem, earn, bumpMission, isConWeekend, type Modifiers } from './sim';
 import { fakeRoll } from './deals';
 import { weightedPick } from './math';
 
@@ -221,7 +221,10 @@ export function finishRun(s: GameState, run: RestockRun, now: number, rand: () =
       fakes++;
     } else items.push(pullItem(s, run.storeId, m.pullLuck, rand));
   }
-  const cash = storeCycleProfit(s, run.storeId, m) * 3 * run.grabbed + STORE_BY_ID[run.storeId].baseProfit * run.grabbed;
+  // Cash is sized by time (30s of that store's income per unit) so a late
+  // store's long cycle does not turn a restock into hours of income.
+  const storeIps = storeCycleProfit(s, run.storeId, m) / storeCycleSeconds(s, run.storeId, m);
+  const cash = storeIps * 30 * run.grabbed + STORE_BY_ID[run.storeId].baseProfit * run.grabbed;
   earn(s, cash);
   s.heat = Math.max(0, Math.min(100, s.heat + run.heat));
   s.restockReadyAt[run.storeId] = now + RESTOCK_COOLDOWN_SECONDS * 1000;

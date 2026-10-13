@@ -19,7 +19,8 @@ npm run build      # production bundle in dist/ (PWA, works offline)
 npm run preview    # serve dist/
 npm test           # engine unit tests (vitest)
 npm run smoke      # headless browser run-through with screenshots
-npm run balance 8  # greedy-bot economy sim for 8 simulated hours
+npm run soak       # 2-minute randomized browser play session, fails on any error
+npm run balance 8  # greedy-bot economy sim (stores, deals, restocks) for 8 simulated hours
 ```
 
 ## What is in the game
@@ -41,7 +42,7 @@ npm run balance 8  # greedy-bot economy sim for 8 simulated hours
 - **Tutorial**: a nine-step first-time checklist that completes itself from
   play and pays Clout.
 - **Cities**: Relocate offers a choice of two cities, each with a perk
-  (Fresno: stores 15% faster, Tampa: offers worth 40% more, Vegas: pull
+  (Fresno: stores 15% faster, Tampa: offers worth 25% more, Vegas: pull
   luck, Scranton: heat cools 2x, Boise: skip 3 in line, Phoenix: carry +4,
   Seattle: bot farm 2x, ...). Your city shows in the header.
 - **Local scalper rankings**: eleven fake rivals from Little Timmy to The

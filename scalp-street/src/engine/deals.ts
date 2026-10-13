@@ -24,13 +24,13 @@ export const PRICING: Record<Pricing, { label: string; blurb: string; value: num
 
 /** Seconds of income an offer is worth, by kind. */
 const KIND_SECONDS: Record<OfferKind, [number, number]> = {
-  fair: [60, 120],
-  lowball: [12, 30],
-  scam: [240, 480],
-  ghost: [60, 120],
+  fair: [12, 24],
+  lowball: [3, 6],
+  scam: [50, 100],
+  ghost: [12, 24],
   trade: [0, 0],
   karen: [0, 0],
-  sneakerbro: [100, 200],
+  sneakerbro: [20, 40],
 };
 
 const AVATARS = ['🧔', '👩', '🧑', '👨‍🦳', '👩‍🦰', '🧒', '👵', '🕶️', '🐶', '🌸', '🤖', '🧢'];
@@ -212,7 +212,7 @@ export const APOLOGY_CLOUT = 30;
 export function tickHeat(s: GameState, m: Modifiers, dt: number, now: number): boolean {
   // Passive heat from the bot farm; everything else is discrete.
   const bots = s.stores.botfarm?.units ?? 0;
-  s.heat += bots * 0.0004 * dt;
+  s.heat += bots * 0.0001 * dt;
   s.heat -= HEAT_DECAY_PER_SECOND * m.heatDecay * dt;
   s.heat = Math.max(0, Math.min(100, s.heat));
   if (s.heat >= 100 && !s.boosts.some((b) => b.id === 'called_out')) {

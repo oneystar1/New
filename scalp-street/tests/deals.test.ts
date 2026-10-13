@@ -116,8 +116,8 @@ describe('offer feed', () => {
     const s = rich();
     s.upgrades.push('ch_fleabay', 'ch_mercarry');
     const m = computeModifiers(s, T0);
-    expect(m.offerValue).toBeCloseTo(1.3, 6);
-    expect(m.offerRate).toBeCloseTo(1.4, 6);
+    expect(m.offerValue).toBeCloseTo(1.1, 6);
+    expect(m.offerRate).toBeCloseTo(1.15, 6);
   });
 });
 
@@ -150,13 +150,13 @@ describe('heat', () => {
     const s = rich();
     s.heat = 99.99;
     const m = computeModifiers(s, T0);
-    s.stores.botfarm.units = 100; // passive heat pushes it over
+    s.stores.botfarm.units = 1000; // passive heat pushes it over
     expect(tickHeat(s, m, 1, T0)).toBe(true);
     expect(s.heat).toBe(45);
     expect(s.stats.calledOut).toBe(1);
     expect(computeModifiers(s, T0).boostMult).toBeCloseTo(CALLED_OUT_MULT, 6);
     expect(tickHeat(s, m, 60, T0 + 1000)).toBe(false);
-    expect(s.heat).toBeLessThan(45 + 60 * 0.04);
+    expect(s.heat).toBeCloseTo(45 + 60 * (1000 * 0.0001 - 0.02), 6);
     s.clout = APOLOGY_CLOUT;
     expect(apologize(s)).toBe(true);
     expect(s.heat).toBe(0);
