@@ -15,6 +15,8 @@ export function Overlays() {
   const claimOfflineNormal = useGame((g) => g.claimOfflineNormal);
   const claimOfflineDouble = useGame((g) => g.claimOfflineDouble);
   const dismissPulls = useGame((g) => g.dismissPulls);
+  const requestTab = useGame((g) => g.requestTab);
+  const dismissToast = useGame((g) => g.dismissToast);
   const noAds = isAdFree(s, Date.now());
 
   return (
@@ -54,7 +56,7 @@ export function Overlays() {
       )}
       <div className="toasts">
         {toasts.map((t) => (
-          <div key={t.id} className={`toast ${t.kind ?? ''}`}>
+          <div key={t.id} className={`toast ${t.kind ?? ''} ${t.tab ? 'link' : ''}`} onClick={() => { if (t.tab) { requestTab(t.tab); dismissToast(t.id); } }}>
             {t.icon && <span>{t.icon}</span>}
             {t.text}
           </div>

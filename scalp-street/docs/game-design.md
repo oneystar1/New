@@ -60,7 +60,8 @@ address, live-stream sellers double-selling. All of it is in the game.
 
 **Deals feed.** While the player is active, a buyer message arrives roughly
 every 30 seconds (faster with channels), up to three open at once, each
-expiring after 90 seconds. Offers are sized in seconds of current income so
+expiring after 3 minutes. A new message raises a tappable toast that jumps
+to the Messages tab, and the tab shows an unread count. Offers are sized in seconds of current income so
 they matter at every stage:
 
 | Kind | Weight | Worth | Accept | Counter | Decline |

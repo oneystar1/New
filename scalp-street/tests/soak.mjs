@@ -16,7 +16,7 @@ const errors = [];
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
 page.on('dialog', (d) => d.dismiss());
-const TABS = ['Hunt', 'Routes', 'Deals', 'Shelf', 'Hustle', 'Shop'];
+const TABS = ['Hunt', 'Routes', 'Messages', 'Shelf', 'Hustle', 'Shop'];
 const AVOID = /Hard reset|Import|Export|Not yet|Confirm purchase/;
 let actions = 0;
 try {

@@ -20,7 +20,7 @@ const errors = [];
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
 const shot = (n) => page.screenshot({ path: path.join(OUT, n) });
-const tab = async (label) => { await page.locator('.nav button', { hasText: label }).click(); await page.waitForTimeout(250); };
+const tab = async (label) => { await page.locator('.nav button', { hasText: label === 'Deals' ? 'Messages' : label }).click(); await page.waitForTimeout(250); };
 try {
   await page.goto(`http://localhost:${PORT}/`);
   await page.waitForSelector('.shelf', { timeout: 15000 });

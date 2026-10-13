@@ -6,6 +6,7 @@ import { fx } from '../ui/fxbus';
 import { TUTORIAL } from './data/tutorial';
 import { RANKED_RIVALS } from './data/rivals';
 import { CITY_BY_ID } from './data/cities';
+import { ITEM_BY_ID } from './data/items';
 import { initialState, deserialize, serialize, SAVE_KEY } from './state';
 import {
   tick, computeModifiers, applyOfflineOnLoad, claimOffline, storeUnlocked, startCycle, earn, tapValue,
@@ -21,11 +22,15 @@ import { acceptOffer, counterOffer, declineOffer, apologize, tossFake, flipFake,
 import { unitCost, maxAffordable, todayKey } from './math';
 import { AD_RULES, type AdPlacement, type MonetizationProvider } from '../monetization/provider';
 
+export type TabId = 'hunt' | 'stores' | 'deals' | 'shelf' | 'boost' | 'shop';
+
 export interface Toast {
   id: number;
   text: string;
   icon?: string;
   kind?: 'info' | 'good' | 'bad' | 'rare';
+  /** Tapping the toast jumps to this tab. */
+  tab?: TabId;
 }
 
 export type BuyAmount = 1 | 10 | 100 | 'max';
@@ -61,6 +66,8 @@ interface GameStore {
   openRelocate: () => void;
   closeRelocate: () => void;
   relocating: boolean;
+  tabRequest: TabId | null;
+  requestTab: (t: TabId | null) => void;
   claimOfflineNormal: () => void;
   claimOfflineDouble: () => Promise<void>;
   watchAd: (placement: AdPlacement) => Promise<void>;
@@ -85,7 +92,7 @@ interface GameStore {
   apologize: () => void;
   fakeToss: (idx: number) => void;
   fakeFlip: (idx: number) => void;
-  toast: (text: string, icon?: string, kind?: Toast['kind']) => void;
+  toast: (text: string, icon?: string, kind?: Toast['kind'], tab?: TabId) => void;
   dismissToast: (id: number) => void;
   setSetting: <K extends keyof GameState['settings']>(k: K, v: GameState['settings'][K]) => void;
 }
@@ -99,10 +106,10 @@ export const useGame = create<GameStore>((set, get) => {
     fn(s);
     set({ s: { ...s } });
   };
-  const toast = (text: string, icon?: string, kind: Toast['kind'] = 'info') => {
+  const toast = (text: string, icon?: string, kind: Toast['kind'] = 'info', tab?: TabId) => {
     const id = toastSeq++;
-    set((st) => ({ toasts: [...st.toasts.slice(-4), { id, text, icon, kind }] }));
-    setTimeout(() => get().dismissToast(id), 3500);
+    set((st) => ({ toasts: [...st.toasts.slice(-4), { id, text, icon, kind, tab }] }));
+    setTimeout(() => get().dismissToast(id), tab ? 6000 : 3500);
   };
   const track = (event: string, props?: Record<string, string | number | boolean>) => get().provider?.analytics.track(event, props);
 
@@ -157,6 +164,8 @@ export const useGame = create<GameStore>((set, get) => {
     run: null,
     runResult: null,
     relocating: false,
+    tabRequest: null,
+    requestTab: (t) => set({ tabRequest: t }),
     provider: null,
     buyAmount: 1,
 
@@ -230,7 +239,7 @@ export const useGame = create<GameStore>((set, get) => {
         const kinds: Record<MarketEventKind, string> = { drop: '🔥', viral: '📱', holiday: '🎄', restock: '🌊', crackdown: '🚫' };
         toast(`Market event: ${res.eventStarted.toUpperCase()}`, kinds[res.eventStarted], res.eventStarted === 'restock' || res.eventStarted === 'crackdown' ? 'bad' : 'good');
       }
-      if (res.offerArrived) { toast(`New message from ${res.offerArrived.buyer}`, '💬', 'info'); sfx.message(); }
+      if (res.offerArrived) { toast(`${res.offerArrived.buyer} messaged you about your ${ITEM_BY_ID[res.offerArrived.itemId]?.name ?? 'listing'}. Tap to open Deals.`, '💬', 'info', 'deals'); sfx.message(); }
       if (res.calledOut) { toast('CALLED OUT. The group posted your listings. Profit x0.4 for 3 min.', '📸', 'bad'); sfx.calledOut(); fx({ kind: 'shake' }); fx({ kind: 'flash', color: '#ff6b6b' }); }
       for (const id of res.tutorialDone) { const t = TUTORIAL.find((x) => x.id === id); toast(`Tutorial: ${t?.text} (+${t?.clout} Clout)`, '✅', 'good'); sfx.achievement(); }
       for (const id of res.overtook) { const r = RANKED_RIVALS.find((x) => x.id === id); toast(`You passed ${r?.name} in the local rankings! +${r?.clout} Clout`, r?.icon ?? '🏆', 'rare'); sfx.rare(); fx({ kind: 'confetti', intensity: 1 }); }

@@ -3,7 +3,7 @@ import { useGame } from '../engine/store';
 import { UPGRADES } from '../engine/data/upgrades';
 import { ITEM_BY_ID } from '../engine/data/items';
 import { DRAMA_FEED } from '../engine/data/offers';
-import { APOLOGY_CLOUT, CALLED_OUT_SECONDS, PRICING } from '../engine/deals';
+import { APOLOGY_CLOUT, CALLED_OUT_SECONDS, PRICING, OFFER_TTL_SECONDS } from '../engine/deals';
 import type { Pricing, OfferKind } from '../engine/types';
 import { Sprite } from '../art/Sprite';
 import { Portrait, type PortraitKind } from '../art/Portrait';
@@ -45,32 +45,9 @@ export function DealsTab() {
 
   return (
     <div>
-      <div className={`card heat ${heatCls}`}>
-        <div className="row between">
-          <h3>🔥 Community heat · {Math.floor(s.heat)}/100</h3>
-          <button className="btn sm" disabled={s.heat < 10 && !calledOut} onClick={apologize}>📝 Apology video 💠{APOLOGY_CLOUT}</button>
-        </div>
-        <div className="progress heatbar mt"><i style={{ width: `${s.heat}%` }} /></div>
-        <div className="small mt">
-          {calledOut
-            ? `CALLED OUT: the group posted your listings. Profit x0.4 for ${formatDuration((calledOut.endsAt - now) / 1000)}.`
-            : `Sketchy tactics, clapping back and bot farms raise it. At 100 the group screenshots you: profit x0.4 for ${CALLED_OUT_SECONDS / 60} minutes.`}
-        </div>
-      </div>
-
-      <div className="ticker">📣 {DRAMA_FEED[drama]}</div>
-
-      <h2 className="sec">Your Facebook listings · pricing</h2>
-      <div className="seg">
-        {(Object.keys(PRICING) as Pricing[]).map((p) => (
-          <button key={p} className={s.pricing === p ? 'active' : ''} onClick={() => setPricing(p)}>{PRICING[p].label}</button>
-        ))}
-      </div>
-      <div className="small" style={{ marginTop: -4, marginBottom: 8 }}>{PRICING[s.pricing].blurb}</div>
-
-      <h2 className="sec">Messages · {s.offers.length} open {m.offerRate > 1 || m.offerValue > 1 ? `· x${m.offerRate.toFixed(1)} rate, x${m.offerValue.toFixed(2)} value` : ''}</h2>
+      <h2 className="sec">📬 Marketplace inbox · {s.offers.length} open {m.offerRate > 1 || m.offerValue > 1 ? `· x${m.offerRate.toFixed(1)} rate, x${m.offerValue.toFixed(2)} value` : ''}</h2>
       {s.offers.length === 0 && (
-        <div className="card center sub">No messages. Buyers find your listings every ~{Math.round(30 / m.offerRate)}s while you play. Pull more items to list more.</div>
+        <div className="card center sub">Inbox empty. Buyers message you about your shelf every ~{Math.round(30 / m.offerRate)}s while the game is open, and each message waits {OFFER_TTL_SECONDS / 60} minutes. Pull more items to list more.</div>
       )}
       {s.offers.map((o) => {
         const it = ITEM_BY_ID[o.itemId];
@@ -115,6 +92,29 @@ export function DealsTab() {
           </div>
         );
       })}
+
+      <div className={`card heat ${heatCls}`}>
+        <div className="row between">
+          <h3>🔥 Community heat · {Math.floor(s.heat)}/100</h3>
+          <button className="btn sm" disabled={s.heat < 10 && !calledOut} onClick={apologize}>📝 Apology video 💠{APOLOGY_CLOUT}</button>
+        </div>
+        <div className="progress heatbar mt"><i style={{ width: `${s.heat}%` }} /></div>
+        <div className="small mt">
+          {calledOut
+            ? `CALLED OUT: the group posted your listings. Profit x0.4 for ${formatDuration((calledOut.endsAt - now) / 1000)}.`
+            : `Sketchy tactics, clapping back and bot farms raise it. At 100 the group screenshots you: profit x0.4 for ${CALLED_OUT_SECONDS / 60} minutes.`}
+        </div>
+      </div>
+
+      <div className="ticker">📣 {DRAMA_FEED[drama]}</div>
+
+      <h2 className="sec">Your Facebook listings · pricing</h2>
+      <div className="seg">
+        {(Object.keys(PRICING) as Pricing[]).map((p) => (
+          <button key={p} className={s.pricing === p ? 'active' : ''} onClick={() => setPricing(p)}>{PRICING[p].label}</button>
+        ))}
+      </div>
+      <div className="small" style={{ marginTop: -4, marginBottom: 8 }}>{PRICING[s.pricing].blurb}</div>
 
       {s.fakes.length > 0 && (
         <>

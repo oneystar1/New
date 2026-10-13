@@ -21,7 +21,7 @@ export type Tab = 'hunt' | 'stores' | 'deals' | 'shelf' | 'boost' | 'shop';
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'hunt', label: 'Hunt', icon: '🍌' },
   { id: 'stores', label: 'Routes', icon: '🛒' },
-  { id: 'deals', label: 'Deals', icon: '🤝' },
+  { id: 'deals', label: 'Messages', icon: '💬' },
   { id: 'shelf', label: 'Shelf', icon: '📒' },
   { id: 'boost', label: 'Hustle', icon: '⚡' },
   { id: 'shop', label: 'Shop', icon: '💠' },
@@ -40,7 +40,13 @@ export function App() {
   const setProvider = useGame((g) => g.setProvider);
   const s = useGame((g) => g.s);
   const now = useGame((g) => g.now);
+  const tabRequest = useGame((g) => g.tabRequest);
+  const requestTab = useGame((g) => g.requestTab);
   const loaded = useRef(false);
+
+  useEffect(() => {
+    if (tabRequest) { setTab(tabRequest); requestTab(null); }
+  }, [tabRequest, requestTab]);
 
   // Boot: provider, load save (offline earnings), start the loop, autosave.
   useEffect(() => {
@@ -95,7 +101,7 @@ export function App() {
           <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id)}>
             <span className="ico">{t.icon}</span>
             {t.label}
-            {dots[t.id] && <span className="dot" />}
+            {t.id === 'deals' && s.offers.length > 0 ? <span className="count">{s.offers.length}</span> : dots[t.id] && <span className="dot" />}
           </button>
         ))}
       </nav>

@@ -10,7 +10,7 @@ import { formatCash, weightedPick } from './math';
 
 export const MAX_OFFERS = 3;
 export const OFFER_INTERVAL_SECONDS = 30;
-export const OFFER_TTL_SECONDS = 90;
+export const OFFER_TTL_SECONDS = 180;
 
 const KIND_WEIGHTS: Record<OfferKind, number> = { fair: 28, lowball: 26, ghost: 14, scam: 11, karen: 8, trade: 5, sneakerbro: 8 };
 
