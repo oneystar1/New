@@ -40,5 +40,13 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'a_fake', name: 'Wrong Font', blurb: 'Toss a counterfeit.', icon: '🔦', clout: 5, check: (s) => s.stats.fakesTossed >= 1 },
   { id: 'a_calledout', name: 'Screenshotted', blurb: 'Get Called Out by the community.', icon: '📸', clout: 15, check: (s) => s.stats.calledOut >= 1 },
   { id: 'a_heat50', name: 'Group Chat Villain', blurb: 'Own 4 sketchy tactics.', icon: '😈', clout: 20, check: (s) => s.upgrades.filter((u) => u.startsWith('k_')).length >= 4 },
+  { id: 'a_restock1', name: 'Doors Open', blurb: 'Survive your first restock run.', icon: '🚪', clout: 10, check: (s) => s.stats.restocks >= 1 },
+  { id: 'a_restock10', name: 'Line Veteran', blurb: 'Complete 10 restock runs.', icon: '⛺', clout: 25, check: (s) => s.stats.restocks >= 10 },
+  { id: 'a_sweep', name: 'Shelf Sweeper', blurb: 'Grab 10 units in a single restock.', icon: '🧹', clout: 20, check: (s) => s.stats.bestRestock >= 10 },
+  { id: 'a_kidspare', name: 'Let The Kid Have It', blurb: 'Spare 5 kids at the shelf.', icon: '🥹', clout: 15, check: (s) => s.stats.kidsSpared >= 5 },
+  { id: 'a_kidsnatch', name: 'Stepped Over A Child', blurb: 'Snatch from 5 kids. Three people filmed each one.', icon: '😈', clout: 15, check: (s) => s.stats.kidsSnatched >= 5 },
+  { id: 'a_momfight', name: 'Minivan Standoff', blurb: 'Argue with 10 NeeDoh Moms.', icon: '👩‍👧‍👦', clout: 15, check: (s) => s.stats.momsArgued >= 10 },
+  { id: 'a_banned', name: 'Photo By The Register', blurb: 'Get banned from a store.', icon: '🚫', clout: 10, check: (s) => s.stats.bans >= 1 },
+  { id: 'a_insane', name: '"Firm On Price"', blurb: 'Close a deal while pricing is set to Insane.', icon: '💅', clout: 15, check: (s) => s.pricing === 'insane' && s.stats.offersAccepted >= 1 },
   { id: 'a_hour', name: 'Just One More Cycle', blurb: 'Play for a total of one hour.', icon: '⏳', clout: 10, check: (s) => s.stats.playSeconds >= 3600 },
 ];

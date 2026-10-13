@@ -3,7 +3,8 @@ import { useGame } from '../engine/store';
 import { UPGRADES } from '../engine/data/upgrades';
 import { ITEM_BY_ID } from '../engine/data/items';
 import { DRAMA_FEED } from '../engine/data/offers';
-import { APOLOGY_CLOUT, CALLED_OUT_SECONDS } from '../engine/deals';
+import { APOLOGY_CLOUT, CALLED_OUT_SECONDS, PRICING } from '../engine/deals';
+import type { Pricing } from '../engine/types';
 import { computeModifiers } from '../engine/sim';
 import { formatCash, formatDuration, formatNumber } from '../engine/math';
 import type { OfferKind } from '../engine/types';
@@ -27,6 +28,7 @@ export function DealsTab() {
   const fakeToss = useGame((g) => g.fakeToss);
   const fakeFlip = useGame((g) => g.fakeFlip);
   const buyUpgrade = useGame((g) => g.buyUpgrade);
+  const setPricing = useGame((g) => g.setPricing);
   const [drama, setDrama] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setDrama((d) => (d + 1) % DRAMA_FEED.length), 6000);
@@ -53,6 +55,14 @@ export function DealsTab() {
       </div>
 
       <div className="ticker">📣 {DRAMA_FEED[drama]}</div>
+
+      <h2 className="sec">Your Facebook listings · pricing</h2>
+      <div className="seg">
+        {(Object.keys(PRICING) as Pricing[]).map((p) => (
+          <button key={p} className={s.pricing === p ? 'active' : ''} onClick={() => setPricing(p)}>{PRICING[p].label}</button>
+        ))}
+      </div>
+      <div className="small" style={{ marginTop: -4, marginBottom: 8 }}>{PRICING[s.pricing].blurb}</div>
 
       <h2 className="sec">Messages · {s.offers.length} open {m.offerRate > 1 || m.offerValue > 1 ? `· x${m.offerRate.toFixed(1)} rate, x${m.offerValue.toFixed(2)} value` : ''}</h2>
       {s.offers.length === 0 && (

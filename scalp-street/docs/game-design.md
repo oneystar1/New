@@ -87,6 +87,39 @@ Heat resets to 45. An apology video (30 Clout) clears it. Relocate resets it.
 the Deals tab: toss for an achievement, or flip for 20 seconds of income and
 +8 Heat.
 
+## Restock runs: the line, the moms, the kids
+
+Every store you own a unit of gets a restock every 10 minutes. A run has
+three phases:
+
+1. **Line.** 4 to 7 rivals ahead of you (minus line gear: Folding Chair
+   skips 2, Overnight Tent 3). Rivals: NeeDoh Mom (takes 2 to 4), kid (1),
+   other reseller (2 to 3), grandpa (1), employee holding stock (2). The
+   shelf has 10 to 17 units; what the line leaves is what you fight for.
+   60% of runs open with a line encounter (a mom asks to cut, a sleeping
+   kid is ahead of you).
+2. **Doors.** 12 seconds. Three taps of GRAB secure one unit, up to your
+   carry (4, +3 minivan, +6 "cousins"). Every ~3 to 5 seconds an encounter
+   pauses the clock: kid reaches for the last one (spare: -1 unit, -4 heat;
+   snatch: +1 unit, +10 heat), mom blocks the aisle (argue +6 heat 50/50,
+   compliment her minivan 70% pass, crawl under +3 heat), admin films you,
+   Dalton offers to split the shelf (take half, run ends), manager enforces
+   the limit (comply: 2 more max; "buying for my cousins": 60% works, 40%
+   banned).
+3. **Checkout.** Each unit is a real pull from that store (counterfeit odds
+   apply), plus cash worth 3 cycles of that store per unit. Heat from the
+   run is applied. A ban locks the store for 10 minutes: no cycles, no
+   restocks, a BANNED badge on the Routes tab.
+
+## Facebook pricing dial
+
+| Setting | Offer value | Feed |
+| --- | --- | --- |
+| Retail | 0.6x | 60% fair buyers, no Karens, group-approved |
+| Fair | 1x | the default mix |
+| Scalper | 1.6x | more lowballs, twice the Karens |
+| Insane | 2.8x | mostly ghosts and Karens, +0.03 heat/sec |
+
 ## Economy tuning
 
 Store table (cost x16 per store, profit/cost ratio falls 38% per store,

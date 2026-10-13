@@ -10,6 +10,7 @@ import { ShelfTab } from './ShelfTab';
 import { BoostTab } from './BoostTab';
 import { ShopTab } from './ShopTab';
 import { Overlays, AdOverlay, PurchaseOverlay } from './Overlays';
+import { RestockOverlay } from './RestockOverlay';
 import { dailyAvailable } from '../engine/sim';
 import { MISSION_POOL } from '../engine/data/missions';
 
@@ -97,6 +98,7 @@ export function App() {
         ))}
       </nav>
       <Overlays />
+      <RestockOverlay />
       {adReq && (
         <AdOverlay
           placement={adReq.placement}

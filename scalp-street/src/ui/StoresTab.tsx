@@ -3,6 +3,7 @@ import { STORES } from '../engine/data/stores';
 import { MANAGER_BY_STORE } from '../engine/data/managers';
 import { computeModifiers, storeCycleProfit, storeCycleSeconds, storeUnlocked } from '../engine/sim';
 import { unitCost, maxAffordable, formatCash, formatDuration, milestoneMult, nextMilestone } from '../engine/math';
+import { isBanned } from '../engine/restock';
 
 const AMOUNTS: BuyAmount[] = [1, 10, 100, 'max'];
 
@@ -51,7 +52,7 @@ export function StoresTab() {
               <div className="grow">
                 <div className="row between">
                   <h3>{st.name} <span className="small">×{ss.units}</span></h3>
-                  {ss.units > 0 && <span className="small">x{milestoneMult(ss.units)} · {formatDuration(cycle)}</span>}
+                  {ss.units > 0 && <span className="small">{isBanned(s, st.id, now) ? <b style={{ color: 'var(--red)' }}>🚫 BANNED · </b> : null}x{milestoneMult(ss.units)} · {formatDuration(cycle)}</span>}
                 </div>
                 {ss.units > 0 ? (
                   <>

@@ -1,4 +1,4 @@
-import type { GameState, Offer, OfferKind, ItemDef } from './types';
+import type { GameState, Offer, OfferKind, ItemDef, Pricing } from './types';
 import { ITEMS, ITEM_BY_ID } from './data/items';
 import { BUYER_NAMES, OFFER_TEMPLATES } from './data/offers';
 import { computeModifiers, incomePerSecond, earn, bumpMission, pullItem, highestUnlockedStore, type Modifiers } from './sim';
@@ -13,6 +13,14 @@ export const OFFER_INTERVAL_SECONDS = 30;
 export const OFFER_TTL_SECONDS = 90;
 
 const KIND_WEIGHTS: Record<OfferKind, number> = { fair: 30, lowball: 28, ghost: 16, scam: 12, karen: 8, trade: 6 };
+
+/** The Facebook pricing dial: how hard you scalp. */
+export const PRICING: Record<Pricing, { label: string; blurb: string; value: number; weights: Partial<Record<OfferKind, number>> }> = {
+  retail: { label: 'Retail', blurb: 'Group-approved. Fair buyers only, no Karens, offers worth 60%.', value: 0.6, weights: { fair: 60, lowball: 10, ghost: 10, scam: 6, karen: 0, trade: 8 } },
+  fair: { label: 'Fair', blurb: 'A little over retail. The normal feed.', value: 1, weights: KIND_WEIGHTS },
+  scalper: { label: 'Scalper', blurb: 'Double retail. Offers worth 160%. More lowballs, twice the Karens.', value: 1.6, weights: { fair: 22, lowball: 36, ghost: 18, scam: 12, karen: 16, trade: 4 } },
+  insane: { label: 'Insane', blurb: '10x retail "firm". Offers worth 280%. Ghosts, Karens, slow heat gain.', value: 2.8, weights: { fair: 10, lowball: 30, ghost: 26, scam: 10, karen: 30, trade: 2 } },
+};
 
 /** Seconds of income an offer is worth, by kind. */
 const KIND_SECONDS: Record<OfferKind, [number, number]> = {
@@ -35,13 +43,14 @@ export function listedItemFor(s: GameState, rand: () => number): ItemDef {
 }
 
 export function makeOffer(s: GameState, m: Modifiers, now: number, rand: () => number): Offer {
-  let kind = weightedPick(KIND_WEIGHTS, rand);
+  const pricing = PRICING[s.pricing ?? 'fair'];
+  let kind = weightedPick(pricing.weights, rand);
   if (kind === 'scam' && m.scamShield) kind = 'fair';
   const item = listedItemFor(s, rand);
   const ips = Math.max(1, incomePerSecond(s, m, true));
   const [lo, hi] = KIND_SECONDS[kind];
   const secs = lo + rand() * (hi - lo);
-  const amount = kind === 'karen' || kind === 'trade' ? 0 : Math.max(item.retail * 0.5, ips * secs * m.offerValue * s.hype[item.family]);
+  const amount = kind === 'karen' || kind === 'trade' ? 0 : Math.max(item.retail * 0.5, ips * secs * m.offerValue * pricing.value * s.hype[item.family]);
   const tpl = OFFER_TEMPLATES[kind];
   const message = tpl[Math.floor(rand() * tpl.length)]
     .replace('{item}', item.name)

@@ -6,7 +6,7 @@ sticks and blind-box dumplings. Camp the drops, hoard the bananas, flip the
 dohs, get found out, relocate, repeat.
 Web first (PWA), built to wrap into an iOS app with Capacitor.
 
-![hunt](docs/screenshots/01-hunt.png) ![deals](docs/screenshots/03-deals.png) ![shop](docs/screenshots/06-shop.png)
+![line](docs/screenshots/03-line.png) ![deals](docs/screenshots/06-deals.png)
 
 ## Run it
 
@@ -27,6 +27,18 @@ npm run balance 8  # greedy-bot economy sim for 8 simulated hours
 - **52 collectible items** in two families (Dohs and Squishies) and six
   rarity tiers, a mystery pull gacha with published odds, a shelf bonus,
   duplicate flipping.
+- **Restock runs**: stand in line at 6am behind NeeDoh Moms ("two per
+  FAMILY", she brought the family), little kids with birthday money, other
+  resellers and the employee holding one for a friend. When the doors open
+  you mash GRAB for 12 seconds while a kid reaches for the last one, a mom
+  parks her cart across the aisle and films you for the group, Dalton
+  offers to split the shelf, and the manager says "Sir. SIR. Two per
+  customer." Spare the kid or step over him. Lie about cousins and risk a
+  10-minute store ban. Gear (folding chair, tent, minivan, four "cousins")
+  moves you up the line and raises your carry.
+- **Facebook pricing dial**: Retail, Fair, Scalper or Insane. Higher
+  pricing makes offers worth up to 2.8x but floods the feed with lowballs,
+  ghosts and Karens, and Insane slowly raises Heat.
 - **Deals feed**: a Facebook-Marketplace-style stream of buyers for the
   items on your shelf. Fair buyers, lowballers, "is this available?"
   ghosts, Zelle and Friends & Family scammers, trade offers and angry

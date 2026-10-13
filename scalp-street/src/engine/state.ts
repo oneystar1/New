@@ -36,6 +36,9 @@ export function initialState(now = Date.now()): GameState {
     offers: [],
     nextOfferAt: now + 20_000,
     fakes: [],
+    pricing: 'fair',
+    restockReadyAt: {},
+    bannedUntil: {},
     stats: {
       totalCashEarned: 0,
       lifetimeCashEarned: 0,
@@ -58,6 +61,13 @@ export function initialState(now = Date.now()): GameState {
       fakesFlipped: 0,
       calledOut: 0,
       tradesDone: 0,
+      restocks: 0,
+      restockUnits: 0,
+      bestRestock: 0,
+      kidsSpared: 0,
+      kidsSnatched: 0,
+      momsArgued: 0,
+      bans: 0,
     },
     settings: { sfx: true, haptics: true, notation: 'short' },
   };
@@ -82,6 +92,8 @@ export function migrate(raw: unknown, now = Date.now()): GameState {
     adsToday: s.adsToday ?? fresh.adsToday,
     offers: Array.isArray(s.offers) ? s.offers : [],
     fakes: Array.isArray(s.fakes) ? s.fakes : [],
+    restockReadyAt: s.restockReadyAt ?? {},
+    bannedUntil: s.bannedUntil ?? {},
     version: SAVE_VERSION,
   };
   for (const st of STORES) if (!merged.stores[st.id]) merged.stores[st.id] = { units: 0, progress: 0, manager: false };

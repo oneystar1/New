@@ -38,6 +38,8 @@ export interface Modifiers {
   scamShield: boolean;
   fakeShield: boolean;
   heatDecay: number;
+  linePosition: number;
+  carry: number;
 }
 
 export const BASE_OFFLINE_CAP_HOURS = 2;
@@ -77,6 +79,8 @@ export function computeModifiers(s: GameState, now: number): Modifiers {
     scamShield: false,
     fakeShield: false,
     heatDecay: 1,
+    linePosition: 0,
+    carry: 0,
   };
   for (const st of STORES) {
     m.storeProfit[st.id] = 1;
@@ -103,6 +107,8 @@ export function computeModifiers(s: GameState, now: number): Modifiers {
       case 'scamShield': m.scamShield = true; break;
       case 'fakeShield': m.fakeShield = true; break;
       case 'heatDecay': m.heatDecay *= e.mult; break;
+      case 'linePosition': m.linePosition += e.add; break;
+      case 'carry': m.carry += e.add; break;
     }
   }
   // Shelf (collection) bonus: each unique item owned adds a small % to profit.
@@ -220,6 +226,7 @@ export function tick(s: GameState, dt: number, now: number, rand: () => number =
     const ss = s.stores[st.id];
     if (!ss || ss.units <= 0) continue;
     if (!ss.manager && ss.progress <= 0) continue; // waiting for a manual start
+    if ((s.bannedUntil[st.id] ?? 0) > now) continue; // banned: escorted out, no cycles
     const cycle = storeCycleSeconds(s, st.id, m);
     const profit = storeCycleProfit(s, st.id, m);
     ss.progress += dt / cycle;
@@ -244,6 +251,7 @@ export function tick(s: GameState, dt: number, now: number, rand: () => number =
   // Deals feed and community heat.
   const newOffer = tickOffers(s, m, now, rand);
   if (newOffer) res.offerArrived = newOffer;
+  if (s.pricing === 'insane') s.heat = Math.min(100, s.heat + 0.03 * dt);
   if (tickHeat(s, m, dt, now)) res.calledOut = true;
 
   // Events

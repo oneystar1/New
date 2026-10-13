@@ -2,7 +2,9 @@ import { useState, useCallback } from 'react';
 import { useGame } from '../engine/store';
 import { computeModifiers, tapValue, dailyAvailable, DAILY_REWARDS, highestUnlockedStore } from '../engine/sim';
 import { MISSION_POOL } from '../engine/data/missions';
-import { STORE_BY_ID } from '../engine/data/stores';
+import { STORE_BY_ID, STORES } from '../engine/data/stores';
+import { restockReady, isBanned } from '../engine/restock';
+import { formatDuration } from '../engine/math';
 import { ITEMS } from '../engine/data/items';
 import { formatCash } from '../engine/math';
 import type { Reward } from '../engine/types';
@@ -24,6 +26,7 @@ export function HuntTab() {
   const huntMeter = useGame((g) => g.huntMeter);
   const claimDailyReward = useGame((g) => g.claimDailyReward);
   const claimMissionReward = useGame((g) => g.claimMissionReward);
+  const restockStart = useGame((g) => g.restockStart);
   const [floats, setFloats] = useState<{ id: number; x: number; y: number; text: string }[]>([]);
   const m = computeModifiers(s, now);
   const tv = tapValue(s, m);
@@ -63,6 +66,24 @@ export function HuntTab() {
       </div>
       <div className="progress gold"><i style={{ width: `${Math.min(100, huntMeter * 100)}%` }} /></div>
       <div className="hint">Hunt meter · {Math.floor(huntMeter * 100)}%</div>
+
+      <h2 className="sec">Restock lines</h2>
+      {STORES.filter((st) => (s.stores[st.id]?.units ?? 0) > 0).length === 0 && <div className="card center sub">Buy a store unit on the Routes tab to start camping its restocks.</div>}
+      {STORES.filter((st) => (s.stores[st.id]?.units ?? 0) > 0).map((st) => {
+        const ready = restockReady(s, st.id, now);
+        const banned = isBanned(s, st.id, now);
+        const until = banned ? s.bannedUntil[st.id] : s.restockReadyAt[st.id] ?? 0;
+        return (
+          <div className="card row" key={st.id}>
+            <div className="ico-lg">{st.icon}</div>
+            <div className="grow">
+              <h3>{st.name}</h3>
+              <div className="sub">{banned ? `BANNED · ${formatDuration((until - now) / 1000)} left` : ready ? 'Truck spotted. Line is forming. Grab what the moms leave.' : `Next restock in ${formatDuration((until - now) / 1000)}`}</div>
+            </div>
+            <button className="btn gold sm" disabled={!ready} onClick={() => restockStart(st.id)}>{banned ? '🚫' : ready ? '⛺ Camp' : '⏳'}</button>
+          </div>
+        );
+      })}
 
       <h2 className="sec">Daily login</h2>
       <div className="card row">

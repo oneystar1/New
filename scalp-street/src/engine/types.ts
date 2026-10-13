@@ -69,7 +69,9 @@ export type UpgradeEffect =
   | { kind: 'scamRadar' }
   | { kind: 'scamShield' }
   | { kind: 'fakeShield' }
-  | { kind: 'heatDecay'; mult: number };
+  | { kind: 'heatDecay'; mult: number }
+  | { kind: 'linePosition'; add: number }
+  | { kind: 'carry'; add: number };
 
 export type Currency = 'cash' | 'clout' | 'cred';
 
@@ -108,6 +110,38 @@ export interface Offer {
   flagged: boolean;
   expiresAt: number;
 }
+
+export type RivalKind = 'mom' | 'kid' | 'reseller' | 'grandpa' | 'employee';
+
+export interface Rival {
+  kind: RivalKind;
+  name: string;
+  icon: string;
+  takes: number;
+}
+
+export interface RestockRun {
+  storeId: string;
+  phase: 'line' | 'doors' | 'done';
+  stock: number;
+  remaining: number;
+  rivals: Rival[];
+  grabbed: number;
+  grabProgress: number;
+  timeLeft: number;
+  encounter: string | null;
+  nextEncounterIn: number;
+  limit: number | null;
+  heat: number;
+  banned: boolean;
+  kidsSpared: number;
+  kidsSnatched: number;
+  momsArgued: number;
+  log: string[];
+  carry: number;
+}
+
+export type Pricing = 'retail' | 'fair' | 'scalper' | 'insane';
 
 export interface PullResult {
   item: ItemDef;
@@ -165,7 +199,7 @@ export interface MissionDef {
   blurb: string;
   /** Target measured against the mission's counter. */
   target: number;
-  counter: 'taps' | 'cashEarned' | 'unitsBought' | 'pulls' | 'adsWatched' | 'sales' | 'deals';
+  counter: 'taps' | 'cashEarned' | 'unitsBought' | 'pulls' | 'adsWatched' | 'sales' | 'deals' | 'restocks';
   rewardClout: number;
   rewardPassXp: number;
 }
@@ -230,6 +264,13 @@ export interface Stats {
   fakesFlipped: number;
   calledOut: number;
   tradesDone: number;
+  restocks: number;
+  restockUnits: number;
+  bestRestock: number;
+  kidsSpared: number;
+  kidsSnatched: number;
+  momsArgued: number;
+  bans: number;
 }
 
 export interface GameState {
@@ -269,6 +310,10 @@ export interface GameState {
   nextOfferAt: number;
   /** Counterfeits pulled but not yet tossed or flipped. */
   fakes: string[];
+  /** How hard you scalp on the Facebook listings. Shifts the Deals feed. */
+  pricing: Pricing;
+  restockReadyAt: Record<string, number>;
+  bannedUntil: Record<string, number>;
   stats: Stats;
   settings: { sfx: boolean; haptics: boolean; notation: 'short' | 'scientific' };
 }

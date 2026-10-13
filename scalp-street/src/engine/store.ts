@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { GameState, ItemDef, MarketEventKind, Reward } from './types';
+import type { GameState, ItemDef, MarketEventKind, Reward, RestockRun, Pricing } from './types';
+import { startRun, openDoors, grab, tickRun, choose, finishRun } from './restock';
 import { initialState, deserialize, serialize, SAVE_KEY } from './state';
 import {
   tick, computeModifiers, applyOfflineOnLoad, claimOffline, storeUnlocked, startCycle, earn, tapValue,
@@ -30,6 +31,8 @@ interface GameStore {
   toasts: Toast[];
   lastPulls: ItemDef[] | null;
   huntMeter: number; // 0..1, fills with taps, grants a free pull
+  run: RestockRun | null;
+  runResult: { items: ItemDef[]; fakes: number; cash: number; heat: number; banned: boolean; grabbed: number } | null;
   provider: MonetizationProvider | null;
   buyAmount: BuyAmount;
 
@@ -61,6 +64,13 @@ interface GameStore {
   spendClout: (what: keyof typeof CLOUT_COSTS) => void;
   breakPiggy: () => void;
   dismissPulls: () => void;
+  restockStart: (storeId: string) => void;
+  restockOpen: () => void;
+  restockGrab: () => void;
+  restockChoose: (idx: number) => void;
+  restockFinish: () => void;
+  restockDismiss: () => void;
+  setPricing: (p: Pricing) => void;
   dealAccept: (id: number) => void;
   dealCounter: (id: number) => void;
   dealDecline: (id: number) => void;
@@ -136,6 +146,8 @@ export const useGame = create<GameStore>((set, get) => {
     toasts: [],
     lastPulls: null,
     huntMeter: 0,
+    run: null,
+    runResult: null,
     provider: null,
     buyAmount: 1,
 
@@ -199,6 +211,11 @@ export const useGame = create<GameStore>((set, get) => {
       if (dt <= 0) return;
       const s = st.s;
       const res = tick(s, dt, now, rand);
+      if (st.run && st.run.phase === 'doors') {
+        const run = { ...st.run };
+        tickRun(run, dt, rand);
+        set({ run });
+      }
       if (res.eventStarted) {
         const kinds: Record<MarketEventKind, string> = { drop: '🔥', viral: '📱', holiday: '🎄', restock: '🌊', crackdown: '🚫' };
         toast(`Market event: ${res.eventStarted.toUpperCase()}`, kinds[res.eventStarted], res.eventStarted === 'restock' || res.eventStarted === 'crackdown' ? 'bad' : 'good');
@@ -462,6 +479,44 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     dismissPulls: () => set({ lastPulls: null }),
+    restockStart: (storeId) => {
+      const st = get();
+      const now = Date.now();
+      const m = computeModifiers(st.s, now);
+      const run = startRun(st.s, storeId, m, now, rand);
+      if (!run) { toast('No restock yet. Check the cooldown.', '⏳', 'bad'); return; }
+      track('restock_start', { storeId });
+      set({ run, runResult: null });
+    },
+    restockOpen: () => { const r = get().run; if (!r) return; const run = { ...r }; openDoors(run); set({ run }); },
+    restockGrab: () => {
+      const st = get();
+      if (!st.run) return;
+      const m = computeModifiers(st.s, st.now);
+      const run = { ...st.run };
+      grab(run, m.tapPower);
+      if (st.s.settings.haptics && 'vibrate' in navigator) navigator.vibrate?.(6);
+      set({ run });
+    },
+    restockChoose: (idx) => {
+      const r = get().run;
+      if (!r) return;
+      const run = { ...r };
+      const msg = choose(run, idx, rand);
+      if (msg) toast(msg, '💬', run.banned ? 'bad' : 'info');
+      set({ run });
+    },
+    restockFinish: () => {
+      const st = get();
+      if (!st.run || st.run.phase !== 'done') return;
+      const s = st.s;
+      const res = finishRun(s, st.run, Date.now(), rand);
+      track('restock_done', { storeId: st.run.storeId, grabbed: st.run.grabbed, banned: res.banned });
+      set({ s: { ...s }, run: null, runResult: { ...res, grabbed: st.run.grabbed } });
+      get().save();
+    },
+    restockDismiss: () => set({ runResult: null }),
+    setPricing: (p) => mutate((s) => { s.pricing = p; }),
     dealAccept: (id) => {
       const st = get();
       const r = acceptOffer(st.s, id, Date.now(), rand);
