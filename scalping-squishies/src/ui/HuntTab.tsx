@@ -9,6 +9,7 @@ import { TUTORIAL } from '../engine/data/tutorial';
 import { isConWeekend } from '../engine/sim';
 import { Sprite } from '../art/Sprite';
 import { StoreSprite } from '../art/Portrait';
+import { haptic } from '../platform/native';
 import { ITEMS } from '../engine/data/items';
 import { formatCash } from '../engine/math';
 import type { Reward } from '../engine/types';
@@ -42,7 +43,7 @@ export function HuntTab() {
   const onTap = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       tap();
-      if (s.settings.haptics && 'vibrate' in navigator) navigator.vibrate?.(8);
+      if (s.settings.haptics) haptic.light();
       const rect = e.currentTarget.getBoundingClientRect();
       const id = Date.now() + Math.random();
       setFloats((f) => [...f.slice(-12), { id, x: e.clientX - rect.left, y: e.clientY - rect.top, text: '+' + formatCash(tv) }]);

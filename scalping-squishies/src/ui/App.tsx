@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGame } from '../engine/store';
-import { createMockProvider } from '../monetization';
+import { createMockProvider, createCapacitorProvider } from '../monetization';
+import { createAnalytics } from '../net/analytics';
+import { getDeviceId } from '../net/identity';
+import { isNative, platform, onAppStateChange, scheduleReturnNotifications } from '../platform/native';
+import { computeModifiers } from '../engine/sim';
+import { STORES } from '../engine/data/stores';
 import type { AdPlacement } from '../monetization';
 import { Header } from './Header';
 import { HuntTab } from './HuntTab';
@@ -52,17 +57,36 @@ export function App() {
   useEffect(() => {
     if (loaded.current) return;
     loaded.current = true;
-    setProvider(
-      createMockProvider({
-        onSimulatedAd: (placement, kind) => new Promise<boolean>((resolve) => setAdReq({ placement, kind, resolve })),
-        onSimulatedPurchase: (productId, price) => new Promise<boolean>((resolve) => setBuyReq({ productId, price, resolve })),
-      }),
-    );
-    load();
+    const analytics = createAnalytics(() => null, platform());
+    const mock = createMockProvider({
+      analytics,
+      onSimulatedAd: (placement, kind) => new Promise<boolean>((resolve) => setAdReq({ placement, kind, resolve })),
+      onSimulatedPurchase: (productId, price) => new Promise<boolean>((resolve) => setBuyReq({ productId, price, resolve })),
+    });
+    setProvider(mock);
+    void (async () => {
+      await load();
+      if (isNative()) {
+        try {
+          const id = await getDeviceId();
+          setProvider(await createCapacitorProvider({ appUserId: id, analytics }));
+        } catch {
+          /* stay on the simulated provider */
+        }
+      }
+    })();
+    const goBackground = () => {
+      save();
+      const st = useGame.getState();
+      const m = computeModifiers(st.s, Date.now());
+      const next = STORES.filter((x) => (st.s.stores[x.id]?.units ?? 0) > 0).map((x) => ((st.s.restockReadyAt[x.id] ?? 0) - Date.now()) / 1000).filter((t) => t > 0);
+      void scheduleReturnNotifications({ offlineCapHours: m.offlineCapHours, nextRestockSeconds: next.length ? Math.min(...next) : null });
+    };
+    const offState = onAppStateChange((active) => { if (!active) goBackground(); else frame(Date.now()); });
     const loop = setInterval(() => frame(Date.now()), 100);
     const saver = setInterval(() => save(), 10_000);
     const onVis = () => {
-      if (document.visibilityState === 'hidden') save();
+      if (document.visibilityState === 'hidden') goBackground();
       else frame(Date.now());
     };
     document.addEventListener('visibilitychange', onVis);
@@ -71,6 +95,7 @@ export function App() {
     return () => {
       clearInterval(loop);
       clearInterval(saver);
+      offState();
       document.removeEventListener('visibilitychange', onVis);
       window.removeEventListener('pagehide', save);
       window.removeEventListener('scalp-save', save);

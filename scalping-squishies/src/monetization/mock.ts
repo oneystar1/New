@@ -1,4 +1,4 @@
-import type { MonetizationProvider, AdPlacement, AdResult, PurchaseResult } from './provider';
+import type { MonetizationProvider, AdPlacement, AdResult, PurchaseResult, AnalyticsProvider } from './provider';
 import { PRODUCTS } from '../engine/data/shop';
 
 // Browser implementation used for the web build and for dev. Ads are a
@@ -7,6 +7,7 @@ import { PRODUCTS } from '../engine/data/shop';
 // stays free of React.
 
 export interface MockHooks {
+  analytics?: AnalyticsProvider;
   onSimulatedAd: (placement: AdPlacement, kind: 'rewarded' | 'interstitial') => Promise<boolean>;
   onSimulatedPurchase: (productId: string, priceLabel: string) => Promise<boolean>;
 }
@@ -42,7 +43,7 @@ export function createMockProvider(hooks: MockHooks): MonetizationProvider {
         return [];
       },
     },
-    analytics: {
+    analytics: hooks.analytics ?? {
       track(event, props) {
         events.push({ event, props, at: Date.now() });
         if (import.meta.env?.DEV) console.debug('[analytics]', event, props ?? '');

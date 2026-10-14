@@ -6,6 +6,7 @@ import { fx } from '../ui/fxbus';
 import { TUTORIAL } from './data/tutorial';
 import { RANKED_RIVALS } from './data/rivals';
 import { CITY_BY_ID } from './data/cities';
+import { storage, haptic } from '../platform/native';
 import { ITEM_BY_ID } from './data/items';
 import { initialState, deserialize, serialize, SAVE_KEY } from './state';
 import {
@@ -47,8 +48,10 @@ interface GameStore {
   buyAmount: BuyAmount;
 
   setProvider: (p: MonetizationProvider) => void;
-  load: () => void;
+  load: () => Promise<void>;
   save: () => void;
+  /** Replace the state with a save fetched from the cloud (after a conflict check). */
+  adoptSave: (json: string) => void;
   reset: () => void;
   exportSave: () => string;
   importSave: (json: string) => boolean;
@@ -171,11 +174,11 @@ export const useGame = create<GameStore>((set, get) => {
 
     setProvider: (p) => set({ provider: p }),
 
-    load: () => {
+    load: async () => {
       const now = Date.now();
       let s: GameState;
       try {
-        const raw = localStorage.getItem(SAVE_KEY);
+        const raw = await storage.get(SAVE_KEY);
         s = raw ? deserialize(raw, now) : initialState(now);
       } catch {
         s = initialState(now);
@@ -196,11 +199,16 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     save: () => {
-      try {
-        localStorage.setItem(SAVE_KEY, serialize(get().s));
-      } catch {
-        /* storage full or blocked: ignore */
-      }
+      void storage.set(SAVE_KEY, serialize(get().s));
+    },
+
+    adoptSave: (json) => {
+      const now = Date.now();
+      const s = deserialize(json, now);
+      applyOfflineOnLoad(s, now);
+      rollMissions(s, now, rand);
+      set({ s, now });
+      get().save();
     },
 
     reset: () => {
@@ -528,7 +536,7 @@ export const useGame = create<GameStore>((set, get) => {
       const m = computeModifiers(st.s, st.now);
       const run = { ...st.run };
       if (grab(run, m.tapPower)) sfx.secured(); else sfx.grab();
-      if (st.s.settings.haptics && 'vibrate' in navigator) navigator.vibrate?.(6);
+      if (st.s.settings.haptics) haptic.light();
       set({ run });
     },
     restockChoose: (idx) => {
