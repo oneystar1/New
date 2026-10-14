@@ -170,18 +170,18 @@ describe('pricing dial', () => {
     const m = computeModifiers(s, T0);
     s.pricing = 'retail';
     const rng = makeRng(12);
-    for (let i = 0; i < 300; i++) expect(makeOffer(s, m, T0, rng).kind).not.toBe('karen');
+    for (let i = 0; i < 300; i++) expect(makeOffer(s, m, T0, rng)!.kind).not.toBe('karen');
     s.pricing = 'insane';
     let hostile = 0;
-    for (let i = 0; i < 300; i++) { const k = makeOffer(s, m, T0, rng).kind; if (k === 'karen' || k === 'ghost') hostile++; }
+    for (let i = 0; i < 300; i++) { const k = makeOffer(s, m, T0, rng)!.kind; if (k === 'karen' || k === 'ghost') hostile++; }
     expect(hostile).toBeGreaterThan(120);
     // Same seed, both fair: the only difference is the pricing multiplier.
     let checked = false;
     for (let i = 0; i < 400 && !checked; i++) {
       s.pricing = 'fair';
-      const a = makeOffer(s, m, T0, makeRng(500 + i));
+      const a = makeOffer(s, m, T0, makeRng(500 + i))!;
       s.pricing = 'insane';
-      const b = makeOffer(s, m, T0, makeRng(500 + i));
+      const b = makeOffer(s, m, T0, makeRng(500 + i))!;
       if (a.kind === 'fair' && b.kind === 'fair') { expect(b.amount / a.amount).toBeCloseTo(PRICING.insane.value, 3); checked = true; }
     }
     expect(checked).toBe(true);

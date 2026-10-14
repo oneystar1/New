@@ -14,9 +14,9 @@ export interface TutorialStep {
 export const TUTORIAL: TutorialStep[] = [
   { id: 't_tap', text: 'Tap the shelf 10 times', hint: 'Hunt tab. Every tap is cash. Sixty taps fills the meter for a free pull.', clout: 5, tab: 'hunt', check: (s) => s.stats.taps >= 10 },
   { id: 't_unit', text: 'Start your first run', hint: 'Routes tab. A Dollar Dohjo run costs $4: buy the limit, flip it. Tap the store to send the run.', clout: 5, tab: 'stores', check: (s) => s.stats.unitsBought >= 1 },
-  { id: 't_manager', text: 'Hire a manager', hint: 'Routes tab. Cousin Dwayne repeats your Dollar Dohjo runs for $100, even while you are away.', clout: 10, tab: 'stores', check: (s) => Object.values(s.stores).some((st) => st.manager) },
+  { id: 't_manager', text: 'Recruit a runner', hint: 'Routes tab. Cousin Dwayne will stand in the Dollar Dohjo line for $100 and repeat the run, even while you are away.', clout: 10, tab: 'stores', check: (s) => Object.values(s.stores).some((st) => st.manager) },
   { id: 't_restock', text: 'Camp a restock', hint: 'Hunt tab. Stand in line, then mash GRAB when the doors open. Watch out for moms.', clout: 10, tab: 'hunt', check: (s) => s.stats.restocks >= 1 },
-  { id: 't_deal', text: 'Answer a Marketplace message', hint: 'Messages tab (💬). Buyers message you about items on your shelf. Accept, counter or decline. "Hi dear" is a scam.', clout: 10, tab: 'deals', check: (s) => s.stats.offersAccepted + s.stats.offersDeclined >= 1 },
+  { id: 't_deal', text: 'Answer a Marketplace message', hint: 'Messages tab (💬). Buyers message you about the items your runs are flipping. Accept, counter or decline. "Hi dear" is a scam.', clout: 10, tab: 'deals', check: (s) => s.stats.offersAccepted + s.stats.offersDeclined >= 1 },
   { id: 't_upgrade', text: 'Buy an upgrade', hint: 'Hustle tab. Faster Thumbs is $500 and doubles your tap.', clout: 10, tab: 'boost', check: (s) => s.upgrades.some((u) => u.startsWith('u_')) },
   { id: 't_pull', text: 'Open a mystery pull', hint: 'Fill the Hunt meter, watch a video on the Shelf tab, or spend Clout.', clout: 10, tab: 'shelf', check: (s) => s.stats.pulls >= 1 },
   { id: 't_mission', text: 'Claim a daily mission', hint: 'Hunt tab. Missions pay Clout and Hustle Pass XP.', clout: 10, tab: 'hunt', check: (s) => s.missions.some((m) => m.claimed) },

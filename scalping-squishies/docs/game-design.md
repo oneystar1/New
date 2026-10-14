@@ -25,9 +25,9 @@ pulls ──────┘             │                       └─> buy ma
    first-session hook before any store is automated.
 2. **Routes (generators).** Ten stores. Each unit adds base profit per
    cycle; cost grows geometrically per unit (1.07 to 1.15). Unit milestones
-   (25, 50, 100, 200, 300...) double a store's profit. Unmanaged stores need
-   a tap to start each cycle; a manager automates it and makes the store
-   count toward offline income.
+   (25, 50, 100, 200, 300...) double a store's profit. Without a runner a store needs
+   a tap to send each run; recruiting a runner (the idle "manager")
+   automates it and makes the store count toward offline income.
 3. **Upgrades.** Three per store (x2 profit each, gated on unit counts),
    global cash upgrades (shipping supplies, storage unit, label printer,
    cargo van, LLC, warehouse), tap upgrades, family specialisations.
@@ -58,7 +58,9 @@ Karens reporting listings, employees holding stock, empty-box returns,
 counterfeit cubes with the wrong font, bot farms with the same shipping
 address, live-stream sellers double-selling. All of it is in the game.
 
-**Deals feed.** While the player is active, a buyer message arrives roughly
+**Deals feed.** Buyers only ask about what you are flipping: the common item
+of every store you run, plus shelf duplicates. With no runs and no dupes the
+inbox stays empty. While the player is active, a buyer message arrives roughly
 every 30 seconds (faster with channels), up to three open at once, each
 expiring after 3 minutes. A new message raises a tappable toast that jumps
 to the Messages tab, and the tab shows an unread count. Offers are sized in seconds of current income so

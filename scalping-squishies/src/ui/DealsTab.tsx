@@ -3,7 +3,7 @@ import { useGame } from '../engine/store';
 import { UPGRADES } from '../engine/data/upgrades';
 import { ITEM_BY_ID } from '../engine/data/items';
 import { DRAMA_FEED } from '../engine/data/offers';
-import { APOLOGY_CLOUT, CALLED_OUT_SECONDS, PRICING, OFFER_TTL_SECONDS } from '../engine/deals';
+import { APOLOGY_CLOUT, CALLED_OUT_SECONDS, PRICING, OFFER_TTL_SECONDS, listedItems } from '../engine/deals';
 import type { Pricing, OfferKind } from '../engine/types';
 import { Sprite } from '../art/Sprite';
 import { Portrait, type PortraitKind } from '../art/Portrait';
@@ -47,7 +47,7 @@ export function DealsTab() {
     <div>
       <h2 className="sec">📬 Marketplace inbox · {s.offers.length} open {m.offerRate > 1 || m.offerValue > 1 ? `· x${m.offerRate.toFixed(1)} rate, x${m.offerValue.toFixed(2)} value` : ''}</h2>
       {s.offers.length === 0 && (
-        <div className="card center sub">Inbox empty. Buyers message you about your shelf every ~{Math.round(30 / m.offerRate)}s while the game is open, and each message waits {OFFER_TTL_SECONDS / 60} minutes. Pull more items to list more.</div>
+        <div className="card center sub">Inbox empty. Buyers message you about what you are flipping: the items from your runs and any duplicates on your shelf. One arrives every ~{Math.round(30 / m.offerRate)}s while the game is open and waits {OFFER_TTL_SECONDS / 60} minutes.{listedItems(s).length === 0 ? ' Start a run on the Routes tab to get listings.' : ''}</div>
       )}
       {s.offers.map((o) => {
         const it = ITEM_BY_ID[o.itemId];

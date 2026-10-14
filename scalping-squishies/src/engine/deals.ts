@@ -1,5 +1,6 @@
 import type { GameState, Offer, OfferKind, ItemDef, Pricing, PullView } from './types';
-import { ITEMS, ITEM_BY_ID } from './data/items';
+import { ITEMS, ITEM_BY_ID, itemsForStore } from './data/items';
+import { STORES } from './data/stores';
 import { BUYER_NAMES, OFFER_TEMPLATES } from './data/offers';
 import { computeModifiers, incomePerSecond, earn, bumpMission, pullItem, highestUnlockedStore, type Modifiers } from './sim';
 import { formatCash, weightedPick } from './math';
@@ -40,17 +41,30 @@ const AVATARS = ['🧔', '👩', '🧑', '👨‍🦳', '👩‍🦰', '🧒', '
 
 let offerSeq = 1;
 
-export function listedItemFor(s: GameState, rand: () => number): ItemDef {
-  const owned = ITEMS.filter((i) => (s.shelf[i.id] ?? 0) > 0);
-  const pool = owned.length ? owned : ITEMS.filter((i) => i.rarity === 'common');
-  return pool[Math.floor(rand() * pool.length)];
+/** What you are actually flipping: the bread-and-butter item of every store you run, plus any shelf duplicates. */
+export function listedItems(s: GameState): ItemDef[] {
+  const out: ItemDef[] = [];
+  for (const st of STORES) {
+    if ((s.stores[st.id]?.units ?? 0) <= 0) continue;
+    const pool = itemsForStore(st.id);
+    const rep = pool.find((i) => i.rarity === 'common') ?? pool[0];
+    if (rep && !out.includes(rep)) out.push(rep);
+  }
+  for (const i of ITEMS) if ((s.shelf[i.id] ?? 0) > 1 && !out.includes(i)) out.push(i);
+  return out;
 }
 
-export function makeOffer(s: GameState, m: Modifiers, now: number, rand: () => number): Offer {
+export function listedItemFor(s: GameState, rand: () => number): ItemDef | null {
+  const pool = listedItems(s);
+  return pool.length ? pool[Math.floor(rand() * pool.length)] : null;
+}
+
+export function makeOffer(s: GameState, m: Modifiers, now: number, rand: () => number): Offer | null {
+  const item = listedItemFor(s, rand);
+  if (!item) return null; // nothing listed: no buyers
   const pricing = PRICING[s.pricing ?? 'fair'];
   let kind = weightedPick(pricing.weights, rand);
   if (kind === 'scam' && m.scamShield) kind = 'fair';
-  const item = listedItemFor(s, rand);
   const ips = Math.max(1, incomePerSecond(s, m, true));
   const [lo, hi] = KIND_SECONDS[kind];
   const secs = lo + rand() * (hi - lo);
@@ -98,6 +112,7 @@ export function tickOffers(s: GameState, m: Modifiers, now: number, rand: () => 
   if (s.offers.length >= MAX_OFFERS) return null;
   if (now < s.nextOfferAt) return null;
   const o = makeOffer(s, m, now, rand);
+  if (!o) { s.nextOfferAt = now + 15_000; return null; }
   s.offers.push(o);
   s.nextOfferAt = now + (OFFER_INTERVAL_SECONDS / m.offerRate) * (0.7 + rand() * 0.6) * 1000;
   return o;

@@ -46,7 +46,7 @@ export async function scheduleReturnNotifications(opts: { offlineCapHours: numbe
     await LocalNotifications.cancel({ notifications: Object.values(NOTIF_IDS).map((id) => ({ id })) });
     const now = Date.now();
     const list = [
-      { id: NOTIF_IDS.offlineCap, title: 'Your managers stopped flipping', body: 'Offline earnings hit the cap. Come collect before the moms do.', schedule: { at: new Date(now + opts.offlineCapHours * 3600_000) } },
+      { id: NOTIF_IDS.offlineCap, title: 'Your crew stopped flipping', body: 'Offline earnings hit the cap. Come collect before the moms do.', schedule: { at: new Date(now + opts.offlineCapHours * 3600_000) } },
     ];
     if (opts.nextRestockSeconds !== null) {
       list.push({ id: NOTIF_IDS.restock, title: 'Restock truck spotted', body: 'The line is forming. Two per family. Allegedly.', schedule: { at: new Date(now + Math.max(60, opts.nextRestockSeconds) * 1000) } });

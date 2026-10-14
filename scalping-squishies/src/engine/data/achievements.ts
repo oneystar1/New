@@ -18,7 +18,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'a_units200', name: 'Known By Staff', blurb: 'Have 200 runs going across your routes.', icon: '🪪', clout: 15, check: (s) => totalUnits(s) >= 200 },
   { id: 'a_units1000', name: 'Banned From The Parking Lot', blurb: 'Have 1,000 runs going. The parking lot knows your car.', icon: '🚔', clout: 40, check: (s) => totalUnits(s) >= 1_000 },
   { id: 'a_allstores', name: 'Full Route', blurb: 'Have a run going at every store.', icon: '🗺️', clout: 25, check: (s) => STORES.every((st) => (s.stores[st.id]?.units ?? 0) > 0) },
-  { id: 'a_managers', name: 'Delegator', blurb: 'Hire every manager.', icon: '👔', clout: 30, check: (s) => STORES.every((st) => s.stores[st.id]?.manager) },
+  { id: 'a_managers', name: 'Full Crew', blurb: 'Recruit a runner for every store.', icon: '👔', clout: 30, check: (s) => STORES.every((st) => s.stores[st.id]?.manager) },
   { id: 'a_pull10', name: 'Blind Bag Addict', blurb: 'Open 10 mystery pulls.', icon: '🎁', clout: 5, check: (s) => s.stats.pulls >= 10 },
   { id: 'a_pull100', name: 'Gambling, But Cute', blurb: 'Open 100 mystery pulls.', icon: '🎰', clout: 20, check: (s) => s.stats.pulls >= 100 },
   { id: 'a_rare', name: 'Still In The Bag', blurb: 'Own a Rare item.', icon: '🏷️', clout: 5, check: (s) => ITEMS.some((i) => i.rarity === 'rare' && s.shelf[i.id]) },

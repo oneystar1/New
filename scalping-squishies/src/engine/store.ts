@@ -369,7 +369,7 @@ export const useGame = create<GameStore>((set, get) => {
       s.cash -= mgr.cost;
       ss.manager = true;
       if (ss.progress <= 0) ss.progress = 1e-6;
-      toast(`${mgr.name} hired!`, mgr.icon, 'good');
+      toast(`${mgr.name} joined your crew. ${STORE_BY_ID[storeId].name} runs itself now.`, mgr.icon, 'good');
       sfx.manager();
       track('hire_manager', { storeId });
       set({ s: { ...s } });

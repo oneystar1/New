@@ -36,7 +36,7 @@ export function StoresTab() {
 
   return (
     <div>
-      <div className="card sub" style={{ fontSize: 12 }}>A <b>run</b> is one buy-and-flip loop: camp the store, buy the limit, list it, sell it. Add runs to flip more per trip. Hire a manager and the runs repeat while you are away.</div>
+      <div className="card sub" style={{ fontSize: 12 }}>A <b>run</b> is one buy-and-flip loop: camp the store, buy the limit, list it, sell it. Add runs to flip more per trip. Recruit a <b>runner</b> for a store and they repeat its runs while you are away.</div>
       <div className="seg">
         {AMOUNTS.map((a) => (
           <button key={String(a)} className={buyAmount === a ? 'active' : ''} onClick={() => setBuyAmount(a)}>
@@ -77,7 +77,7 @@ export function StoresTab() {
                   <>
                     <div className="progress"><i style={{ width: `${Math.min(100, ss.progress * 100)}%` }} /></div>
                     <div className="row between" style={{ marginTop: 4 }}>
-                      <span className="small">{formatCash(profit)} per trip {ss.manager ? '· manager repeats it' : running ? `· ${phaseLabel(ss.progress)}` : '· tap the store to send a run'}</span>
+                      <span className="small">{formatCash(profit)} per trip {ss.manager ? `· ${mgr.name} runs it` : running ? `· ${phaseLabel(ss.progress)}` : '· no runner: tap the store to go yourself'}</span>
                       {nm && <span className="small">x2 at {nm} runs</span>}
                     </div>
                     {fm.rep && (
@@ -100,9 +100,9 @@ export function StoresTab() {
             </div>
             {ss.units > 0 && !ss.manager && (
               <div className="row between mt">
-                <span className="small">{mgr.icon} {mgr.name}: {mgr.blurb}</span>
+                <span className="small">Runner for hire: {mgr.icon} <b>{mgr.name}</b>. {mgr.blurb}</span>
                 <button className="btn gold sm" data-tut={st.id === 'dollar' ? 'hire' : undefined} disabled={s.cash < mgr.cost} onClick={() => hireManager(st.id)}>
-                  Hire {formatCash(mgr.cost)}
+                  Recruit {formatCash(mgr.cost)}
                 </button>
               </div>
             )}

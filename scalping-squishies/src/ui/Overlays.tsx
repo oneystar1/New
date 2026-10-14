@@ -25,7 +25,7 @@ export function Overlays() {
         <div className="overlay">
           <div className="modal center">
             <h2>Welcome back, hustler</h2>
-            <p>Your managers kept running the routes for {formatDuration(s.pendingOffline.seconds)}: buy the limit, list it, sell it, repeat.</p>
+            <p>Your crew kept running the routes for {formatDuration(s.pendingOffline.seconds)}: buy the limit, list it, sell it, repeat.</p>
             <div className="big">{formatCash(s.pendingOffline.cash, s.settings.notation)}</div>
             <div className="actions">
               <button className="btn" onClick={claimOfflineNormal}>Collect</button>

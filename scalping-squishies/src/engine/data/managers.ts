@@ -1,7 +1,7 @@
 import type { ManagerDef } from '../types';
 
-// One manager per store. Buying one automates that store's cycle so it
-// restarts without a tap (the classic AdCap "manager" beat).
+// One runner per store (the player-facing name for the classic idle
+// "manager"). Recruiting one automates that store's runs.
 export const MANAGERS: ManagerDef[] = [
   { id: 'm_dollar', storeId: 'dollar', name: 'Cousin Dwayne', icon: '🧢', cost: 100, blurb: 'Will stand in any line for gas money.' },
   { id: 'm_fiveunder', storeId: 'fiveunder', name: 'Camper Carla', icon: '⛺', cost: 2_000, blurb: 'Owns a folding chair for every store in town.' },

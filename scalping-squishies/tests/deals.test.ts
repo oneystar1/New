@@ -22,7 +22,7 @@ function offerOfKind(kind: OfferKind, s = rich()) {
   const m = computeModifiers(s, T0);
   const rng = makeRng(5);
   for (let i = 0; i < 500; i++) {
-    const o = makeOffer(s, m, T0, rng);
+    const o = makeOffer(s, m, T0, rng)!;
     if (o.kind === kind) { s.offers = [o]; return { s, o }; }
   }
   throw new Error('no offer of kind ' + kind);
@@ -45,10 +45,12 @@ describe('offer feed', () => {
   it('offers mention a shelf item and scale with income', () => {
     const s = rich();
     const m = computeModifiers(s, T0);
-    const o = makeOffer(s, m, T0, makeRng(2));
-    expect(o.itemId).toBe('doh_kube');
+    const o = makeOffer(s, m, T0, makeRng(2))!;
+    expect(['doh_kube', 'doh_generic']).toContain(o.itemId); // the Kube dupe or the Dollar Dohjo run item
+    const empty = initialState(T0);
+    expect(makeOffer(empty, computeModifiers(empty, T0), T0, makeRng(2))).toBeNull(); // nothing listed, nobody messages
     const fair = offerOfKind('fair', s).o;
-    expect(fair.message).toContain('Nice Kube');
+    expect(fair.message).toContain(fair.itemId === 'doh_kube' ? 'Nice Kube' : 'Off-Brand Dough Ball');
     expect(fair.amount).toBeGreaterThan(0);
   });
   it('fair and lowball offers pay, lowballs pay less', () => {
@@ -82,7 +84,7 @@ describe('offer feed', () => {
     s.upgrades.push('ch_gands');
     const m = computeModifiers(s, T0);
     const rng = makeRng(9);
-    for (let i = 0; i < 300; i++) expect(makeOffer(s, m, T0, rng).kind).not.toBe('scam');
+    for (let i = 0; i < 300; i++) expect(makeOffer(s, m, T0, rng)!.kind).not.toBe('scam');
     const r = offerOfKind('scam');
     expect(r.o.flagged).toBe(false);
     const s2 = rich();
@@ -130,19 +132,21 @@ describe('message text', () => {
     for (const pricing of ['retail', 'fair', 'scalper', 'insane'] as const) {
       s.pricing = pricing;
       for (let i = 0; i < 300; i++) {
-        const o = makeOffer(s, m, T0, rng);
-        expect(o.message).not.toMatch(/\$0(\D|$)/);
+        const o = makeOffer(s, m, T0, rng)!;
+        expect(o.message).not.toMatch(/\$0(?![.\d])/); // "$0" alone is a bug; "$0.55" for a $1 item is a lowball
         expect(o.message).not.toMatch(/\{\w+\}/);
       }
     }
     // Offers decompose into qty x unit, and unit prices sit where the fiction says.
     s.pricing = 'fair';
     for (let i = 0; i < 400; i++) {
-      const o = makeOffer(s, m, T0, rng);
+      const o = makeOffer(s, m, T0, rng)!;
       if (o.amount === 0) continue;
       expect(o.qty * o.unit).toBeCloseTo(o.amount, 6);
-      const ask = 6 * 1.5;
-      if (o.kind === 'lowball') expect(o.unit).toBeLessThan(6);
+      if (o.itemId !== 'doh_kube') continue; // $0.25 rounding blurs the bands on the $1 dough ball
+      const retail = 6;
+      const ask = retail * 1.5;
+      if (o.kind === 'lowball') expect(o.unit).toBeLessThan(retail);
       if (o.kind === 'fair' || o.kind === 'ghost') { expect(o.unit).toBeGreaterThan(ask * 0.85); expect(o.unit).toBeLessThan(ask * 1.2); }
       if (o.kind === 'sneakerbro') expect(o.unit).toBeGreaterThan(ask * 1.15);
       if (o.kind === 'scam') expect(o.unit).toBeGreaterThan(ask * 2.9);
