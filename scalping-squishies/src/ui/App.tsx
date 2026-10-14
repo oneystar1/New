@@ -19,6 +19,8 @@ import { Overlays, AdOverlay, PurchaseOverlay } from './Overlays';
 import { RestockOverlay } from './RestockOverlay';
 import { RelocateOverlay } from './RelocateOverlay';
 import { Fx } from './Fx';
+import { Splash } from './Splash';
+import { Coach } from './Coach';
 import { dailyAvailable } from '../engine/sim';
 import { MISSION_POOL } from '../engine/data/missions';
 
@@ -145,7 +147,9 @@ export function App() {
       <Overlays />
       <RestockOverlay />
       <RelocateOverlay />
+      <Coach />
       <Fx />
+      <Splash />
       {adReq && (
         <AdOverlay
           placement={adReq.placement}

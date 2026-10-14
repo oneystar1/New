@@ -53,7 +53,7 @@ export function BoostTab() {
             </div>
           </div>
         </div>
-        <button className="btn gold block mt" disabled={gain <= 0} onClick={openRelocate}>
+        <button className="btn gold block mt" data-tut="relocate" disabled={gain <= 0} onClick={openRelocate}>
           {gain > 0 ? `Relocate for +⭐${formatNumber(gain)}` : `Earn ${formatCash(PRESTIGE_MIN_EARNED)} this run to relocate (${formatCash(s.stats.totalCashEarned)})`}
         </button>
       </div>
@@ -75,8 +75,8 @@ export function BoostTab() {
       {(view === 'cash' || view === 'sketchy' || view === 'clout' || view === 'cred') && (
         <>
           {list.length === 0 && <div className="card center sub">{view === 'cred' ? 'Relocate at least once to unlock Reputation upgrades.' : 'Nothing left to buy here right now.'}</div>}
-          {list.map((u) => (
-            <div className="card row" key={u.id}>
+          {list.map((u, i) => (
+            <div className="card row" key={u.id} data-tut={i === 0 ? 'upgrade' : undefined}>
               <div className="ico-lg">{u.icon}</div>
               <div className="grow">
                 <h3>{u.name}</h3>
@@ -161,11 +161,13 @@ function Settings() {
   const importSave = useGame((g) => g.importSave);
   const reset = useGame((g) => g.reset);
   const toast = useGame((g) => g.toast);
+  const replayTutorial = useGame((g) => g.replayTutorial);
   const [txt, setTxt] = useState('');
   return (
     <div>
       <div className="card">
         <div className="row between"><span>Haptics</span><button className="btn sm" onClick={() => setSetting('haptics', !s.settings.haptics)}>{s.settings.haptics ? 'On' : 'Off'}</button></div>
+        <div className="row between mt"><span>Tutorial tour</span><button className="btn sm" onClick={replayTutorial}>Replay</button></div>
         <div className="row between mt"><span>Sound effects</span><button className="btn sm" onClick={() => setSetting('sfx', !s.settings.sfx)}>{s.settings.sfx ? 'On' : 'Off'}</button></div>
         <div className="row between mt"><span>Number format</span><button className="btn sm" onClick={() => setSetting('notation', s.settings.notation === 'short' ? 'scientific' : 'short')}>{s.settings.notation}</button></div>
       </div>

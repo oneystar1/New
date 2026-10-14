@@ -282,7 +282,11 @@ export function tick(s: GameState, dt: number, now: number, rand: () => number =
   // Tutorial steps complete themselves from state.
   for (const t of TUTORIAL) {
     if (s.tutorialDone.includes(t.id)) continue;
-    if (t.check(s)) { s.tutorialDone.push(t.id); s.clout += t.clout; res.tutorialDone.push(t.id); }
+    if (t.check(s)) {
+      s.tutorialDone.push(t.id);
+      if (!s.tutorialPaid.includes(t.id)) { s.tutorialPaid.push(t.id); s.clout += t.clout; }
+      res.tutorialDone.push(t.id);
+    }
   }
   // Local rankings: overtaking a rival pays Clout.
   for (const r of RANKED_RIVALS) {

@@ -53,7 +53,7 @@ export function ShelfTab() {
           <button className="btn primary grow" onClick={() => pull(10)} disabled={s.clout < CLOUT_COSTS.pull10}>
             <span className="btn-col"><span>Pull x10</span><span className="price">💠{CLOUT_COSTS.pull10}</span></span>
           </button>
-          <button className="btn gold grow" onClick={() => void watchAd('free_pull')} disabled={!adReady}>
+          <button className="btn gold grow" data-tut="free-pull" onClick={() => void watchAd('free_pull')} disabled={!adReady}>
             <span className="btn-col"><span>📺 Free</span><span className="price">{adReady ? 'watch video' : 'cooldown'}</span></span>
           </button>
         </div>

@@ -41,6 +41,8 @@ export function initialState(now = Date.now()): GameState {
     city: 'dayton',
     cityOffer: null,
     tutorialDone: [],
+    tutorialPaid: [],
+    tutorialChoice: 'pending',
     rankRewarded: [],
     conWeek: { week: '', units: 0 },
     handle: '',
@@ -104,6 +106,9 @@ export function migrate(raw: unknown, now = Date.now()): GameState {
     fakes: Array.isArray(s.fakes) ? s.fakes : [],
     restockReadyAt: s.restockReadyAt ?? {},
     tutorialDone: Array.isArray(s.tutorialDone) ? s.tutorialDone : [],
+    tutorialPaid: Array.isArray(s.tutorialPaid) ? s.tutorialPaid : (Array.isArray(s.tutorialDone) ? s.tutorialDone : []),
+    // Existing players who never saw the choice: do not interrupt them.
+    tutorialChoice: s.tutorialChoice ?? ((s.stats?.taps ?? 0) > 0 ? 'off' : 'pending'),
     rankRewarded: Array.isArray(s.rankRewarded) ? s.rankRewarded : [],
     city: typeof s.city === 'string' ? s.city : 'dayton',
     conWeek: s.conWeek ?? fresh.conWeek,

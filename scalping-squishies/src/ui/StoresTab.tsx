@@ -91,7 +91,7 @@ export function StoresTab() {
                   <div className="sub">{unlocked ? st.tagline : `Unlocks at ${st.unlockAtTotalUnits} total runs`}</div>
                 )}
               </div>
-              <button className="btn primary" disabled={!canBuy} onClick={() => buyUnits(st.id)}>
+              <button className="btn primary" data-tut={st.id === 'dollar' ? 'start-run' : undefined} disabled={!canBuy} onClick={() => buyUnits(st.id)}>
                 <span className="btn-col">
                   <span>{ss.units > 0 ? 'Add' : 'Start'} {count > 1 ? `${count} runs` : 'run'}</span>
                   <span className="price">{formatCash(cost)}</span>
@@ -101,7 +101,7 @@ export function StoresTab() {
             {ss.units > 0 && !ss.manager && (
               <div className="row between mt">
                 <span className="small">{mgr.icon} {mgr.name}: {mgr.blurb}</span>
-                <button className="btn gold sm" disabled={s.cash < mgr.cost} onClick={() => hireManager(st.id)}>
+                <button className="btn gold sm" data-tut={st.id === 'dollar' ? 'hire' : undefined} disabled={s.cash < mgr.cost} onClick={() => hireManager(st.id)}>
                   Hire {formatCash(mgr.cost)}
                 </button>
               </div>

@@ -23,7 +23,13 @@ const shot = (n) => page.screenshot({ path: path.join(OUT, n) });
 const tab = async (label) => { await page.locator('.nav button', { hasText: label === 'Deals' ? 'Messages' : label }).click(); await page.waitForTimeout(250); };
 try {
   await page.goto(`http://localhost:${PORT}/`);
+  await page.waitForSelector('.splash', { timeout: 15000 });
+  await shot('00-splash.png');
+  await page.waitForSelector('.splash', { state: 'detached', timeout: 10000 });
+  await page.getByRole('button', { name: 'Take the tour' }).click();
+  await page.waitForSelector('.coach');
   await page.waitForSelector('.shelf', { timeout: 15000 });
+  await shot('00b-tour.png');
   for (let i = 0; i < 70; i++) await page.locator('.shelf').dispatchEvent('pointerdown', { clientX: 200, clientY: 400 });
   await page.waitForTimeout(300);
   await shot('01-hunt.png');
@@ -55,6 +61,7 @@ try {
   await page.evaluate(() => window.dispatchEvent(new Event('scalp-save')));
   await page.evaluate(() => { const k = 'scalp-street-save-v1'; const s = JSON.parse(localStorage.getItem(k)); if (!s) throw new Error('no save yet'); s.nextOfferAt = 0; s.heat = 62; s.shelf = { doh_kube: 2, sq_nana: 1 }; localStorage.setItem(k, JSON.stringify(s)); });
   await page.reload();
+  await page.waitForSelector('.splash', { state: 'detached', timeout: 10000 });
   await page.waitForSelector('.shelf');
   await tab('Deals');
   await page.waitForSelector('.offer', { timeout: 30000 }); // feed starts 15s after load
@@ -85,6 +92,7 @@ try {
   console.log('cash', cash, '| clout', clout);
   // Reload: save persisted and offline modal path does not crash.
   await page.reload();
+  await page.waitForSelector('.splash', { state: 'detached', timeout: 10000 });
   await page.waitForSelector('.shelf');
   await tab('Shop');
   if (await page.locator('.card.starter').count()) throw new Error('save did not persist: starter pack offer is back');

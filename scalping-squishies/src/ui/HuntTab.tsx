@@ -84,7 +84,7 @@ export function HuntTab() {
           <div className="small">Tap the shelf to grab and flip at the curb: +{formatCash(tv)} each. Fill the meter to keep one.</div>
         </div>
       </div>
-      <div className="shelf" onPointerDown={onTap}>
+      <div className="shelf" data-tut="shelf" onPointerDown={onTap}>
         <div className="pile-bg" aria-hidden>
           {Array.from({ length: 24 }, (_, i) => <span key={i}><Sprite id={bgItems[(i + 1) % bgItems.length]?.id ?? 'sq_nana'} size={34} /></span>)}
         </div>
@@ -109,7 +109,7 @@ export function HuntTab() {
               <h3>{st.name}</h3>
               <div className="sub">{banned ? `BANNED · ${formatDuration((until - now) / 1000)} left` : ready ? 'Truck spotted. Line is forming. Grab what the moms leave.' : `Next restock in ${formatDuration((until - now) / 1000)}`}</div>
             </div>
-            <button className="btn gold sm" disabled={!ready} onClick={() => restockStart(st.id)}>{banned ? '🚫' : ready ? '⛺ Camp' : '⏳'}</button>
+            <button className="btn gold sm" data-tut={ready ? 'camp' : undefined} disabled={!ready} onClick={() => restockStart(st.id)}>{banned ? '🚫' : ready ? '⛺ Camp' : '⏳'}</button>
           </div>
         );
       })}
@@ -136,7 +136,7 @@ export function HuntTab() {
                 <div className="sub">{d.blurb} · {Math.min(ms.progress, d.target).toLocaleString(undefined, { maximumFractionDigits: 0 })}/{d.target}</div>
                 <div className="progress" style={{ marginTop: 4 }}><i style={{ width: `${Math.min(100, (ms.progress / d.target) * 100)}%` }} /></div>
               </div>
-              <button className="btn sm" disabled={!done || ms.claimed} onClick={() => claimMissionReward(ms.id)}>
+              <button className="btn sm" data-tut={done && !ms.claimed ? 'mission' : undefined} disabled={!done || ms.claimed} onClick={() => claimMissionReward(ms.id)}>
                 {ms.claimed ? '✓' : `💠${d.rewardClout}`}
               </button>
             </div>

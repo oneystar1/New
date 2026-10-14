@@ -60,6 +60,10 @@ interface GameStore {
   /** Apply purchases recorded by the server webhook that this device has not seen. */
   cloudClaimGrants: () => Promise<void>;
   setHandle: (h: string) => void;
+  setTutorialChoice: (c: GameState['tutorialChoice']) => void;
+  replayTutorial: () => void;
+  splashDone: boolean;
+  dismissSplash: () => void;
   reset: () => void;
   exportSave: () => string;
   importSave: (json: string) => boolean;
@@ -253,6 +257,10 @@ export const useGame = create<GameStore>((set, get) => {
       get().save();
     },
     setHandle: (h) => mutate((s) => { s.handle = h.slice(0, 24); }),
+    setTutorialChoice: (c) => { mutate((s) => { s.tutorialChoice = c; }); get().save(); },
+    replayTutorial: () => { mutate((s) => { s.tutorialDone = []; s.tutorialChoice = 'on'; }); get().requestTab('hunt'); },
+    splashDone: false,
+    dismissSplash: () => set({ splashDone: true }),
 
     adoptSave: (json) => {
       const now = Date.now();

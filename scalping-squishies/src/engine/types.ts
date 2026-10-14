@@ -329,6 +329,10 @@ export interface GameState {
   city: string;
   cityOffer: [string, string] | null;
   tutorialDone: string[];
+  /** Steps whose Clout was already paid (so a replayed tour does not pay twice). */
+  tutorialPaid: string[];
+  /** First-launch choice: pending (ask), on (guided tour), off (skipped), done (finished). */
+  tutorialChoice: 'pending' | 'on' | 'off' | 'done';
   rankRewarded: string[];
   /** Con Weekend score: restock units grabbed this ISO week (week key + units). */
   conWeek: { week: string; units: number };

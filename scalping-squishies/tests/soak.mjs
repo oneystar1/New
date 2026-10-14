@@ -21,6 +21,8 @@ const AVOID = /Hard reset|Import|Export|Not yet|Confirm purchase/;
 let actions = 0;
 try {
   await page.goto(`http://localhost:${PORT}/`);
+  await page.waitForSelector('.splash', { state: 'detached', timeout: 15000 });
+  await page.getByRole('button', { name: /Skip, I/ }).click();
   await page.waitForSelector('.shelf', { timeout: 15000 });
   const end = Date.now() + SECONDS * 1000;
   while (Date.now() < end) {

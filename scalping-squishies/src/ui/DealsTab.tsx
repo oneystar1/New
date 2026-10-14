@@ -54,7 +54,7 @@ export function DealsTab() {
         const tag = KIND_TAG[o.kind];
         const showTag = o.kind === 'karen' || o.kind === 'trade' || o.kind === 'lowball' || o.kind === 'sneakerbro' || (o.kind === 'scam' && o.flagged);
         return (
-          <div className={`card offer ${o.flagged ? 'flagged' : ''}`} key={o.id}>
+          <div className={`card offer ${o.flagged ? 'flagged' : ''}`} key={o.id} data-tut="offer">
             <div className="row">
               <div className="ico-lg"><Portrait kind={o.flagged || o.kind !== 'scam' ? KIND_PORTRAIT[o.kind] : 'buyer'} size={44} seed={o.id} /></div>
               <div className="grow">
