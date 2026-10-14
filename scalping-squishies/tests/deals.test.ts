@@ -121,6 +121,26 @@ describe('offer feed', () => {
   });
 });
 
+describe('message text', () => {
+  it('never prints $0 or an unfilled placeholder', () => {
+    const s = rich();
+    s.shelf.doh_kube = 1;
+    const m = computeModifiers(s, T0);
+    const rng = makeRng(77);
+    for (const pricing of ['retail', 'fair', 'scalper', 'insane'] as const) {
+      s.pricing = pricing;
+      for (let i = 0; i < 300; i++) {
+        const o = makeOffer(s, m, T0, rng);
+        expect(o.message).not.toMatch(/\$0(\D|$)/);
+        expect(o.message).not.toMatch(/\{\w+\}/);
+      }
+    }
+    s.pricing = 'insane';
+    const karen = offerOfKind('karen', s).o;
+    if (karen.message.includes('asking')) expect(karen.message).toContain('$60'); // 10x the $6 Kube
+  });
+});
+
 describe('sneaker bros', () => {
   it('pay hype prices 60% of the time and back out otherwise', () => {
     let paid = 0, backed = 0;

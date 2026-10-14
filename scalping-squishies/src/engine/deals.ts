@@ -15,6 +15,9 @@ export const OFFER_TTL_SECONDS = 180;
 const KIND_WEIGHTS: Record<OfferKind, number> = { fair: 28, lowball: 26, ghost: 14, scam: 11, karen: 8, trade: 5, sneakerbro: 8 };
 
 /** The Facebook pricing dial: how hard you scalp. */
+/** Your listing price as a multiple of retail, for message text. */
+export const ASK_MULT: Record<Pricing, number> = { retail: 1, fair: 1.5, scalper: 2, insane: 10 };
+
 export const PRICING: Record<Pricing, { label: string; blurb: string; value: number; weights: Partial<Record<OfferKind, number>> }> = {
   retail: { label: 'Retail', blurb: 'Group-approved. Fair buyers only, no Karens, offers worth 60%.', value: 0.6, weights: { fair: 60, lowball: 10, ghost: 10, scam: 6, karen: 0, trade: 8, sneakerbro: 2 } },
   fair: { label: 'Fair', blurb: 'A little over retail. The normal feed.', value: 1, weights: KIND_WEIGHTS },
@@ -53,9 +56,12 @@ export function makeOffer(s: GameState, m: Modifiers, now: number, rand: () => n
   const secs = lo + rand() * (hi - lo);
   const amount = kind === 'karen' || kind === 'trade' ? 0 : Math.max(item.retail * 0.5, ips * secs * m.offerValue * pricing.value * s.hype[item.family]);
   const tpl = OFFER_TEMPLATES[kind];
+  const ask = item.retail * ASK_MULT[s.pricing ?? 'fair'];
   const message = tpl[Math.floor(rand() * tpl.length)]
-    .replace('{item}', item.name)
-    .replace('{price}', formatCash(amount));
+    .replace(/\{item\}/g, item.name)
+    .replace(/\{price\}/g, formatCash(amount))
+    .replace(/\{ask\}/g, formatCash(ask))
+    .replace(/\{retail\}/g, formatCash(item.retail));
   const BROS = ['Hype Hank', 'DeadstockDrew', 'SZ10_Civic', 'kicks2kubes', 'Bro (matching hoodie)'];
   const buyer = kind === 'karen' && rand() < 0.5 ? 'Karen_From_PTA' : kind === 'sneakerbro' ? BROS[Math.floor(rand() * BROS.length)] : BUYER_NAMES[Math.floor(rand() * BUYER_NAMES.length)];
   return {

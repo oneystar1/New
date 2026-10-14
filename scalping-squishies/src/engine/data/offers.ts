@@ -1,7 +1,8 @@
 import type { OfferKind } from '../types';
 
-// Buyer personas and message templates for the Deals feed. {item} is
-// replaced with the listed item's name and {price} with the offer amount.
+// Buyer personas and message templates for the Deals feed. Placeholders:
+// {item} the listed item, {price} the buyer's offer, {ask} your listing
+// price (retail x the pricing dial), {retail} the store price.
 
 export const BUYER_NAMES = [
   'Brayden K.', 'SquishMom2019', 'Hype Hank', 'DeadstockDrew', 'SZ10_Civic', 'kicks2kubes', 'DealzDealzDealz', 'Tyler (no profile pic)', 'Kayleigh ✨', 'Grandpa Ron',
@@ -18,7 +19,7 @@ export const OFFER_TEMPLATES: Record<OfferKind, string[]> = {
     'Been hunting a {item} for months. {price} and I\'ll leave a 5 star review.',
   ],
   lowball: [
-    'would u take {price} for the {item}? its only $6 at the store',
+    'would u take {price} for the {item}? its only {retail} at the store',
     '{price} cash rn for the {item}. firm. lmk',
     'I can do {price} for the {item}, I\'m literally 2 min away',
     'my kid wants the {item} but im not paying scalper prices. {price}?',
@@ -53,10 +54,10 @@ export const OFFER_TEMPLATES: Record<OfferKind, string[]> = {
   ],
   karen: [
     'You people are the reason my kids can\'t find a {item} at the store. Hope you\'re proud. Reported.',
-    'Retail is $6. You\'re asking {price}?? I\'m posting this in the group.',
+    'Retail is {retail}. You\'re asking {ask}?? I\'m posting this in the group.',
     'Scalpers like you should be banned from every store. Enjoy your blood money.',
     'I know what store you got the {item} from. I\'m telling the manager.',
-    'Not buying, just here to say this is disgusting. {price} for a {item}. Disgusting.',
+    'Not buying, just here to say this is disgusting. {ask} for a {item}. Disgusting.',
   ],
 };
 
