@@ -7,7 +7,7 @@ import { weightedPick } from './math';
 
 // Restock runs: the "standing outside at 6am" part of scalping. You pick a
 // store, stand in line behind rivals who each take their share, then when
-// doors open you mash GRAB for 12 seconds while NeeDoh Moms, little kids,
+// doors open you mash GRAB for 12 seconds while Kube Moms, little kids,
 // other resellers and the manager interrupt you with choices.
 
 export const RESTOCK_COOLDOWN_SECONDS = 10 * 60;
@@ -171,7 +171,7 @@ export function choose(run: RestockRun, choiceIdx: number, rand: () => number): 
     case 'raceBro':
       run.brosRaced += 1;
       if (rand() < 0.5) { run.grabbed = Math.min(run.carry, run.grabbed + 2); run.remaining = Math.max(0, run.remaining - 2); msg = 'You beat him to the row. +2. He calls it an "L" and films you.'; }
-      else { run.remaining = Math.max(0, run.remaining - 4); run.timeLeft -= 2; msg = 'He has camped for Jordans. He is faster. Row gone, 2 seconds gone.'; }
+      else { run.remaining = Math.max(0, run.remaining - 4); run.timeLeft -= 2; msg = 'He has camped for sneaker drops. He is faster. Row gone, 2 seconds gone.'; }
       break;
     case 'fudBro':
       if (rand() < 0.7) { msg = 'He opens the app to check. He is gone for the rest of the restock. Bless the chart.'; }

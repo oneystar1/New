@@ -31,7 +31,7 @@ const globalCash: UpgradeDef[] = [
   { id: 'u_llc', name: 'Form an LLC', blurb: '"Oh I run a small business." Taxes get cheaper.', icon: '🏢', cost: 900_000_000, currency: 'cash', effect: { kind: 'globalProfit', mult: 3 } },
   { id: 'u_warehouse', name: 'Fulfillment Warehouse', blurb: 'Someone else packs boxes now. You "manage".', icon: '🏭', cost: 40_000_000_000, currency: 'cash', effect: { kind: 'globalProfit', mult: 5 } },
   { id: 'u_squishlove', name: 'Slow-Rise Sommelier', blurb: 'You can tell a true slow-rise from a fast-rise across the aisle.', icon: '🍌', cost: 20_000_000, currency: 'cash', effect: { kind: 'familyProfit', family: 'squish', mult: 2 } },
-  { id: 'u_dohlove', name: 'Doh Dealer', blurb: 'Your name is known in every dough-cube Facebook group.', icon: '🧊', cost: 20_000_000, currency: 'cash', effect: { kind: 'familyProfit', family: 'doh', mult: 2 } },
+  { id: 'u_dohlove', name: 'Doh Dealer', blurb: 'Your name is known in every dough-cube group chat.', icon: '🧊', cost: 20_000_000, currency: 'cash', effect: { kind: 'familyProfit', family: 'doh', mult: 2 } },
   { id: 'u_chair', name: 'Folding Chair', blurb: 'Arrive at 5am in comfort. Skip 2 people in every restock line.', icon: '🪑', cost: 2_000, currency: 'cash', effect: { kind: 'linePosition', add: 2 } },
   { id: 'u_tent', name: 'Overnight Tent', blurb: 'Sleep in the parking lot. Skip 3 more people in line.', icon: '⛺', cost: 400_000, currency: 'cash', effect: { kind: 'linePosition', add: 3 } },
   { id: 'u_minivan', name: 'Minivan (seats out)', blurb: 'Carry 3 more units out of every restock.', icon: '🚐', cost: 80_000, currency: 'cash', effect: { kind: 'carry', add: 3 } },

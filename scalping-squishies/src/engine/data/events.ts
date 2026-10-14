@@ -25,7 +25,7 @@ export const EVENTS: Record<MarketEventKind, MarketEventDef> = {
   },
   holiday: {
     kind: 'holiday',
-    name: 'Squishmas Drop',
+    name: 'Dohlidays Drop',
     blurb: 'Seasonal jumbo bananas and glow squishies land. Squishy resale doubles and moves faster.',
     icon: '🎄',
     durationSeconds: 180,

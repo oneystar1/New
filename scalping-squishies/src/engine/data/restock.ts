@@ -2,7 +2,7 @@ import type { RivalKind } from '../types';
 
 export const RIVALS: Record<RivalKind, { names: string[]; icon: string; takes: [number, number]; blurb: string }> = {
   mom: {
-    names: ['NeeDoh Mom (minivan)', 'NeeDoh Mom (SUV)', 'NeeDoh Mom (three kids = three families)', 'Squad Mom Tiffani', 'Group Admin Brenda'],
+    names: ['Kube Mom (minivan)', 'Kube Mom (SUV)', 'Kube Mom (three kids = three families)', 'Squad Mom Tiffani', 'Group Admin Brenda'],
     icon: '👩‍👧‍👦',
     takes: [2, 4],
     blurb: 'Two per family. She brought the whole family.',
@@ -26,7 +26,7 @@ export const RIVALS: Record<RivalKind, { names: string[]; icon: string; takes: [
     blurb: 'Buying one for a grandkid. Protect at all costs.',
   },
   sneakerbro: {
-    names: ['Sneaker Bro (pivoted from Dunks)', 'Hype Hank (matching hoodie)', 'Guy who camped for Jordans, now cubes', 'DeadstockDrew with a Bluetooth speaker', 'Three bros, one Civic'],
+    names: ['Sneaker Bro (pivoted from sneakers)', 'Hype Hank (matching hoodie)', 'Guy who camped for retros, now cubes', 'DeadstockDrew with a Bluetooth speaker', 'Three bros, one Civic'],
     icon: '👟',
     takes: [3, 4],
     blurb: 'Used to camp for sneakers. Same tent, same bot, new product.',
@@ -74,7 +74,7 @@ export const ENCOUNTERS: EncounterDef[] = [
   },
   {
     id: 'mom_cart', kind: 'mom', icon: '🛒',
-    text: 'A NeeDoh Mom parks her cart sideways across the aisle and starts handing cubes to each of her kids. "Two per FAMILY."',
+    text: 'A Kube Mom parks her cart sideways across the aisle and starts handing cubes to each of her kids. "Two per FAMILY."',
     choices: [
       { label: 'Argue (+6 heat)', effect: 'argueMom' },
       { label: 'Compliment her minivan', effect: 'complimentMom' },
@@ -83,7 +83,7 @@ export const ENCOUNTERS: EncounterDef[] = [
   },
   {
     id: 'mom_film', kind: 'mom', icon: '📱',
-    text: 'Group Admin Brenda is filming you for the Facebook group. "Everyone say hi to the scalper."',
+    text: 'Group Admin Brenda is filming you for the group. "Everyone say hi to the scalper."',
     choices: [
       { label: 'Argue on camera (+6 heat)', effect: 'argueMom' },
       { label: 'Smile and wave', effect: 'complimentMom' },
@@ -132,7 +132,7 @@ export const ENCOUNTERS: EncounterDef[] = [
   },
   {
     id: 'line_cut', kind: 'mom', icon: '🚻', line: true,
-    text: 'A NeeDoh Mom asks to cut in front of you. "My kid has to pee." The kid does not look like he has to pee.',
+    text: 'A Kube Mom asks to cut in front of you. "My kid has to pee." The kid does not look like he has to pee.',
     choices: [
       { label: 'Let her cut (she takes 3)', effect: 'letCut' },
       { label: 'Refuse (+2 heat, she argues)', effect: 'refuseCut' },
@@ -156,6 +156,6 @@ export const LINE_FLAVOR = [
   'Employee peeks through the door, counts heads, winces.',
   'A kid asks you what you are going to do with that many. You do not answer.',
   'Dalton pulls up in the cargo van. He is not even in line. He has a system.',
-  'A sneaker bro is explaining "the StockyX chart" to a NeeDoh Mom. She is not listening. She has a list.',
+  'A sneaker bro is explaining "the StockyX chart" to a Kube Mom. She is not listening. She has a list.',
   'Someone\'s Bluetooth speaker is playing a hype playlist at 6am. The bros. It is always the bros.',
 ];

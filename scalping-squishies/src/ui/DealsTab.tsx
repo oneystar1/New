@@ -108,7 +108,7 @@ export function DealsTab() {
 
       <div className="ticker">📣 {DRAMA_FEED[drama]}</div>
 
-      <h2 className="sec">Your Facebook listings · pricing</h2>
+      <h2 className="sec">Your Marketplace listings · pricing</h2>
       <div className="seg">
         {(Object.keys(PRICING) as Pricing[]).map((p) => (
           <button key={p} className={s.pricing === p ? 'active' : ''} onClick={() => setPricing(p)}>{PRICING[p].label}</button>
