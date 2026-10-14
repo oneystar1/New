@@ -1,6 +1,7 @@
 import type { AchievementDef } from '../types';
 import { STORES } from './stores';
 import { ITEMS } from './items';
+import { completedSets } from '../sim';
 
 const totalUnits = (s: { stores: Record<string, { units: number }> }) =>
   Object.values(s.stores).reduce((a, b) => a + b.units, 0);
@@ -25,7 +26,13 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'a_select', name: 'Limited Company', blurb: 'Own a Limited Run item.', icon: '🔮', clout: 30, check: (s) => ITEMS.some((i) => i.rarity === 'select' && s.shelf[i.id]) },
   { id: 'a_grail', name: 'Holy Grail', blurb: 'Own a Grail.', icon: '🏆', clout: 60, check: (s) => ITEMS.some((i) => i.rarity === 'grail' && s.shelf[i.id]) },
   { id: 'a_shelf_half', name: 'Half the Binder', blurb: 'Collect half of all items.', icon: '📒', clout: 40, check: (s) => Object.keys(s.shelf).filter((k) => s.shelf[k] > 0).length >= Math.ceil(ITEMS.length / 2) },
-  { id: 'a_shelf_full', name: 'Completionist', blurb: 'Collect every item.', icon: '🥇', clout: 150, check: (s) => ITEMS.every((i) => s.shelf[i.id] > 0) },
+  { id: 'a_shelf_full', name: 'Completionist', blurb: 'Collect every Standard item.', icon: '🥇', clout: 150, check: (s) => ITEMS.every((i) => s.shelf[i.id] > 0) },
+  { id: 'a_chase', name: 'Chased It', blurb: 'Pull a Chase item. One in thousands.', icon: '🌈', clout: 100, check: (s) => ITEMS.some((i) => i.rarity === 'chase' && (s.shelf[i.id] ?? 0) + (s.shelf[`${i.id}:glitter`] ?? 0) + (s.shelf[`${i.id}:glow`] ?? 0) + (s.shelf[`${i.id}:mini`] ?? 0) > 0) },
+  { id: 'a_glitter', name: 'Sparkle Page', blurb: 'Own a Glitter version of 20 different items.', icon: '✦', clout: 25, check: (s) => ITEMS.filter((i) => (s.shelf[`${i.id}:glitter`] ?? 0) > 0).length >= 20 },
+  { id: 'a_glow', name: 'Lights Off', blurb: 'Own a Glow version of 20 different items.', icon: '☼', clout: 25, check: (s) => ITEMS.filter((i) => (s.shelf[`${i.id}:glow`] ?? 0) > 0).length >= 20 },
+  { id: 'a_mini', name: 'Teenie Collector', blurb: 'Own a Mini version of 20 different items.', icon: '•', clout: 25, check: (s) => ITEMS.filter((i) => (s.shelf[`${i.id}:mini`] ?? 0) > 0).length >= 20 },
+  { id: 'a_set1', name: 'Page Complete', blurb: 'Finish any store page in any variant.', icon: '📚', clout: 20, check: (s) => completedSets(s).length >= 1 },
+  { id: 'a_set10', name: 'Binder Boss', blurb: 'Finish 10 sets.', icon: '📒', clout: 60, check: (s) => completedSets(s).length >= 10 },
   { id: 'a_prestige1', name: 'New City, Who Dis', blurb: 'Relocate once.', icon: '🚚', clout: 20, check: (s) => s.stats.prestiges >= 1 },
   { id: 'a_prestige5', name: 'Serial Relocator', blurb: 'Relocate 5 times.', icon: '✈️', clout: 50, check: (s) => s.stats.prestiges >= 5 },
   { id: 'a_streak7', name: 'Daily Grinder', blurb: 'Hit a 7-day login streak.', icon: '📅', clout: 25, check: (s) => s.dailyStreak >= 7 },

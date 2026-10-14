@@ -160,11 +160,12 @@ describe('pulls and shelf', () => {
   it('pulls add to the shelf and duplicates sell for at least resale value', () => {
     const s = initialState(T0);
     const rng = makeRng(3);
-    const it = pullItem(s, 'dollar', 0, rng);
-    expect(s.shelf[it.id]).toBe(1);
-    expect(sellDuplicate(s, it.id, T0)).toBe(0);
+    const p = pullItem(s, 'dollar', 0, rng);
+    const key = p.variant === 'standard' ? p.item.id : `${p.item.id}:${p.variant}`;
+    expect(s.shelf[key]).toBe(1);
+    expect(sellDuplicate(s, key, T0)).toBe(0);
     pullItem(s, 'dollar', 0, () => 0.01); // force same pool
-    const dupId = Object.keys(s.shelf).find((k) => s.shelf[k] > 1) ?? (s.shelf[it.id] = 2, it.id);
+    const dupId = Object.keys(s.shelf).find((k) => s.shelf[k] > 1) ?? (s.shelf[key] = 2, key);
     const v = sellDuplicate(s, dupId, T0);
     expect(v).toBeGreaterThan(0);
     expect(s.shelf[dupId]).toBe(1);

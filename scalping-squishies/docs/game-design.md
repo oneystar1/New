@@ -31,7 +31,7 @@ pulls ──────┘             │                       └─> buy ma
 3. **Upgrades.** Three per store (x2 profit each, gated on unit counts),
    global cash upgrades (shipping supplies, storage unit, label printer,
    cargo van, LLC, warehouse), tap upgrades, family specialisations.
-4. **Shelf (collection).** 72 items across two families (Dohs: stretchy
+4. **Shelf (collection).** 87 items in four variants (348 slots) across two families (Dohs: stretchy
    dough cubes and globs, Squishies: slow-rise and jumbo squeezies such as
    the viral bananas, cheese cubes, butter sticks, dumplings, mochi,
    Smushers) and six rarity tiers. Each unique item adds a permanent profit bonus (0.5% common to
@@ -123,6 +123,25 @@ three phases:
 | Fair | 1x | the default mix |
 | Scalper | 1.6x | more lowballs, twice the Karens |
 | Insane | 2.8x | mostly ghosts and Karens, +0.03 heat/sec |
+
+## Collection depth: variants, sets, chase
+
+The first bot run filled a 72-item binder in 3.5 hours. The fix is depth,
+not raw count:
+
+- **Variants.** Every item exists as Standard (70%), Glitter (15%), Glow
+  (10%) and Mini (5%), rolled on every pull; luck shifts odds toward the
+  rarer ones. 87 items become 348 binder slots. Variant slots add 40% to
+  80% of the item's shelf bonus. Variant duplicates flip for 1.5x to 3x.
+- **Sets.** Completing a store page in one variant pays +5% (Standard),
+  +8% (Glitter), +10% (Glow) or +6% (Mini) profit forever; completing every
+  Standard Squishy or Doh pays +15%. 42 sets in all, listed on the Shelf
+  tab's Sets view.
+- **Chase.** A seventh tier above Grail: five items at roughly 1 in 3,000
+  (Five & Under) to 1 in 250 (Factory). Shelf bonus +50% each, duplicates
+  flip for a day of income, and a 100-Clout achievement.
+- **Gaps filled.** Bullseye went from 3 items to 10 (the endcap food
+  squishies), grails from 4 to 8, every store page has at least 6 items.
 
 ## Cities, rankings, tutorial, feel
 

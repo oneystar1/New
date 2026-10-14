@@ -1,7 +1,7 @@
-import type { GameState, RestockRun, Rival, RivalKind, ItemDef } from './types';
+import type { GameState, RestockRun, Rival, RivalKind, PullView } from './types';
 import { STORE_BY_ID } from './data/stores';
 import { RIVALS, ENCOUNTERS, LINE_FLAVOR, type EncounterDef } from './data/restock';
-import { computeModifiers, storeCycleProfit, storeCycleSeconds, pullItem, earn, bumpMission, isConWeekend, weekKey, type Modifiers } from './sim';
+import { computeModifiers, storeCycleProfit, storeCycleSeconds, pullItem, unpull, earn, bumpMission, isConWeekend, weekKey, type Modifiers } from './sim';
 import { fakeRoll } from './deals';
 import { weightedPick } from './math';
 
@@ -200,7 +200,7 @@ export function choose(run: RestockRun, choiceIdx: number, rand: () => number): 
 }
 
 export interface RunResult {
-  items: ItemDef[];
+  items: PullView[];
   fakes: number;
   cash: number;
   heat: number;
@@ -210,16 +210,12 @@ export interface RunResult {
 /** Apply a finished run to the game state. */
 export function finishRun(s: GameState, run: RestockRun, now: number, rand: () => number): RunResult {
   const m = computeModifiers(s, now);
-  const items: ItemDef[] = [];
+  const items: PullView[] = [];
   let fakes = 0;
   for (let i = 0; i < run.grabbed; i++) {
-    if (fakeRoll(run.storeId, m, rand)) {
-      const it = pullItem(s, run.storeId, m.pullLuck, rand);
-      s.shelf[it.id] -= 1;
-      s.stats.pulls -= 1;
-      s.fakes.push(it.id);
-      fakes++;
-    } else items.push(pullItem(s, run.storeId, m.pullLuck, rand));
+    const p = pullItem(s, run.storeId, m.pullLuck, rand);
+    if (fakeRoll(run.storeId, m, rand)) { unpull(s, p); s.fakes.push(p.item.id); fakes++; }
+    else items.push(p);
   }
   // Cash is sized by time (30s of that store's income per unit) so a late
   // store's long cycle does not turn a restock into hours of income.

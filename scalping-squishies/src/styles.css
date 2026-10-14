@@ -107,6 +107,11 @@ h2.sec { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color:
 .tag.ultra { background: #3f2a80; }
 .tag.select { background: #6b2a5a; }
 .tag.grail { background: #6b5a10; color: var(--gold); }
+.tag.chase { background: linear-gradient(90deg, #ff7ac8, #ffe066, #6ef0c2); color: #1a1030; }
+.item.r-chase { border-color: #fff; box-shadow: 0 0 18px #ffffffaa; }
+.item .variants { display: flex; justify-content: center; gap: 4px; font-size: 10px; margin-top: 2px; color: #4a3a7d; }
+.item .variants .on { color: var(--gold); }
+.vrow { padding: 6px 0; border-top: 1px solid var(--line); }
 
 /* Overlays */
 .overlay { position: fixed; inset: 0; background: rgba(8, 4, 20, 0.82); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px; }

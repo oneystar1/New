@@ -29,9 +29,12 @@ npm run balance 8  # greedy-bot economy sim (stores, deals, restocks) for 8 simu
 
 - **10 stores** (Dollar Dohjo through the Factory Back Door) with unit
   milestones, managers that automate, and 3 upgrades each.
-- **72 collectible items** in two families (Dohs and Squishies) and six
-  rarity tiers, a mystery pull gacha with published odds, a shelf bonus,
-  duplicate flipping.
+- **87 collectible items in four variants each (348 binder slots)** across
+  two families (Dohs and Squishies) and seven rarity tiers up to Chase
+  (one in thousands). Standard, Glitter, Glow and Mini versions of every
+  item, set bonuses for completing a store page in a variant or a whole
+  family, a mystery pull gacha with published odds, a shelf bonus,
+  duplicate flipping scaled by variant.
 - **Original art**: every item, rival, buyer and storefront is an original
   vector sprite composed at runtime from a shape library (`src/art/`):
   jelly gradients, highlights, glitter, glow, holo, chrome and gold

@@ -4,7 +4,16 @@
 
 export type ItemFamily = 'squish' | 'doh';
 
-export type Rarity = 'common' | 'uncommon' | 'rare' | 'ultra' | 'select' | 'grail';
+export type Rarity = 'common' | 'uncommon' | 'rare' | 'ultra' | 'select' | 'grail' | 'chase';
+
+/** Every item ships in four versions, like the real lines. */
+export type Variant = 'standard' | 'glitter' | 'glow' | 'mini';
+
+/** A pulled item with its variant, for reveal screens. */
+export interface PullView {
+  item: ItemDef;
+  variant: Variant;
+}
 
 export interface ItemDef {
   id: string;
@@ -144,10 +153,7 @@ export interface RestockRun {
 
 export type Pricing = 'retail' | 'fair' | 'scalper' | 'insane';
 
-export interface PullResult {
-  item: ItemDef;
-  fake: boolean;
-}
+
 
 export interface AchievementDef {
   id: string;
@@ -289,7 +295,7 @@ export interface GameState {
   cred: number;
   stores: Record<string, StoreState>;
   upgrades: string[];
-  /** Item id -> count owned on the shelf (collection). */
+  /** Shelf key -> count. Key is the item id for Standard, `id:variant` otherwise. */
   shelf: Record<string, number>;
   /** Market hype per family: 1 = neutral. Drifts over time with events. */
   hype: Record<ItemFamily, number>;

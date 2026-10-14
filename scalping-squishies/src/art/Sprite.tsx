@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { SHAPES } from './shapes';
 import { ART, FALLBACK_ART, type Face } from './art';
+import type { Variant } from '../engine/types';
 
 // Inline-SVG sprite for an item id. Composed from: drop shadow, behind
 // parts, gradient body, finish overlay, decorations, highlight, face.
@@ -65,11 +66,13 @@ function FaceSvg({ face, x, y, s, ink = '#2a1a3a' }: { face: Face; x: number; y:
 
 const GLITTER = [[18, 20], [40, 16], [46, 36], [24, 44], [34, 30], [14, 36], [42, 48], [30, 50]];
 
-export const Sprite = memo(function Sprite({ id, size = 48, className }: { id: string; size?: number; className?: string }) {
+export const Sprite = memo(function Sprite({ id, size = 48, className, variant = 'standard' }: { id: string; size?: number; className?: string; variant?: Variant }) {
   const a = ART[id] ?? FALLBACK_ART;
   const sh = SHAPES[a.shape];
   const k = `g${(uid = (uid + 1) % 100000)}`;
-  const finish = a.finish ?? 'jelly';
+  // Variants layer on top of the base finish: glitter adds sparkle, glow adds a halo, mini shrinks.
+  const finish = variant === 'glitter' ? 'glitter' : variant === 'glow' ? 'glow' : (a.finish ?? 'jelly');
+  const scale = variant === 'mini' ? 0.68 : 1;
   const bodyOpacity = finish === 'clear' ? 0.78 : 1;
   const [fx, fy, fs] = sh.face;
   const accent = a.accent ?? a.c2;
@@ -94,7 +97,8 @@ export const Sprite = memo(function Sprite({ id, size = 48, className }: { id: s
           <filter id={`${k}f`} x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3" /></filter>
         )}
       </defs>
-      <ellipse cx="32" cy="58" rx={18 * (sh.shadow ?? 1)} ry="4" fill="#000" opacity="0.3" />
+      <ellipse cx="32" cy="58" rx={18 * (sh.shadow ?? 1) * scale} ry="4" fill="#000" opacity="0.3" />
+      <g transform={scale === 1 ? undefined : `translate(${32 - 32 * scale} ${58 - 58 * scale}) scale(${scale})`}>
       {finish === 'glow' && <path d={sh.body} fill={a.c1} opacity="0.7" filter={`url(#${k}f)`} />}
       {sh.behind?.map((p, i) => <path key={i} d={p.d} fill={p.fill ?? accent} stroke={p.stroke} strokeWidth={p.width} opacity={p.opacity} strokeLinecap="round" />)}
       <path d={sh.body} fill={`url(#${k}b)`} opacity={bodyOpacity} />
@@ -104,6 +108,10 @@ export const Sprite = memo(function Sprite({ id, size = 48, className }: { id: s
       {sh.decos?.map((p, i) => <path key={i} d={p.d} fill={p.fill ?? 'none'} stroke={p.stroke} strokeWidth={p.width} opacity={p.opacity} strokeLinecap="round" />)}
       {finish !== 'matte' && finish !== 'fuzzy' && <ellipse cx="24" cy="20" rx="7" ry="4" fill="#fff" opacity={finish === 'clear' ? 0.7 : 0.45} transform="rotate(-25 24 20)" />}
       <FaceSvg face={a.face ?? 'happy'} x={fx} y={fy} s={fs} ink={a.faceColor} />
+      </g>
+      {variant === 'glitter' && <text x="54" y="14" fontSize="12" fill="#ffe066" textAnchor="middle">✦</text>}
+      {variant === 'glow' && <circle cx="54" cy="10" r="4" fill="#b9ffb0" opacity="0.9" />}
+      {variant === 'mini' && <text x="52" y="16" fontSize="9" fontWeight="900" fill="#fff" textAnchor="middle" opacity="0.9">mini</text>}
     </svg>
   );
 });

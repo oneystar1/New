@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { GameState, ItemDef, MarketEventKind, Reward, RestockRun, Pricing } from './types';
+import type { GameState, MarketEventKind, Reward, RestockRun, Pricing, PullView } from './types';
 import { startRun, openDoors, grab, tickRun, choose, finishRun } from './restock';
 import { sfx, setSfxEnabled } from '../ui/sfx';
 import { fx } from '../ui/fxbus';
@@ -13,7 +13,7 @@ import { initialState, deserialize, serialize, SAVE_KEY } from './state';
 import {
   tick, computeModifiers, applyOfflineOnLoad, claimOffline, storeUnlocked, startCycle, earn, tapValue,
   pullItem, highestUnlockedStore, sellDuplicate, prestige, credForRun, rollMissions, claimMission,
-  claimDaily, claimPassTier, addBoost, timeSkip, grantReward, bumpMission, isVip, isAdFree, rollCityOffer,
+  claimDaily, claimPassTier, addBoost, timeSkip, grantReward, bumpMission, isVip, isAdFree, rollCityOffer, unpull,
 } from './sim';
 import { STORE_BY_ID } from './data/stores';
 import { MANAGER_BY_STORE } from './data/managers';
@@ -41,10 +41,10 @@ interface GameStore {
   s: GameState;
   now: number;
   toasts: Toast[];
-  lastPulls: ItemDef[] | null;
+  lastPulls: PullView[] | null;
   huntMeter: number; // 0..1, fills with taps, grants a free pull
   run: RestockRun | null;
-  runResult: { items: ItemDef[]; fakes: number; cash: number; heat: number; banned: boolean; grabbed: number } | null;
+  runResult: { items: PullView[]; fakes: number; cash: number; heat: number; banned: boolean; grabbed: number } | null;
   provider: MonetizationProvider | null;
   buyAmount: BuyAmount;
 
@@ -72,7 +72,7 @@ interface GameStore {
   hireManager: (storeId: string) => void;
   buyUpgrade: (id: string) => void;
   pull: (count: 1 | 10, free?: boolean) => void;
-  sellDupe: (itemId: string) => void;
+  sellDupe: (shelfKey: string) => void;
   doPrestige: (cityId: string) => Promise<void>;
   openRelocate: () => void;
   closeRelocate: () => void;
@@ -321,7 +321,7 @@ export const useGame = create<GameStore>((set, get) => {
       s.stats.taps += 1;
       bumpMission(s, 'taps', 1);
       let meter = st.huntMeter + 1 / 60;
-      let pulls: ItemDef[] | null = null;
+      let pulls: PullView[] | null = null;
       if (meter >= 1) {
         meter = 0;
         pulls = [pullItem(s, highestUnlockedStore(s), m.pullLuck, rand)];
@@ -397,18 +397,13 @@ export const useGame = create<GameStore>((set, get) => {
         s.clout -= cost;
       }
       const m = computeModifiers(s, st.now);
-      const results: ItemDef[] = [];
+      const results: PullView[] = [];
       const storeId = highestUnlockedStore(s);
       let fakes = 0;
       for (let i = 0; i < count; i++) {
-        if (fakeRoll(storeId, m, rand)) { fakes++; continue; }
-        results.push(pullItem(s, storeId, m.pullLuck, rand));
-      }
-      for (let i = 0; i < fakes; i++) {
-        const it = pullItem(s, storeId, m.pullLuck, rand);
-        s.shelf[it.id] -= 1; // not a real one: goes to the fakes pile instead
-        s.stats.pulls -= 1;
-        s.fakes.push(it.id);
+        const p = pullItem(s, storeId, m.pullLuck, rand);
+        if (fakeRoll(storeId, m, rand)) { unpull(s, p); s.fakes.push(p.item.id); fakes++; } // counterfeit: goes to the pile
+        else results.push(p);
       }
       if (fakes) toast(`${fakes} of those were counterfeit. Check the Deals tab.`, '🔦', 'bad');
       pullFx(results);
@@ -416,9 +411,9 @@ export const useGame = create<GameStore>((set, get) => {
       set({ s: { ...s }, lastPulls: results });
     },
 
-    sellDupe: (itemId) => {
+    sellDupe: (key) => {
       const st = get();
-      const v = sellDuplicate(st.s, itemId, st.now);
+      const v = sellDuplicate(st.s, key, st.now);
       if (v > 0) toast('Duplicate flipped!', '💸', 'good');
       set({ s: { ...st.s } });
     },
@@ -636,9 +631,9 @@ export const useGame = create<GameStore>((set, get) => {
 });
 
 /** Sound + confetti for a batch of pulled items, scaled to the best rarity. */
-function pullFx(items: ItemDef[]): void {
-  const order = ['common', 'uncommon', 'rare', 'ultra', 'select', 'grail'];
-  const best = items.reduce((m, it) => Math.max(m, order.indexOf(it.rarity)), -1);
+function pullFx(items: PullView[]): void {
+  const order = ['common', 'uncommon', 'rare', 'ultra', 'select', 'grail', 'chase'];
+  const best = items.reduce((m, p) => Math.max(m, order.indexOf(p.item.rarity) + (p.variant === 'standard' ? 0 : 1)), -1);
   if (best < 0) return;
   if (best >= 5) { sfx.grail(); fx({ kind: 'confetti', intensity: 4 }); fx({ kind: 'flash', color: '#ffe066' }); }
   else if (best >= 3) { sfx.rare(); fx({ kind: 'confetti', intensity: 2 }); }

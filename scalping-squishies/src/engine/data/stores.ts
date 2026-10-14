@@ -28,7 +28,7 @@ export const STORES: StoreDef[] = [
     baseProfit: 10,
     cycleSeconds: 3,
     unlockAtTotalUnits: 3,
-    pullWeights: { common: 75, uncommon: 20, rare: 5 },
+    pullWeights: { common: 75, uncommon: 20, rare: 5, chase: 0.03 },
   },
   {
     id: 'bullseye',
@@ -41,7 +41,7 @@ export const STORES: StoreDef[] = [
     baseProfit: 98,
     cycleSeconds: 6,
     unlockAtTotalUnits: 10,
-    pullWeights: { common: 65, uncommon: 25, rare: 9, ultra: 1 },
+    pullWeights: { common: 62, uncommon: 25, rare: 10, ultra: 2.5, grail: 0.5 },
   },
   {
     id: 'wallymart',
@@ -80,7 +80,7 @@ export const STORES: StoreDef[] = [
     baseProfit: 96_063,
     cycleSeconds: 48,
     unlockAtTotalUnits: 80,
-    pullWeights: { common: 45, uncommon: 30, rare: 18, ultra: 5, select: 2 },
+    pullWeights: { common: 45, uncommon: 30, rare: 18, ultra: 5, select: 2, chase: 0.05 },
   },
   {
     id: 'claw',
@@ -106,7 +106,7 @@ export const STORES: StoreDef[] = [
     baseProfit: 9_453_262,
     cycleSeconds: 192,
     unlockAtTotalUnits: 170,
-    pullWeights: { common: 30, uncommon: 30, rare: 25, ultra: 10, select: 4, grail: 1 },
+    pullWeights: { common: 30, uncommon: 30, rare: 25, ultra: 10, select: 4, grail: 1, chase: 0.1 },
   },
   {
     id: 'con',
@@ -119,7 +119,7 @@ export const STORES: StoreDef[] = [
     baseProfit: 93_776_361,
     cycleSeconds: 384,
     unlockAtTotalUnits: 230,
-    pullWeights: { common: 20, uncommon: 30, rare: 28, ultra: 14, select: 6, grail: 2 },
+    pullWeights: { common: 20, uncommon: 30, rare: 28, ultra: 14, select: 6, grail: 2, chase: 0.2 },
   },
   {
     id: 'factory',
@@ -132,7 +132,7 @@ export const STORES: StoreDef[] = [
     baseProfit: 930_261_504,
     cycleSeconds: 768,
     unlockAtTotalUnits: 300,
-    pullWeights: { common: 10, uncommon: 25, rare: 30, ultra: 20, select: 10, grail: 5 },
+    pullWeights: { common: 10, uncommon: 25, rare: 30, ultra: 20, select: 10, grail: 5, chase: 0.4 },
   },
 ];
 

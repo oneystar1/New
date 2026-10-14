@@ -1,4 +1,4 @@
-import type { GameState, Offer, OfferKind, ItemDef, Pricing } from './types';
+import type { GameState, Offer, OfferKind, ItemDef, Pricing, PullView } from './types';
 import { ITEMS, ITEM_BY_ID } from './data/items';
 import { BUYER_NAMES, OFFER_TEMPLATES } from './data/offers';
 import { computeModifiers, incomePerSecond, earn, bumpMission, pullItem, highestUnlockedStore, type Modifiers } from './sim';
@@ -88,7 +88,7 @@ export interface DealOutcome {
   text: string;
   icon: string;
   kind: 'good' | 'bad' | 'info' | 'rare';
-  item?: ItemDef;
+  item?: PullView;
 }
 
 function remove(s: GameState, id: number): Offer | null {
@@ -135,7 +135,7 @@ export function acceptOffer(s: GameState, id: number, now: number, rand: () => n
       s.stats.tradesDone += 1;
       s.stats.offersAccepted += 1;
       bumpMission(s, 'deals', 1);
-      return { text: `Traded for a ${got.name}.`, icon: '🔄', kind: got.rarity === 'common' ? 'info' : 'rare', item: got };
+      return { text: `Traded for a ${got.variant !== 'standard' ? got.variant + ' ' : ''}${got.item.name}.`, icon: '🔄', kind: got.item.rarity === 'common' ? 'info' : 'rare', item: got };
     }
     case 'sneakerbro': {
       // Pays hype prices, but backs out when the chart dips.

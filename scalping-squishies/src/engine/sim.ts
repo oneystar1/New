@@ -1,9 +1,9 @@
-import type { GameState, ItemFamily, MarketEventKind, Rarity, ItemDef, Reward, Offer, UpgradeEffect } from './types';
+import type { GameState, ItemFamily, MarketEventKind, Rarity, Reward, Offer, UpgradeEffect, Variant, PullView } from './types';
 import { tickOffers, tickHeat } from './deals';
 import { STORES, STORE_BY_ID } from './data/stores';
 import { UPGRADE_BY_ID } from './data/upgrades';
 import { EVENTS, EVENT_WEIGHTS } from './data/events';
-import { ITEMS, ITEM_BY_ID, RARITY_ORDER, RARITY_SHELF_BONUS, itemsForStore } from './data/items';
+import { ITEMS, ITEM_BY_ID, RARITY_ORDER, RARITY_SHELF_BONUS, itemsForStore, VARIANTS, VARIANT_WEIGHTS, VARIANT_BONUS_MULT, VARIANT_VALUE_MULT, SET_BONUS, FAMILY_SET_BONUS, shelfKey, parseShelfKey } from './data/items';
 import { ACHIEVEMENTS } from './data/achievements';
 import { MISSION_POOL } from './data/missions';
 import { PASS_TIERS } from './data/pass';
@@ -114,9 +114,11 @@ export function computeModifiers(s: GameState, now: number): Modifiers {
       case 'carry': m.carry += e.add; break;
     }
   }
-  // Shelf (collection) bonus: each unique item owned adds a small % to profit.
+  // Shelf (collection) bonus: each unique slot (item x variant) adds a small % to profit,
+  // plus set bonuses for complete store pages and families.
   let shelfBonus = 0;
-  for (const it of ITEMS) if ((s.shelf[it.id] ?? 0) > 0) shelfBonus += RARITY_SHELF_BONUS[it.rarity];
+  for (const it of ITEMS) for (const v of VARIANTS) if ((s.shelf[shelfKey(it.id, v)] ?? 0) > 0) shelfBonus += RARITY_SHELF_BONUS[it.rarity] * VARIANT_BONUS_MULT[v];
+  for (const set of completedSets(s)) shelfBonus += set.bonus;
   m.shelfMult = 1 + shelfBonus;
   // Event
   if (s.event && s.event.endsAt > now) {
@@ -366,6 +368,45 @@ export function highestUnlockedStore(s: GameState): string {
   return best;
 }
 
+export interface SetProgress {
+  id: string;
+  label: string;
+  variant: Variant | 'family';
+  have: number;
+  total: number;
+  bonus: number;
+  done: boolean;
+}
+
+/** Progress on every set: each store page in each variant, plus the two family pages. */
+export function setProgress(s: GameState): SetProgress[] {
+  const out: SetProgress[] = [];
+  for (const st of STORES) {
+    const items = itemsForStore(st.id);
+    if (items.length === 0) continue;
+    for (const v of VARIANTS) {
+      const have = items.filter((i) => (s.shelf[shelfKey(i.id, v)] ?? 0) > 0).length;
+      out.push({ id: `${st.id}:${v}`, label: `${st.name} · ${v}`, variant: v, have, total: items.length, bonus: SET_BONUS[v], done: have === items.length });
+    }
+  }
+  for (const fam of ['squish', 'doh'] as ItemFamily[]) {
+    const items = ITEMS.filter((i) => i.family === fam);
+    const have = items.filter((i) => (s.shelf[i.id] ?? 0) > 0).length;
+    out.push({ id: `family:${fam}`, label: fam === 'squish' ? 'Every Squishy' : 'Every Doh', variant: 'family', have, total: items.length, bonus: FAMILY_SET_BONUS, done: have === items.length });
+  }
+  return out;
+}
+
+export function completedSets(s: GameState): SetProgress[] {
+  return setProgress(s).filter((x) => x.done);
+}
+
+export function rollVariant(luck: number, rand: () => number): Variant {
+  const w: Partial<Record<Variant, number>> = {};
+  VARIANTS.forEach((v, i) => { w[v] = VARIANT_WEIGHTS[v] * (1 + luck * i * 0.5); });
+  return weightedPick(w, rand);
+}
+
 export function rollRarity(storeId: string, luck: number, rand: () => number): Rarity {
   const base = STORE_BY_ID[storeId].pullWeights;
   const weights: Partial<Record<Rarity, number>> = {};
@@ -377,16 +418,25 @@ export function rollRarity(storeId: string, luck: number, rand: () => number): R
   return weightedPick(weights, rand);
 }
 
-export function pullItem(s: GameState, storeId: string, luck: number, rand: () => number): ItemDef {
+export function pullItem(s: GameState, storeId: string, luck: number, rand: () => number): PullView {
   const rarity = rollRarity(storeId, luck, rand);
   let pool = itemsForStore(storeId).filter((i) => i.rarity === rarity);
   if (pool.length === 0) pool = ITEMS.filter((i) => i.rarity === rarity);
   if (pool.length === 0) pool = itemsForStore(storeId);
   const item = pool[Math.floor(rand() * pool.length)];
-  s.shelf[item.id] = (s.shelf[item.id] ?? 0) + 1;
+  const variant = rollVariant(luck, rand);
+  const key = shelfKey(item.id, variant);
+  s.shelf[key] = (s.shelf[key] ?? 0) + 1;
   s.stats.pulls += 1;
   bumpMission(s, 'pulls', 1);
-  return item;
+  return { item, variant };
+}
+
+/** Remove the most recent pull (used when a pull turns out to be counterfeit). */
+export function unpull(s: GameState, p: PullView): void {
+  const key = shelfKey(p.item.id, p.variant);
+  s.shelf[key] = Math.max(0, (s.shelf[key] ?? 0) - 1);
+  s.stats.pulls -= 1;
 }
 
 /** Seconds of income a duplicate sells for, by rarity. */
@@ -397,21 +447,24 @@ export const DUPE_VALUE_SECONDS: Record<Rarity, number> = {
   ultra: 900,
   select: 3600,
   grail: 4 * 3600,
+  chase: 24 * 3600,
 };
 
-export function dupeSaleValue(s: GameState, itemId: string, now: number): number {
+/** `key` is a shelf key (item id, or id:variant). */
+export function dupeSaleValue(s: GameState, key: string, now: number): number {
+  const { itemId, variant } = parseShelfKey(key);
   const it = ITEM_BY_ID[itemId];
   const m = computeModifiers(s, now);
   const ips = Math.max(1, incomePerSecond(s, m, true));
   const hype = s.hype[it.family];
-  return Math.max(it.retail * it.resaleMult, ips * DUPE_VALUE_SECONDS[it.rarity] * hype);
+  return Math.max(it.retail * it.resaleMult, ips * DUPE_VALUE_SECONDS[it.rarity] * hype) * VARIANT_VALUE_MULT[variant];
 }
 
-export function sellDuplicate(s: GameState, itemId: string, now: number): number {
-  const owned = s.shelf[itemId] ?? 0;
+export function sellDuplicate(s: GameState, key: string, now: number): number {
+  const owned = s.shelf[key] ?? 0;
   if (owned <= 1) return 0;
-  const val = dupeSaleValue(s, itemId, now);
-  s.shelf[itemId] = owned - 1;
+  const val = dupeSaleValue(s, key, now);
+  s.shelf[key] = owned - 1;
   earn(s, val);
   return val;
 }
@@ -531,8 +584,8 @@ export function claimDaily(s: GameState, now: number): { reward: Reward; day: nu
   return { reward, day };
 }
 
-export function grantReward(s: GameState, r: Reward, now: number, rand: () => number = Math.random): ItemDef[] {
-  const pulled: ItemDef[] = [];
+export function grantReward(s: GameState, r: Reward, now: number, rand: () => number = Math.random): PullView[] {
+  const pulled: PullView[] = [];
   switch (r.kind) {
     case 'cash': {
       const m = computeModifiers(s, now);
@@ -548,7 +601,7 @@ export function grantReward(s: GameState, r: Reward, now: number, rand: () => nu
       break;
     case 'item':
       s.shelf[r.itemId] = (s.shelf[r.itemId] ?? 0) + 1;
-      pulled.push(ITEM_BY_ID[r.itemId]);
+      pulled.push({ item: ITEM_BY_ID[r.itemId], variant: 'standard' });
       break;
     case 'pulls': {
       const m = computeModifiers(s, now);
@@ -575,7 +628,7 @@ export function passTierReached(s: GameState): number {
   return t;
 }
 
-export function claimPassTier(s: GameState, tier: number, premium: boolean, now: number): ItemDef[] | null {
+export function claimPassTier(s: GameState, tier: number, premium: boolean, now: number): PullView[] | null {
   const def = PASS_TIERS.find((t) => t.tier === tier);
   if (!def || passTierReached(s) < tier) return null;
   if (premium && !s.pass.premium) return null;

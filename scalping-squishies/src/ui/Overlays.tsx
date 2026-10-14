@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useGame } from '../engine/store';
 import { formatCash, formatDuration } from '../engine/math';
-import { RARITY_LABEL } from '../engine/data/items';
+import { RARITY_LABEL, VARIANT_LABEL } from '../engine/data/items';
 import { PRODUCTS } from '../engine/data/shop';
 import { isAdFree } from '../engine/sim';
 import { Sprite } from '../art/Sprite';
@@ -41,15 +41,15 @@ export function Overlays() {
           <div className="modal center" onClick={(e) => e.stopPropagation()}>
             <h2>{lastPulls.length > 1 ? 'Haul!' : 'Found one!'}</h2>
             <div className="pulls">
-              {lastPulls.map((it, i) => (
+              {lastPulls.map((p, i) => (
                 <div className={`pull`} key={i} style={{ animationDelay: `${i * 0.08}s` }}>
-                  <div className="i"><Sprite id={it.id} size={64} /></div>
-                  <div className="n">{it.name}</div>
-                  <span className={`tag ${it.rarity}`}>{RARITY_LABEL[it.rarity]}</span>
+                  <div className="i"><Sprite id={p.item.id} size={64} variant={p.variant} /></div>
+                  <div className="n">{p.variant !== 'standard' ? `${VARIANT_LABEL[p.variant]} ` : ''}{p.item.name}</div>
+                  <span className={`tag ${p.item.rarity}`}>{RARITY_LABEL[p.item.rarity]}</span>
                 </div>
               ))}
             </div>
-            {lastPulls.length === 1 && <p>{lastPulls[0].blurb}</p>}
+            {lastPulls.length === 1 && <p>{lastPulls[0].item.blurb}</p>}
             <button className="btn primary block" onClick={dismissPulls}>Nice</button>
           </div>
         </div>

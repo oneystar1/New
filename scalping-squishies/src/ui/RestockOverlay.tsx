@@ -2,7 +2,7 @@ import { useGame } from '../engine/store';
 import { STORE_BY_ID } from '../engine/data/stores';
 import { RIVALS } from '../engine/data/restock';
 import { encounterDef, DOORS_SECONDS } from '../engine/restock';
-import { RARITY_LABEL } from '../engine/data/items';
+import { RARITY_LABEL, VARIANT_LABEL } from '../engine/data/items';
 import { formatCash } from '../engine/math';
 import { Sprite } from '../art/Sprite';
 import { Portrait, StoreSprite } from '../art/Portrait';
@@ -25,11 +25,11 @@ export function RestockOverlay() {
           <p>{result.grabbed} grabbed · +{formatCash(result.cash)} · heat {result.heat >= 0 ? '+' : ''}{result.heat}{result.fakes ? ` · ${result.fakes} counterfeit` : ''}</p>
           {result.banned && <p style={{ color: 'var(--red)' }}>Banned from this store for 10 minutes. No cycles, no restocks. Your photo is by the register.</p>}
           <div className="pulls">
-            {result.items.map((it, i) => (
+            {result.items.map((p, i) => (
               <div className="pull" key={i} style={{ animationDelay: `${i * 0.06}s` }}>
-                <div className="i"><Sprite id={it.id} size={56} /></div>
-                <div className="n">{it.name}</div>
-                <span className={`tag ${it.rarity}`}>{RARITY_LABEL[it.rarity]}</span>
+                <div className="i"><Sprite id={p.item.id} size={56} variant={p.variant} /></div>
+                <div className="n">{p.variant !== 'standard' ? `${VARIANT_LABEL[p.variant]} ` : ''}{p.item.name}</div>
+                <span className={`tag ${p.item.rarity}`}>{RARITY_LABEL[p.item.rarity]}</span>
               </div>
             ))}
           </div>
