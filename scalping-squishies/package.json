@@ -11,6 +11,8 @@
     "test": "vitest run",
     "smoke": "node tests/smoke.mjs",
     "soak": "node tests/soak.mjs",
+    "server": "node server/index.mjs",
+    "test:server": "node --test server/test.mjs",
     "balance": "tsx tools/balance.ts",
     "cap:add:ios": "npx cap add ios",
     "cap:sync": "npm run build && npx cap sync"

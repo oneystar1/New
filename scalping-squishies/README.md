@@ -20,6 +20,8 @@ npm run preview    # serve dist/
 npm test           # engine unit tests (vitest)
 npm run smoke      # headless browser run-through with screenshots
 npm run soak       # 2-minute randomized browser play session, fails on any error
+npm run server     # backend on :8787 (see server/README.md)
+npm run test:server
 npm run balance 8  # greedy-bot economy sim (stores, deals, restocks) for 8 simulated hours
 ```
 
@@ -96,6 +98,19 @@ npm run balance 8  # greedy-bot economy sim (stores, deals, restocks) for 8 simu
 - 35 achievements, 11 daily mission types.
 - Versioned local save with export/import codes, autosave, PWA service
   worker, safe-area aware mobile layout, haptics.
+
+## Native and backend
+
+- `capacitor.config.ts` plus `src/platform/native.ts` and
+  `src/monetization/capacitor.ts`: on a device the game uses AdMob for
+  rewarded and interstitial ads, RevenueCat for StoreKit purchases and
+  restore, native haptics, Preferences storage and local notifications.
+  The web build keeps the simulated provider.
+- `server/`: a zero-dependency Node 22 backend for accounts, cloud saves,
+  analytics, the Con Weekend leaderboard and RevenueCat webhook grants.
+  `npm run server`, `npm run test:server`.
+- `.env.example` lists every key. With no env the game runs fully offline.
+- `docs/launch-checklist.md` is the path to the App Store.
 
 ## Docs
 

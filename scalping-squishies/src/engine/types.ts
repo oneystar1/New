@@ -321,6 +321,10 @@ export interface GameState {
   cityOffer: [string, string] | null;
   tutorialDone: string[];
   rankRewarded: string[];
+  /** Con Weekend score: restock units grabbed this ISO week (week key + units). */
+  conWeek: { week: string; units: number };
+  /** Display name for leaderboards. */
+  handle: string;
   restockReadyAt: Record<string, number>;
   bannedUntil: Record<string, number>;
   stats: Stats;

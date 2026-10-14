@@ -42,6 +42,8 @@ export function initialState(now = Date.now()): GameState {
     cityOffer: null,
     tutorialDone: [],
     rankRewarded: [],
+    conWeek: { week: '', units: 0 },
+    handle: '',
     restockReadyAt: {},
     bannedUntil: {},
     stats: {
@@ -104,6 +106,8 @@ export function migrate(raw: unknown, now = Date.now()): GameState {
     tutorialDone: Array.isArray(s.tutorialDone) ? s.tutorialDone : [],
     rankRewarded: Array.isArray(s.rankRewarded) ? s.rankRewarded : [],
     city: typeof s.city === 'string' ? s.city : 'dayton',
+    conWeek: s.conWeek ?? fresh.conWeek,
+    handle: typeof s.handle === 'string' ? s.handle : '',
     bannedUntil: s.bannedUntil ?? {},
     version: SAVE_VERSION,
   };

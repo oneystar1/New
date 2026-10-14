@@ -7,6 +7,7 @@ import { TUTORIAL } from './data/tutorial';
 import { RANKED_RIVALS } from './data/rivals';
 import { CITY_BY_ID } from './data/cities';
 import { storage, haptic } from '../platform/native';
+import { pushSave, pullSave, fetchGrants, claimGrant, submitScore, cloudEnabled } from '../net/api';
 import { ITEM_BY_ID } from './data/items';
 import { initialState, deserialize, serialize, SAVE_KEY } from './state';
 import {
@@ -52,6 +53,13 @@ interface GameStore {
   save: () => void;
   /** Replace the state with a save fetched from the cloud (after a conflict check). */
   adoptSave: (json: string) => void;
+  /** Pull the cloud save on boot and adopt it if it has more play time. */
+  cloudPull: () => Promise<void>;
+  /** Push the local save; adopts the server copy on a conflict. */
+  cloudPush: () => Promise<void>;
+  /** Apply purchases recorded by the server webhook that this device has not seen. */
+  cloudClaimGrants: () => Promise<void>;
+  setHandle: (h: string) => void;
   reset: () => void;
   exportSave: () => string;
   importSave: (json: string) => boolean;
@@ -201,6 +209,50 @@ export const useGame = create<GameStore>((set, get) => {
     save: () => {
       void storage.set(SAVE_KEY, serialize(get().s));
     },
+
+    cloudPull: async () => {
+      if (!cloudEnabled()) return;
+      const cs = await pullSave();
+      const local = get().s;
+      if (cs?.json && (cs.playSeconds ?? 0) > local.stats.playSeconds + 1) {
+        get().adoptSave(cs.json);
+        toast('Cloud save loaded', '☁️', 'good');
+      }
+    },
+    cloudPush: async () => {
+      if (!cloudEnabled()) return;
+      const s = get().s;
+      const r = await pushSave(serialize(s), s.stats.playSeconds, s.stats.lifetimeCashEarned);
+      if (r && r !== 'ok' && r.json && (r.playSeconds ?? 0) > s.stats.playSeconds + 1) {
+        get().adoptSave(r.json);
+        toast('Newer cloud save found and loaded', '☁️', 'info');
+      }
+      if (s.conWeek.units > 0) void submitScore(s.conWeek.units, s.handle || 'Anonymous Scalper');
+    },
+    cloudClaimGrants: async () => {
+      if (!cloudEnabled()) return;
+      const g = await fetchGrants();
+      if (!g) return;
+      const s = get().s;
+      const now = Date.now();
+      let applied = 0;
+      for (const grant of g.grants) {
+        if (!(await claimGrant(grant.id))) continue;
+        s.iap.purchases[`txn:${grant.id}`] = 1;
+        applyProduct(s, grant.product_id, now);
+        applied += 1;
+      }
+      // Subscriptions: trust the server's expiry (handles renewals made elsewhere).
+      for (const e of g.entitlements) {
+        if (e.kind === 'subscription' && e.expires_at && e.product_id === 'ss_vip') s.iap.vipUntil = Math.max(s.iap.vipUntil, e.expires_at);
+        if (e.product_id === 'ss_noads') s.iap.noAds = true;
+        if (e.product_id === 'ss_pass') s.pass.premium = true;
+      }
+      if (applied) toast(`${applied} purchase${applied > 1 ? 's' : ''} restored from your account`, '🔁', 'good');
+      set({ s: { ...s } });
+      get().save();
+    },
+    setHandle: (h) => mutate((s) => { s.handle = h.slice(0, 24); }),
 
     adoptSave: (json) => {
       const now = Date.now();

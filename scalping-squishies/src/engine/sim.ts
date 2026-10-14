@@ -426,6 +426,14 @@ export function isConWeekend(now: number): boolean {
   return d === 0 || d === 6;
 }
 
+/** ISO-ish week key matching the server's. */
+export function weekKey(ms: number): string {
+  const d = new Date(ms);
+  const start = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const week = Math.floor(((d.getTime() - start.getTime()) / 86400000 + start.getUTCDay() + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
+}
+
 export const PRESTIGE_MIN_EARNED = 100_000_000;
 
 export function credForRun(totalCashEarnedThisRun: number): number {

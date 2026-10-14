@@ -10,6 +10,7 @@ import { isConWeekend } from '../engine/sim';
 import { Sprite } from '../art/Sprite';
 import { StoreSprite } from '../art/Portrait';
 import { haptic } from '../platform/native';
+import { Leaderboard } from './Leaderboard';
 import { ITEMS } from '../engine/data/items';
 import { formatCash } from '../engine/math';
 import type { Reward } from '../engine/types';
@@ -63,6 +64,7 @@ export function HuntTab() {
           <div className="t"><b>Con Weekend</b><span className="small">Restock trucks are 50% fuller all weekend. Camp everything.</span></div>
         </div>
       )}
+      <Leaderboard />
       {tutorialOpen && nextStep && (
         <div className="card tutorial">
           <div className="row">

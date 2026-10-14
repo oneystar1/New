@@ -1,5 +1,10 @@
 # iOS plan
 
+> Status: steps 1 and 2 below are implemented in code (`capacitor.config.ts`,
+> `src/monetization/capacitor.ts`, `src/platform/native.ts`, `src/net/`).
+> What remains is running `npx cap add ios` on a Mac, filling in the
+> accounts and keys, and App Store assets. See `docs/launch-checklist.md`.
+
 The web build is the game. The iOS app is a native shell around it. This
 keeps one codebase, one save format, and one balance table.
 

@@ -183,4 +183,5 @@ body.shake .app { animation: shake 0.5s; }
 .rank { padding: 6px 0; border-top: 1px solid var(--line); opacity: 0.6; }
 .rank.beaten { opacity: 1; }
 .rank.beaten b { color: var(--mint); }
+input.handle { flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; }
 .debug { font-size: 11px; color: var(--muted); margin-top: 20px; }

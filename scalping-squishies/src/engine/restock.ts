@@ -1,7 +1,7 @@
 import type { GameState, RestockRun, Rival, RivalKind, ItemDef } from './types';
 import { STORE_BY_ID } from './data/stores';
 import { RIVALS, ENCOUNTERS, LINE_FLAVOR, type EncounterDef } from './data/restock';
-import { computeModifiers, storeCycleProfit, storeCycleSeconds, pullItem, earn, bumpMission, isConWeekend, type Modifiers } from './sim';
+import { computeModifiers, storeCycleProfit, storeCycleSeconds, pullItem, earn, bumpMission, isConWeekend, weekKey, type Modifiers } from './sim';
 import { fakeRoll } from './deals';
 import { weightedPick } from './math';
 
@@ -231,6 +231,11 @@ export function finishRun(s: GameState, run: RestockRun, now: number, rand: () =
   if (run.banned) s.bannedUntil[run.storeId] = now + BAN_SECONDS * 1000;
   s.stats.restocks += 1;
   s.stats.restockUnits += run.grabbed;
+  if (isConWeekend(now)) {
+    const wk = weekKey(now);
+    if (s.conWeek.week !== wk) s.conWeek = { week: wk, units: 0 };
+    s.conWeek.units += run.grabbed;
+  }
   s.stats.kidsSpared += run.kidsSpared;
   s.stats.kidsSnatched += run.kidsSnatched;
   s.stats.momsArgued += run.momsArgued;
