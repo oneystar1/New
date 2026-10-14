@@ -54,7 +54,8 @@ export function HuntTab() {
   );
 
   const nextStep = TUTORIAL.find((t) => !s.tutorialDone.includes(t.id));
-  const tutorialOpen = nextStep && s.tutorialDone.length < TUTORIAL.length - 1;
+  // The checklist card is for players who skipped the tour; the coach bubble covers the tour itself.
+  const tutorialOpen = nextStep && s.tutorialDone.length < TUTORIAL.length - 1 && s.tutorialChoice !== 'on' && s.tutorialChoice !== 'pending';
 
   return (
     <div>

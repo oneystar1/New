@@ -190,8 +190,9 @@ body.shake .app { animation: shake 0.5s; }
 .rank.beaten b { color: var(--mint); }
 input.handle { flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; }
 .flipmath { gap: 6px; margin-top: 4px; color: var(--muted); align-items: center; }
-.splash { position: fixed; inset: 0; z-index: 90; background: radial-gradient(circle at 50% 30%, #3b2a6e, #1a1030 70%); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; animation: splashIn 0.4s ease-out; }
-@keyframes splashIn { from { opacity: 0; } to { opacity: 1; } }
+.splash { position: fixed; inset: 0; z-index: 90; background: radial-gradient(circle at 50% 30%, #3b2a6e, #1a1030 70%); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+.splash .splash-art, .splash .splash-title, .splash .splash-tag { animation: splashIn 0.5s ease-out; }
+@keyframes splashIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .splash-art { position: relative; width: 240px; height: 170px; }
 .splash-sprite { position: absolute; animation: bob 2.4s ease-in-out infinite; }
 .splash-sprite.a { left: 50px; top: 10px; animation-delay: 0s; }
