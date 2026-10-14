@@ -183,6 +183,19 @@ to 30%, a 6-hour perfect run splits 51% stores, 29% deals, 16% restocks,
 human plays slower, so real numbers land later. The randomized browser
 soak (`npm run soak`) runs 150 seconds of random actions with no errors.
 
+## The fiction of automatic cash
+
+Idle income is an abstraction, so the game names it. A store "unit" is a
+**run**: one buy-and-flip loop (camp the store, buy the limit, list it,
+sell it). Adding runs flips more per trip; milestones double the quantity
+per run; a manager repeats the runs while you are away. Every Routes card
+shows the math behind its number ("each run flips 4 × Nice Kube: buy at
+$6, sell at $41 each") and its progress bar reads buying → listing →
+selling. Hype is labelled market price. Taps are curbside flips. The
+engine is unchanged; only the presentation makes the money legible. A
+real inventory economy (cash only on sale, stock you can be stuck with)
+is parked as a possible mid-life "Warehouse" mode.
+
 ## Economy tuning
 
 Store table (cost x16 per store, profit/cost ratio falls 38% per store,

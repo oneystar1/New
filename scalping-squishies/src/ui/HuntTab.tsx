@@ -47,7 +47,7 @@ export function HuntTab() {
       if (s.settings.haptics) haptic.light();
       const rect = e.currentTarget.getBoundingClientRect();
       const id = Date.now() + Math.random();
-      setFloats((f) => [...f.slice(-12), { id, x: e.clientX - rect.left, y: e.clientY - rect.top, text: '+' + formatCash(tv) }]);
+      setFloats((f) => [...f.slice(-12), { id, x: e.clientX - rect.left, y: e.clientY - rect.top, text: '+' + formatCash(tv) + ' flipped' }]);
       setTimeout(() => setFloats((f) => f.filter((x) => x.id !== id)), 900);
     },
     [tap, tv, s.settings.haptics],
@@ -81,7 +81,7 @@ export function HuntTab() {
       <div className="row between">
         <div>
           <h3 style={{ margin: 0 }} className="row"><StoreSprite id={hunting.id} size={26} /> Hunting at {hunting.name}</h3>
-          <div className="small">Tap the shelf: +{formatCash(tv)} per grab. Fill the meter for a free pull.</div>
+          <div className="small">Tap the shelf to grab and flip at the curb: +{formatCash(tv)} each. Fill the meter to keep one.</div>
         </div>
       </div>
       <div className="shelf" onPointerDown={onTap}>
@@ -97,7 +97,7 @@ export function HuntTab() {
       <div className="hint">Hunt meter · {Math.floor(huntMeter * 100)}%</div>
 
       <h2 className="sec">Restock lines</h2>
-      {STORES.filter((st) => (s.stores[st.id]?.units ?? 0) > 0).length === 0 && <div className="card center sub">Buy a store unit on the Routes tab to start camping its restocks.</div>}
+      {STORES.filter((st) => (s.stores[st.id]?.units ?? 0) > 0).length === 0 && <div className="card center sub">Start a run at a store on the Routes tab to camp its restocks.</div>}
       {STORES.filter((st) => (s.stores[st.id]?.units ?? 0) > 0).map((st) => {
         const ready = restockReady(s, st.id, now);
         const banned = isBanned(s, st.id, now);

@@ -82,7 +82,7 @@ export function BoostTab() {
                 <h3>{u.name}</h3>
                 <div className="sub">
                   {u.blurb}
-                  {u.requires && ` · needs ${u.requires.units} ${STORE_BY_ID[u.requires.storeId].name}`}
+                  {u.requires && ` · needs ${u.requires.units} ${STORE_BY_ID[u.requires.storeId].name} runs`}
                   {u.heat && <span style={{ color: 'var(--red)' }}> · 🔥 +{u.heat} heat</span>}
                 </div>
               </div>
