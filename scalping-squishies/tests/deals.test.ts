@@ -135,6 +135,18 @@ describe('message text', () => {
         expect(o.message).not.toMatch(/\{\w+\}/);
       }
     }
+    // Offers decompose into qty x unit, and unit prices sit where the fiction says.
+    s.pricing = 'fair';
+    for (let i = 0; i < 400; i++) {
+      const o = makeOffer(s, m, T0, rng);
+      if (o.amount === 0) continue;
+      expect(o.qty * o.unit).toBeCloseTo(o.amount, 6);
+      const ask = 6 * 1.5;
+      if (o.kind === 'lowball') expect(o.unit).toBeLessThan(6);
+      if (o.kind === 'fair' || o.kind === 'ghost') { expect(o.unit).toBeGreaterThan(ask * 0.85); expect(o.unit).toBeLessThan(ask * 1.2); }
+      if (o.kind === 'sneakerbro') expect(o.unit).toBeGreaterThan(ask * 1.15);
+      if (o.kind === 'scam') expect(o.unit).toBeGreaterThan(ask * 2.9);
+    }
     s.pricing = 'insane';
     const karen = offerOfKind('karen', s).o;
     if (karen.message.includes('asking')) expect(karen.message).toContain('$60'); // 10x the $6 Kube

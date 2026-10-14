@@ -100,7 +100,7 @@ export function migrate(raw: unknown, now = Date.now()): GameState {
     stats: { ...fresh.stats, ...(s.stats ?? {}) },
     settings: { ...fresh.settings, ...(s.settings ?? {}) },
     adsToday: s.adsToday ?? fresh.adsToday,
-    offers: Array.isArray(s.offers) ? s.offers : [],
+    offers: Array.isArray(s.offers) ? s.offers.filter((o) => typeof o.qty === 'number') : [],
     fakes: Array.isArray(s.fakes) ? s.fakes : [],
     restockReadyAt: s.restockReadyAt ?? {},
     tutorialDone: Array.isArray(s.tutorialDone) ? s.tutorialDone : [],

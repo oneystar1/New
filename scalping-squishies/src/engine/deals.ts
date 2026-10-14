@@ -54,12 +54,23 @@ export function makeOffer(s: GameState, m: Modifiers, now: number, rand: () => n
   const ips = Math.max(1, incomePerSecond(s, m, true));
   const [lo, hi] = KIND_SECONDS[kind];
   const secs = lo + rand() * (hi - lo);
-  const amount = kind === 'karen' || kind === 'trade' ? 0 : Math.max(item.retail * 0.5, ips * secs * m.offerValue * pricing.value * s.hype[item.family]);
-  const tpl = OFFER_TEMPLATES[kind];
   const ask = item.retail * ASK_MULT[s.pricing ?? 'fair'];
+  // The payout is sized to income; the fiction carries the scale through
+  // quantity. Unit prices stay believable next to retail and your ask:
+  // lowballers under retail, fair buyers around the ask, bros above it,
+  // scammers absurdly above it (that is the tell).
+  const target = kind === 'karen' || kind === 'trade' ? 0 : Math.max(item.retail * 0.5, ips * secs * m.offerValue * pricing.value * s.hype[item.family]);
+  const unitMult = kind === 'lowball' ? 0.55 + rand() * 0.35 : kind === 'sneakerbro' ? 1.2 + rand() * 0.5 : kind === 'scam' ? 3 + rand() * 3 : 0.9 + rand() * 0.25;
+  const unitRaw = kind === 'lowball' ? item.retail * unitMult : ask * unitMult;
+  const unit = target > 0 ? Math.max(0.25, Math.round(unitRaw * 4) / 4) : 0;
+  const qty = target > 0 ? Math.max(1, Math.round(target / unit)) : 0;
+  const amount = qty * unit;
+  const tpl = OFFER_TEMPLATES[kind];
   const message = tpl[Math.floor(rand() * tpl.length)]
     .replace(/\{item\}/g, item.name)
     .replace(/\{price\}/g, formatCash(amount))
+    .replace(/\{unit\}/g, formatCash(unit))
+    .replace(/\{qty\}/g, qty.toLocaleString())
     .replace(/\{ask\}/g, formatCash(ask))
     .replace(/\{retail\}/g, formatCash(item.retail));
   const BROS = ['Hype Hank', 'DeadstockDrew', 'SZ10_Civic', 'kicks2kubes', 'Bro (matching hoodie)'];
@@ -72,6 +83,8 @@ export function makeOffer(s: GameState, m: Modifiers, now: number, rand: () => n
     itemId: item.id,
     message,
     amount,
+    qty,
+    unit,
     flagged: kind === 'scam' && m.scamRadar,
     expiresAt: now + OFFER_TTL_SECONDS * 1000,
   };

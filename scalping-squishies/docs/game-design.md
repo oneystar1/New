@@ -74,6 +74,13 @@ they matter at every stage:
 | Karen | 8 | nothing | clap back: +10 pass XP, +6 Heat | same | block |
 | Sneaker bro | 8 | 20-40s | 60% paid, 40% "the chart dipped" | 60% paid x1.2 | nothing |
 
+Every offer is phrased as a quantity at a unit price (payout = qty x unit).
+Unit prices sit where the fiction says: lowballers 55% to 90% of retail,
+fair buyers and ghosts 90% to 115% of your ask, sneaker bros 120% to
+170%, scammers 3x to 6x (the tell). The income-sized payout is carried by
+the quantity, so late-game you are a volume dealer, not a person selling
+one Kube for $12 million.
+
 Channels: FleaBay (+10% value), Mercarry (+15% rate), WhatNow Live (+15%
 rate), Hype Mode (+10% value), StockyX (+10% value), Scam Radar (flags scams), Goods &
 Services Only (scams cost nothing and stop appearing), UV Tag Light (no

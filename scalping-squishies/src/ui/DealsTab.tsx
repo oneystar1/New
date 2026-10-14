@@ -66,7 +66,7 @@ export function DealsTab() {
                 <div className="row" style={{ gap: 6, marginTop: 4 }}>
                   {o.flagged && <span className="tag grail">🚩 scam radar</span>}
                   {showTag && !(o.kind === 'scam') && <span className={`tag ${tag.cls}`}>{tag.label}</span>}
-                  {o.amount > 0 && <span className="pill" style={{ color: 'var(--mint)' }}>{formatCash(o.amount)}</span>}
+                  {o.amount > 0 && <span className="pill" style={{ color: 'var(--mint)' }}>{formatCash(o.amount)} <span className="small" style={{ color: 'var(--muted)' }}>· {o.qty.toLocaleString()} × {formatCash(o.unit)}</span></span>}
                 </div>
               </div>
             </div>

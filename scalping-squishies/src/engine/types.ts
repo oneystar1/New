@@ -113,8 +113,11 @@ export interface Offer {
   avatar: string;
   itemId: string;
   message: string;
-  /** Cash offered (0 for karen/trade). */
+  /** Cash offered in total (0 for karen/trade). */
   amount: number;
+  /** The deal as the buyer phrases it: qty units at unit price. amount = qty * unit. */
+  qty: number;
+  unit: number;
   /** Whether the UI should show the scam flag (Scam Radar owned). */
   flagged: boolean;
   expiresAt: number;
