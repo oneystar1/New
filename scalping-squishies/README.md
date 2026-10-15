@@ -53,13 +53,15 @@ npm run balance 8  # greedy-bot economy sim (stores, deals, restocks) for 8 simu
 - **Local scalper rankings**: eleven fake rivals from Little Timmy to The
   Manufacturer. Overtake each one for Clout and confetti.
 - **Con Weekend**: every Saturday and Sunday, restock trucks are 50% fuller.
-- **Restock runs**: stand in line at 6am behind NeeDoh Moms ("two per
-  FAMILY", she brought the family), little kids with birthday money, other
-  resellers and the employee holding one for a friend. When the doors open
-  you mash GRAB for 12 seconds while a kid reaches for the last one, a mom
-  parks her cart across the aisle and films you for the group, Dalton
-  offers to split the shelf, and the manager says "Sir. SIR. Two per
-  customer." Spare the kid or step over him. Lie about cousins and risk a
+- **Restock runs**: camp the line or show up at opening. Camping is a
+  25-second wait where your spot moves: bathroom breaks, coffee rounds for
+  the line, a timed ticket hand-out, rain, Grandpa Ron needing your chair,
+  mall security, someone buying your spot for a taquito, and a phone that
+  answers one Marketplace message, scrolls the group for intel or naps.
+  Then the doors open and you mash GRAB for 12 seconds while a kid reaches
+  for the last one, a Kube Mom parks her cart across the aisle and films
+  you for the group, Dalton offers to split the shelf, and the manager
+  says "Sir. SIR. Two per customer." Lie about cousins and risk a
   10-minute store ban. Gear (folding chair, tent, minivan, four "cousins")
   moves you up the line and raises your carry.
 - **Sneaker bros**: they pivoted from Dunks to dough. They camp the line
