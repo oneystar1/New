@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { GameState, MarketEventKind, Reward, RestockRun, Pricing, PullView } from './types';
-import { startRun, openDoors, grab, tickRun, choose, finishRun } from './restock';
+import { startRun, openDoors, grab, tickRun, choose, finishRun, chooseCamp, chooseSkip, tickCamp, campChoose, phoneAction } from './restock';
 import { sfx, setSfxEnabled } from '../ui/sfx';
 import { fx } from '../ui/fxbus';
 import { TUTORIAL } from './data/tutorial';
@@ -96,6 +96,10 @@ interface GameStore {
   dismissPulls: () => void;
   restockStart: (storeId: string) => void;
   restockOpen: () => void;
+  restockCamp: () => void;
+  restockSkip: () => void;
+  restockCampChoose: (idx: number) => void;
+  restockPhone: (id: 'message' | 'intel' | 'nap') => void;
   restockGrab: () => void;
   restockChoose: (idx: number) => void;
   restockFinish: () => void;
@@ -298,9 +302,10 @@ export const useGame = create<GameStore>((set, get) => {
       if (dt <= 0) return;
       const s = st.s;
       const res = tick(s, dt, now, rand);
-      if (st.run && st.run.phase === 'doors') {
+      if (st.run && (st.run.phase === 'doors' || st.run.phase === 'camp')) {
         const run = { ...st.run };
-        tickRun(run, dt, rand);
+        if (run.phase === 'camp') { const before = run.phase; tickCamp(run, dt, rand); if (before !== run.phase) { sfx.doors(); fx({ kind: 'shake' }); } }
+        else tickRun(run, dt, rand);
         set({ run });
       }
       if (res.eventStarted) {
@@ -585,6 +590,24 @@ export const useGame = create<GameStore>((set, get) => {
       set({ run, runResult: null });
     },
     restockOpen: () => { const r = get().run; if (!r) return; const run = { ...r }; openDoors(run); sfx.doors(); fx({ kind: 'shake' }); set({ run }); },
+    restockCamp: () => { const r = get().run; if (!r) return; const run = { ...r }; chooseCamp(run); set({ run }); },
+    restockSkip: () => { const r = get().run; if (!r) return; const run = { ...r }; chooseSkip(run); sfx.doors(); fx({ kind: 'shake' }); set({ run }); },
+    restockCampChoose: (idx) => {
+      const st = get();
+      if (!st.run) return;
+      const run = { ...st.run };
+      const msg = campChoose(st.s, run, idx, rand);
+      if (msg) toast(msg, '⛺', 'info');
+      set({ run, s: { ...st.s } });
+    },
+    restockPhone: (id) => {
+      const st = get();
+      if (!st.run) return;
+      const run = { ...st.run };
+      const msg = phoneAction(st.s, run, id, rand);
+      if (msg) toast(msg, '📱', 'info');
+      set({ run, s: { ...st.s } });
+    },
     restockGrab: () => {
       const st = get();
       if (!st.run) return;

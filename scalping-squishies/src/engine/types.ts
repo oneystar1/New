@@ -134,7 +134,23 @@ export interface Rival {
 
 export interface RestockRun {
   storeId: string;
-  phase: 'line' | 'doors' | 'done';
+  phase: 'choice' | 'camp' | 'doors' | 'done';
+  /** People ahead of you right now. Moves during the camp phase. */
+  position: number;
+  /** Camp phase clock. */
+  campLeft: number;
+  nextCampEventIn: number;
+  /** Seconds left before a timed event (ticket hand-out) expires. */
+  eventExpiresIn: number | null;
+  /** Phone actions used this camp. */
+  phoneUsed: string[];
+  /** Kube Moms take one fewer each after a coffee round. */
+  momDiscount: number;
+  /** Seconds knocked off the doors clock by camp choices (held it in). */
+  doorsPenalty: number;
+  coffeeRounds: number;
+  ticketsGrabbed: number;
+  spotsSold: number;
   stock: number;
   remaining: number;
   rivals: Rival[];
@@ -278,6 +294,10 @@ export interface Stats {
   broBackouts: number;
   broRaces: number;
   restocks: number;
+  camps: number;
+  coffeeRounds: number;
+  ticketsGrabbed: number;
+  spotsSold: number;
   restockUnits: number;
   bestRestock: number;
   kidsSpared: number;
@@ -340,6 +360,8 @@ export interface GameState {
   handle: string;
   restockReadyAt: Record<string, number>;
   bannedUntil: Record<string, number>;
+  /** Extra stock on the next run at a store, from group-chat intel. */
+  restockIntel: Record<string, number>;
   stats: Stats;
   settings: { sfx: boolean; haptics: boolean; notation: 'short' | 'scientific' };
 }

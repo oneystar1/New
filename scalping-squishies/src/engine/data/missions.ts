@@ -14,6 +14,6 @@ export const MISSION_POOL: MissionDef[] = [
   { id: 'q_deals5', name: 'Close the Deal', blurb: 'Accept 5 offers in the Deals feed.', target: 5, counter: 'deals', rewardClout: 4, rewardPassXp: 60 },
   { id: 'q_deals15', name: 'Marketplace Grind', blurb: 'Accept 15 offers in the Deals feed.', target: 15, counter: 'deals', rewardClout: 8, rewardPassXp: 120 },
   { id: 'q_restock1', name: 'Early Bird', blurb: 'Complete a restock run.', target: 1, counter: 'restocks', rewardClout: 4, rewardPassXp: 60 },
-  { id: 'q_restock3', name: 'Tent Life', blurb: 'Complete 3 restock runs.', target: 3, counter: 'restocks', rewardClout: 8, rewardPassXp: 120 },
+  { id: 'q_restock3', name: 'Overnighter', blurb: 'Complete 3 restock runs.', target: 3, counter: 'restocks', rewardClout: 8, rewardPassXp: 120 },
   { id: 'q_sales500', name: 'Volume Seller', blurb: 'Complete 500 flips.', target: 500, counter: 'sales', rewardClout: 8, rewardPassXp: 120 },
 ];

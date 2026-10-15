@@ -59,5 +59,9 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'a_brobackout', name: '"The Chart Dipped"', blurb: 'Get backed out on by 5 sneaker bros.', icon: '📉', clout: 10, check: (s) => s.stats.broBackouts >= 5 },
   { id: 'a_brorace', name: 'Faster Than A Civic', blurb: 'Race a sneaker bro for the row 5 times.', icon: '🏁', clout: 15, check: (s) => s.stats.broRaces >= 5 },
   { id: 'a_colorways', name: 'Colorway Collector', blurb: 'Own the Bred, Panda, Triple White and Friends & Family dohs.', icon: '🎨', clout: 40, check: (s) => ['doh_bred', 'doh_panda', 'doh_tripwhite', 'doh_ff'].every((id) => (s.shelf[id] ?? 0) > 0) },
+  { id: 'a_camp10', name: 'Tent Life', blurb: 'Camp the full line 10 times.', icon: '⛺', clout: 15, check: (s) => s.stats.camps >= 10 },
+  { id: 'a_coffee', name: 'Cold Brew Hero', blurb: 'Buy coffee for the line 5 times.', icon: '☕', clout: 15, check: (s) => s.stats.coffeeRounds >= 5 },
+  { id: 'a_tickets', name: 'Ticket Master', blurb: 'Grab 10 numbered tickets in time.', icon: '🎟️', clout: 20, check: (s) => s.stats.ticketsGrabbed >= 10 },
+  { id: 'a_spots', name: 'Spot Dealer', blurb: 'Sell your place in line 3 times. For a taquito.', icon: '🌯', clout: 10, check: (s) => s.stats.spotsSold >= 3 },
   { id: 'a_hour', name: 'Just One More Cycle', blurb: 'Play for a total of one hour.', icon: '⏳', clout: 10, check: (s) => s.stats.playSeconds >= 3600 },
 ];

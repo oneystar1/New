@@ -1,9 +1,9 @@
 import type { GameState, RestockRun, Rival, RivalKind, PullView } from './types';
 import { STORE_BY_ID } from './data/stores';
-import { RIVALS, ENCOUNTERS, LINE_FLAVOR, type EncounterDef } from './data/restock';
-import { computeModifiers, storeCycleProfit, storeCycleSeconds, pullItem, unpull, earn, bumpMission, isConWeekend, weekKey, type Modifiers } from './sim';
+import { RIVALS, ENCOUNTERS, LINE_FLAVOR, INTEL_LINES, type EncounterDef } from './data/restock';
+import { computeModifiers, storeCycleProfit, storeCycleSeconds, pullItem, unpull, earn, bumpMission, isConWeekend, weekKey, incomePerSecond, type Modifiers } from './sim';
 import { fakeRoll } from './deals';
-import { weightedPick } from './math';
+import { weightedPick, formatCash } from './math';
 
 // Restock runs: the "standing outside at 6am" part of scalping. You pick a
 // store, stand in line behind rivals who each take their share, then when
@@ -15,6 +15,10 @@ export const BAN_SECONDS = 10 * 60;
 export const DOORS_SECONDS = 12;
 export const TAPS_PER_UNIT = 3;
 export const ENCOUNTER_EVERY_SECONDS = 3;
+export const CAMP_SECONDS = 25;
+export const CAMP_EVENT_EVERY_SECONDS = 4;
+/** Showing up at opening instead of camping: this many latecomers beat you to the line. */
+export const SKIP_CAMP_PENALTY = 2;
 
 const RIVAL_WEIGHTS: Record<RivalKind, number> = { mom: 32, kid: 23, reseller: 18, grandpa: 11, employee: 6, sneakerbro: 10 };
 
@@ -30,23 +34,32 @@ export function makeRival(kind: RivalKind, rand: () => number): Rival {
 
 export function startRun(s: GameState, storeId: string, m: Modifiers, now: number, rand: () => number): RestockRun | null {
   if (!restockReady(s, storeId, now)) return null;
-  const stock = Math.round((10 + Math.floor(rand() * 8)) * (isConWeekend(now) ? 1.5 : 1));
+  const intel = s.restockIntel[storeId] ?? 0;
+  delete s.restockIntel[storeId];
+  const stock = Math.round((10 + Math.floor(rand() * 8)) * (isConWeekend(now) ? 1.5 : 1)) + intel;
   const ahead = Math.max(0, 4 + Math.floor(rand() * 4) - m.linePosition);
   const rivals: Rival[] = [];
   for (let i = 0; i < ahead; i++) rivals.push(makeRival(weightedPick(RIVAL_WEIGHTS, rand), rand));
-  const taken = rivals.reduce((a, r) => a + r.takes, 0);
-  const lineEnc = ENCOUNTERS.filter((e) => e.line);
-  const encounter = rand() < 0.6 ? lineEnc[Math.floor(rand() * lineEnc.length)].id : null;
-  return {
+  const run: RestockRun = {
     storeId,
-    phase: 'line',
+    phase: 'choice',
+    position: rivals.length,
+    campLeft: CAMP_SECONDS,
+    nextCampEventIn: 2.5,
+    eventExpiresIn: null,
+    phoneUsed: [],
+    momDiscount: 0,
+    doorsPenalty: 0,
+    coffeeRounds: 0,
+    ticketsGrabbed: 0,
+    spotsSold: 0,
     stock,
-    remaining: Math.max(1, stock - taken),
+    remaining: stock,
     rivals,
     grabbed: 0,
     grabProgress: 0,
     timeLeft: DOORS_SECONDS,
-    encounter,
+    encounter: null,
     nextEncounterIn: ENCOUNTER_EVERY_SECONDS,
     limit: null,
     heat: 0,
@@ -58,6 +71,128 @@ export function startRun(s: GameState, storeId: string, m: Modifiers, now: numbe
     log: [LINE_FLAVOR[Math.floor(rand() * LINE_FLAVOR.length)]],
     carry: 4 + m.carry,
   };
+  run.remaining = computeRemaining(run);
+  return run;
+}
+
+/** Stock left for you given your spot: everyone ahead takes their share (moms take fewer after coffee). */
+export function computeRemaining(run: RestockRun): number {
+  let taken = 0;
+  for (let i = 0; i < run.position; i++) {
+    const r = run.rivals[i];
+    if (r) taken += Math.max(0, r.takes - (r.kind === 'mom' ? run.momDiscount : 0));
+    else taken += 2; // latecomers who still beat you
+  }
+  return Math.max(1, run.stock - taken);
+}
+
+export function chooseCamp(run: RestockRun): void {
+  if (run.phase !== 'choice') return;
+  run.phase = 'camp';
+  run.log.push('6:05am. Folding chair out. It is colder than the app said.');
+}
+
+export function chooseSkip(run: RestockRun): void {
+  if (run.phase !== 'choice') return;
+  run.position += SKIP_CAMP_PENALTY;
+  run.log.push(`You rolled up at opening. ${SKIP_CAMP_PENALTY} people who camped are ahead of you now.`);
+  openDoors(run);
+}
+
+/** Advance the camp clock: spawn timed line events, expire them, end the camp. */
+export function tickCamp(run: RestockRun, dt: number, rand: () => number): void {
+  if (run.phase !== 'camp') return;
+  if (run.encounter) {
+    if (run.eventExpiresIn !== null) {
+      run.eventExpiresIn -= dt;
+      if (run.eventExpiresIn <= 0) {
+        const enc = encounterDef(run.encounter);
+        run.encounter = null;
+        run.eventExpiresIn = null;
+        if (enc?.id === 'camp_ticket') { run.position += 1; run.log.push('Too slow. The tickets are gone and a mom slid in front of you.'); }
+      }
+    }
+    return; // untimed events pause the clock
+  }
+  run.campLeft -= dt;
+  run.nextCampEventIn -= dt;
+  if (run.campLeft <= 0) { openDoors(run); return; }
+  if (run.nextCampEventIn <= 0) {
+    const pool = ENCOUNTERS.filter((e) => e.line);
+    const enc = pool[Math.floor(rand() * pool.length)];
+    run.encounter = enc.id;
+    run.eventExpiresIn = enc.timed ?? null;
+    run.nextCampEventIn = CAMP_EVENT_EVERY_SECONDS + rand() * 2;
+  }
+}
+
+/** Phone actions while waiting. Each can be used once per camp. */
+export function phoneAction(s: GameState, run: RestockRun, id: 'message' | 'intel' | 'nap', rand: () => number): string {
+  if (run.phase !== 'camp' || run.encounter || run.phoneUsed.includes(id)) return '';
+  run.phoneUsed.push(id);
+  switch (id) {
+    case 'intel': {
+      s.restockIntel[run.storeId] = (s.restockIntel[run.storeId] ?? 0) + 4;
+      const line = INTEL_LINES[Math.floor(rand() * INTEL_LINES.length)];
+      run.log.push(line);
+      return line;
+    }
+    case 'nap': {
+      s.heat = Math.max(0, s.heat - 6);
+      if (rand() < 0.35) { run.position += 2; run.log.push('You wake up. Two people are standing where you were standing.'); return 'You wake up two spots back. Heat -6 though.'; }
+      run.log.push('Twenty minutes of chair sleep. Heat -6.');
+      return 'Chair sleep. Heat -6. Nobody moved.';
+    }
+    case 'message':
+      return 'Phone out. One message, then back to the line.';
+  }
+}
+
+/** Camp-phase choices (bathroom, coffee, tickets, spot sales, rain, chairs, security, cutters). */
+export function campChoose(s: GameState, run: RestockRun, choiceIdx: number, rand: () => number): string {
+  const enc = encounterDef(run.encounter);
+  if (!enc || run.phase !== 'camp') return '';
+  const c = enc.choices[choiceIdx];
+  if (!c) return '';
+  run.encounter = null;
+  run.eventExpiresIn = null;
+  const m = computeModifiers(s, Date.now());
+  const ips = Math.max(1, incomePerSecond(s, m, true));
+  let msg = '';
+  switch (c.effect) {
+    case 'holdSpot':
+      if (rand() < 0.7) msg = 'She held it. She even glared at the guy who tried to slide in. Respect.';
+      else { run.position += 2; msg = '"Oh, I thought you left." Two spots gone.'; }
+      break;
+    case 'justGo': run.position += 2; msg = 'Relief. Also two people are in your spot.'; break;
+    case 'holdIt': run.doorsPenalty += 3; msg = 'You hold it. You will be slower at the shelf. Worth it. Maybe.'; break;
+    case 'coffeeRound': {
+      const cost = Math.max(10, ips * 30);
+      if (s.cash < cost) { msg = 'You check your pockets. You cannot afford a round. The line notices.'; break; }
+      s.cash -= cost;
+      s.heat = Math.max(0, s.heat - 5);
+      run.momDiscount = 1;
+      run.coffeeRounds += 1;
+      msg = `Round bought for ${formatCash(cost)}. Heat -5. The moms are taking one fewer each. Everyone loves you for eleven minutes.`;
+      break;
+    }
+    case 'coffeeSolo': { const cost = Math.max(3, ips * 3); s.cash = Math.max(0, s.cash - cost); msg = 'One coffee. Nobody else gets one. Nobody forgets.'; break; }
+    case 'nothing': msg = 'You stay put.'; break;
+    case 'grabTicket': run.position = Math.max(0, run.position - 3); run.ticketsGrabbed += 1; msg = 'Ticket in hand. Your spot is locked and three people who blinked are behind you.'; break;
+    case 'sellSpot': { const cash = ips * 60; earn(s, cash); run.position += 5; run.spotsSold += 1; msg = `Sold the spot for ${formatCash(cash)} and a taquito. Five people ahead of you now.`; break; }
+    case 'stayRain': run.position = Math.max(0, run.position - 3); run.heat = Math.max(0, run.heat - 1); msg = 'Soaked. Three people gave up. You did not.'; break;
+    case 'carRain': run.position += 2; msg = 'Dry, warm, two spots back.'; break;
+    case 'giveChair': run.heat -= 4; msg = 'He sits. He tells you about 1987. Heat -4.'; break;
+    case 'ignoreGrandpa': run.heat += 2; msg = 'You look at your phone very hard. +2 heat.'; break;
+    case 'complySecurity': run.position += 1; msg = 'Tent down. In the shuffle someone steps in front of you.'; break;
+    case 'argueSecurity': run.heat += 4; if (rand() < 0.5) msg = 'He shrugs and moves on. +4 heat, spot kept.'; else { run.position += 2; msg = 'He makes you move. Two spots gone, +4 heat.'; } break;
+    case 'letCut': run.position += 1; run.heat -= 3; msg = 'She cuts. The kid did not pee.'; break;
+    case 'refuseCut': run.heat += 2; if (rand() < 0.4) { run.position += 1; msg = 'She argues loudly. The employee lets her in first anyway.'; } else msg = '"No." She mutters something about resellers. You hold your spot.'; break;
+    default: msg = ''; break;
+  }
+  run.remaining = computeRemaining(run);
+  if (msg) run.log.push(msg);
+  return msg;
 }
 
 export function encounterDef(id: string | null): EncounterDef | null {
@@ -65,9 +200,12 @@ export function encounterDef(id: string | null): EncounterDef | null {
 }
 
 export function openDoors(run: RestockRun): void {
-  if (run.phase !== 'line') return;
+  if (run.phase !== 'choice' && run.phase !== 'camp') return;
   run.phase = 'doors';
   run.encounter = null;
+  run.eventExpiresIn = null;
+  run.remaining = computeRemaining(run);
+  run.timeLeft = Math.max(4, DOORS_SECONDS - run.doorsPenalty);
   run.log.push('DOORS OPEN. Go go go.');
 }
 
@@ -226,6 +364,10 @@ export function finishRun(s: GameState, run: RestockRun, now: number, rand: () =
   s.restockReadyAt[run.storeId] = now + RESTOCK_COOLDOWN_SECONDS * 1000;
   if (run.banned) s.bannedUntil[run.storeId] = now + BAN_SECONDS * 1000;
   s.stats.restocks += 1;
+  if (run.campLeft < CAMP_SECONDS) s.stats.camps += 1;
+  s.stats.coffeeRounds += run.coffeeRounds;
+  s.stats.ticketsGrabbed += run.ticketsGrabbed;
+  s.stats.spotsSold += run.spotsSold;
   s.stats.restockUnits += run.grabbed;
   if (isConWeekend(now)) {
     const wk = weekKey(now);

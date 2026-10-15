@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { initialState } from '../src/engine/state';
 import { computeModifiers, tick } from '../src/engine/sim';
-import { startRun, openDoors, grab, tickRun, choose, finishRun, restockReady, isBanned, TAPS_PER_UNIT, RESTOCK_COOLDOWN_SECONDS, BAN_SECONDS } from '../src/engine/restock';
+import { startRun, openDoors, grab, tickRun, choose, finishRun, restockReady, isBanned, TAPS_PER_UNIT, RESTOCK_COOLDOWN_SECONDS, BAN_SECONDS, chooseCamp, chooseSkip, tickCamp, campChoose, phoneAction, computeRemaining, SKIP_CAMP_PENALTY } from '../src/engine/restock';
 import { makeOffer, PRICING } from '../src/engine/deals';
 import { RIVALS } from '../src/engine/data/restock';
 import { makeRng } from '../src/engine/math';
@@ -36,7 +36,7 @@ describe('restock runs', () => {
   });
   it('builds a line whose rivals eat stock, gear shortens the line', () => {
     const { run } = runWith(3);
-    expect(run.phase).toBe('line');
+    expect(run.phase).toBe('choice');
     expect(run.rivals.length).toBeGreaterThanOrEqual(4);
     const taken = run.rivals.reduce((a, r) => a + r.takes, 0);
     expect(run.remaining).toBe(Math.max(1, run.stock - taken));
@@ -190,5 +190,84 @@ describe('pricing dial', () => {
     s.heat = 0;
     tick(s, 100, T0 + 100_000, makeRng(1));
     expect(s.heat).toBeGreaterThan(0);
+  });
+});
+
+describe('camp phase', () => {
+  it('camp or skip: skipping costs spots, camping runs a clock with events', () => {
+    const s = ready();
+    const a = startRun(s, 'bullseye', computeModifiers(s, T0), T0, makeRng(31))!;
+    expect(a.phase).toBe('choice');
+    const pos = a.position;
+    chooseSkip(a);
+    expect(a.phase).toBe('doors');
+    expect(a.position).toBe(pos + SKIP_CAMP_PENALTY);
+    const b = startRun(s, 'bullseye', computeModifiers(s, T0), T0, makeRng(31))!;
+    chooseCamp(b);
+    expect(b.phase).toBe('camp');
+    const rng = makeRng(4);
+    tickCamp(b, 3, rng);
+    expect(b.encounter).not.toBeNull();
+    const left = b.campLeft;
+    tickCamp(b, 2, rng);
+    if (b.eventExpiresIn === null) expect(b.campLeft).toBe(left); // untimed events pause the clock
+    b.encounter = null; b.eventExpiresIn = null;
+    tickCamp(b, 60, rng);
+    expect(b.phase).toBe('doors');
+  });
+  it('your spot sets what is left: tickets move you up, selling your spot moves you back', () => {
+    const s = ready();
+    s.cash = 1e6;
+    const run = startRun(s, 'bullseye', computeModifiers(s, T0), T0, makeRng(9))!;
+    chooseCamp(run);
+    run.position = 5;
+    const before = computeRemaining(run);
+    run.encounter = 'camp_ticket'; run.eventExpiresIn = 3;
+    campChoose(s, run, 0, makeRng(1));
+    expect(run.position).toBe(2);
+    expect(run.ticketsGrabbed).toBe(1);
+    expect(computeRemaining(run)).toBeGreaterThanOrEqual(before);
+    run.encounter = 'camp_spot';
+    const cash = s.cash;
+    campChoose(s, run, 0, makeRng(1));
+    expect(run.position).toBe(7);
+    expect(s.cash).toBeGreaterThan(cash);
+    expect(run.spotsSold).toBe(1);
+    // a missed ticket costs a spot
+    run.encounter = 'camp_ticket'; run.eventExpiresIn = 0.5;
+    tickCamp(run, 1, makeRng(2));
+    expect(run.encounter).toBeNull();
+    expect(run.position).toBe(8);
+  });
+  it('coffee for the line costs cash, lowers heat and makes moms take fewer', () => {
+    const s = ready();
+    s.cash = 1e6; s.heat = 20;
+    const run = startRun(s, 'bullseye', computeModifiers(s, T0), T0, makeRng(12))!;
+    chooseCamp(run);
+    run.rivals = [{ kind: 'mom', name: 'Kube Mom', icon: '', takes: 3 }, { kind: 'kid', name: 'Kid', icon: '', takes: 1 }];
+    run.position = 2; run.stock = 10;
+    expect(computeRemaining(run)).toBe(6);
+    run.encounter = 'camp_coffee';
+    campChoose(s, run, 0, makeRng(1));
+    expect(s.cash).toBeLessThan(1e6);
+    expect(s.heat).toBe(15);
+    expect(run.momDiscount).toBe(1);
+    expect(computeRemaining(run)).toBe(7);
+  });
+  it('phone: intel adds stock to the next run here, nap cools heat, each once per camp', () => {
+    const s = ready();
+    s.heat = 30;
+    const run = startRun(s, 'bullseye', computeModifiers(s, T0), T0, makeRng(5))!;
+    chooseCamp(run);
+    expect(phoneAction(s, run, 'intel', makeRng(1))).not.toBe('');
+    expect(s.restockIntel.bullseye).toBe(4);
+    expect(phoneAction(s, run, 'intel', makeRng(1))).toBe('');
+    phoneAction(s, run, 'nap', () => 0.9);
+    expect(s.heat).toBe(24);
+    s.restockReadyAt.bullseye = 0;
+    const next = startRun(s, 'bullseye', computeModifiers(s, T0), T0 + 1, makeRng(5))!;
+    const plain = startRun(s, 'bullseye', computeModifiers(s, T0), T0 + 1, makeRng(5))!;
+    expect(next.stock).toBe(plain.stock + 4);
+    expect(s.restockIntel.bullseye).toBeUndefined();
   });
 });

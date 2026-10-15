@@ -42,7 +42,8 @@ export const RIVALS: Record<RivalKind, { names: string[]; icon: string; takes: [
 export interface EncounterChoice {
   label: string;
   /** Effect applied when picked; `chance` is probability the good branch happens. */
-  effect: 'spareKid' | 'snatchKid' | 'argueMom' | 'complimentMom' | 'crawlMom' | 'splitShelf' | 'noSplit' | 'comply' | 'cousins' | 'letCut' | 'refuseCut' | 'raceBro' | 'fudBro' | 'halvesBro';
+  effect: 'spareKid' | 'snatchKid' | 'argueMom' | 'complimentMom' | 'crawlMom' | 'splitShelf' | 'noSplit' | 'comply' | 'cousins' | 'letCut' | 'refuseCut' | 'raceBro' | 'fudBro' | 'halvesBro'
+    | 'holdSpot' | 'justGo' | 'holdIt' | 'coffeeRound' | 'coffeeSolo' | 'nothing' | 'grabTicket' | 'sellSpot' | 'stayRain' | 'carRain' | 'giveChair' | 'ignoreGrandpa' | 'complySecurity' | 'argueSecurity';
 }
 
 export interface EncounterDef {
@@ -51,8 +52,11 @@ export interface EncounterDef {
   icon: string;
   text: string;
   choices: EncounterChoice[];
-  /** Only during the line phase (before doors open). */
+  /** Only during the camp phase (before doors open). */
   line?: boolean;
+  /** Timed event: seconds to respond before it resolves on its own (`onExpire`). */
+  timed?: number;
+  onExpire?: EncounterChoice['effect'];
 }
 
 export const ENCOUNTERS: EncounterDef[] = [
@@ -131,6 +135,63 @@ export const ENCOUNTERS: EncounterDef[] = [
     ],
   },
   {
+    id: 'camp_pee', kind: 'kid', icon: '🚻', line: true,
+    text: 'You have to pee. Badly. The gas station is across the lot and the line is not getting shorter.',
+    choices: [
+      { label: 'Ask the Kube Mom to hold your spot', effect: 'holdSpot' },
+      { label: 'Just go (lose 2 spots)', effect: 'justGo' },
+      { label: 'Hold it (doors clock -3s)', effect: 'holdIt' },
+    ],
+  },
+  {
+    id: 'camp_coffee', kind: 'grandpa', icon: '☕', line: true,
+    text: 'Grandpa Ron is taking coffee orders for the line. "My treat if you cover the next round."',
+    choices: [
+      { label: 'Buy a round for the line (-cash, -5 heat, moms take fewer)', effect: 'coffeeRound' },
+      { label: 'Just one for you', effect: 'coffeeSolo' },
+      { label: 'Pass', effect: 'nothing' },
+    ],
+  },
+  {
+    id: 'camp_ticket', kind: 'employee', icon: '🎟️', line: true, timed: 3, onExpire: 'nothing',
+    text: 'An employee comes out with numbered tickets. "One per person, right now." GRAB ONE.',
+    choices: [
+      { label: '🎟️ Grab a ticket!', effect: 'grabTicket' },
+    ],
+  },
+  {
+    id: 'camp_spot', kind: 'reseller', icon: '💵', line: true,
+    text: 'Guy behind you leans in. "Twenty bucks for your spot? I\'ll throw in a gas station taquito."',
+    choices: [
+      { label: 'Sell the spot (cash, +5 spots back)', effect: 'sellSpot' },
+      { label: 'Keep it', effect: 'nothing' },
+    ],
+  },
+  {
+    id: 'camp_rain', kind: 'mom', icon: '🌧️', line: true,
+    text: 'It starts raining sideways. Half the line looks at their cars.',
+    choices: [
+      { label: 'Stay in it (people leave, you move up 3)', effect: 'stayRain' },
+      { label: 'Sit in the car (lose 2 spots)', effect: 'carRain' },
+    ],
+  },
+  {
+    id: 'camp_chair', kind: 'grandpa', icon: '🪑', line: true,
+    text: 'Grandpa Ron has been standing for an hour. He is looking at your folding chair.',
+    choices: [
+      { label: 'Give him the chair (-4 heat)', effect: 'giveChair' },
+      { label: 'Pretend not to notice (+2 heat)', effect: 'ignoreGrandpa' },
+    ],
+  },
+  {
+    id: 'camp_security', kind: 'employee', icon: '🚔', line: true,
+    text: 'Mall security: "Tents down, folks. Store policy." He is looking at your tent.',
+    choices: [
+      { label: 'Comply (lose 1 spot in the shuffle)', effect: 'complySecurity' },
+      { label: 'Argue (+4 heat, 50% keep your spot)', effect: 'argueSecurity' },
+    ],
+  },
+  {
     id: 'line_cut', kind: 'mom', icon: '🚻', line: true,
     text: 'A Kube Mom asks to cut in front of you. "My kid has to pee." The kid does not look like he has to pee.',
     choices: [
@@ -146,6 +207,19 @@ export const ENCOUNTERS: EncounterDef[] = [
       { label: '"Line\'s moving, buddy" (+2 heat)', effect: 'refuseCut' },
     ],
   },
+];
+
+export const PHONE_ACTIONS = [
+  { id: 'message', icon: '💬', label: 'Answer a message', blurb: 'Handle one Marketplace offer without leaving the line.' },
+  { id: 'intel', icon: '📱', label: 'Scroll the group', blurb: 'Someone always leaks the pallet count. Next run here gets +4 stock.' },
+  { id: 'nap', icon: '😴', label: 'Nap in the chair', blurb: '-6 heat. 35% chance you wake up two spots back.' },
+] as const;
+
+export const INTEL_LINES = [
+  'Night stocker posted a photo of the pallet. Fourteen cases. Deleted in 40 seconds. You saw it.',
+  '"Truck came in at 4:10, they are putting out everything" - Brenda, who is also in this line.',
+  'Someone in the group counted the boxes through the window. You trust them. You should not.',
+  'Store employee\'s cousin says the limit is being lifted today. The store employee\'s cousin is wrong.',
 ];
 
 export const LINE_FLAVOR = [

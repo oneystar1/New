@@ -48,6 +48,7 @@ export function initialState(now = Date.now()): GameState {
     handle: '',
     restockReadyAt: {},
     bannedUntil: {},
+    restockIntel: {},
     stats: {
       totalCashEarned: 0,
       lifetimeCashEarned: 0,
@@ -74,6 +75,10 @@ export function initialState(now = Date.now()): GameState {
       broBackouts: 0,
       broRaces: 0,
       restocks: 0,
+      camps: 0,
+      coffeeRounds: 0,
+      ticketsGrabbed: 0,
+      spotsSold: 0,
       restockUnits: 0,
       bestRestock: 0,
       kidsSpared: 0,
@@ -114,6 +119,7 @@ export function migrate(raw: unknown, now = Date.now()): GameState {
     conWeek: s.conWeek ?? fresh.conWeek,
     handle: typeof s.handle === 'string' ? s.handle : '',
     bannedUntil: s.bannedUntil ?? {},
+    restockIntel: s.restockIntel ?? {},
     version: SAVE_VERSION,
   };
   for (const st of STORES) if (!merged.stores[st.id]) merged.stores[st.id] = { units: 0, progress: 0, manager: false };

@@ -103,15 +103,25 @@ the Deals tab: toss for an achievement, or flip for 20 seconds of income and
 Every store you own a unit of gets a restock every 10 minutes. A run has
 three phases:
 
-1. **Line.** 4 to 7 rivals ahead of you (minus line gear: Folding Chair
-   skips 2, Overnight Tent 3). Rivals: NeeDoh Mom (takes 2 to 4), kid (1),
-   other reseller (2 to 3), grandpa (1), employee holding stock (2). The
-   shelf has 10 to 17 units; what the line leaves is what you fight for.
-   Sneaker bros (take 3 to 4) are the newest rivals: tent, speaker,
-   cook-group leak, duffel bag.
-   60% of runs open with a line encounter (a mom asks to cut, a sleeping
-   kid is ahead of you).
-2. **Doors.** 12 seconds. Three taps of GRAB secure one unit, up to your
+1. **Camp or skip.** The shelf has 10 to 17 units (plus any group-chat
+   intel); 4 to 7 rivals are already in line (minus line gear: Folding
+   Chair skips 2, Overnight Tent 3). Rivals: Kube Mom (takes 2 to 4), kid
+   (1), other reseller (2 to 3), grandpa (1), employee holding stock (2),
+   sneaker bro (3 to 4). Show up at opening and 2 latecomers beat you to
+   it; camp and the line phase plays out.
+2. **Camp.** 25 seconds. Your spot is a live number and what is left on
+   the shelf is recomputed from it. Every 4 to 6 seconds an event pauses
+   the clock: you have to pee (ask a mom to hold your spot 70/30, just go
+   -2 spots, hold it -3s on the doors clock), Grandpa Ron takes coffee
+   orders (buy a round: 30s of income, -5 heat, moms take one fewer each),
+   an employee hands out numbered tickets (3-second timed tap: +3 spots,
+   miss it and lose one), the guy behind you offers cash for your spot
+   (60s of income, +5 spots back), rain (stay: +3 spots; car: -2), Grandpa
+   needs your chair (-4 heat or +2), mall security wants the tents down,
+   plus the cutters. Between events your phone works, each once per camp:
+   answer one Marketplace message inline, scroll the group for intel (+4
+   stock on the next run here), or nap (-6 heat, 35% to lose 2 spots).
+3. **Doors.** 12 seconds (minus any held-bladder penalty). Three taps of GRAB secure one unit, up to your
    carry (4, +3 minivan, +6 "cousins"). Every ~3 to 5 seconds an encounter
    pauses the clock: kid reaches for the last one (spare: -1 unit, -4 heat;
    snatch: +1 unit, +10 heat), mom blocks the aisle (argue +6 heat 50/50,
@@ -119,7 +129,7 @@ three phases:
    Dalton offers to split the shelf (take half, run ends), manager enforces
    the limit (comply: 2 more max; "buying for my cousins": 60% works, 40%
    banned).
-3. **Checkout.** Each unit is a real pull from that store (counterfeit odds
+4. **Checkout.** Each unit is a real pull from that store (counterfeit odds
    apply), plus cash worth 30 seconds of that store's income per unit. Heat from the
    run is applied. A ban locks the store for 10 minutes: no cycles, no
    restocks, a BANNED badge on the Routes tab.

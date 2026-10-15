@@ -43,9 +43,16 @@ try {
   await tab('Hunt');
   await page.locator('.card .btn.gold', { hasText: 'Camp' }).first().click();
   await page.waitForSelector('.overlay.run');
-  await shot('03-line.png');
-  if (await page.locator('.encounter .btn').count()) await page.locator('.encounter .btn').first().click();
-  await page.getByRole('button', { name: /Doors open/ }).click();
+  await shot('03-choice.png');
+  await page.getByRole('button', { name: /Camp the line/ }).click();
+  await page.waitForTimeout(400);
+  await shot('03b-camp.png');
+  // Camp: answer events as they come, use the phone, until the doors open (~25s).
+  for (let i = 0; i < 80 && !(await page.locator('.grabbtn').count()) && !(await page.locator('.overlay.run').getByRole('button', { name: 'Check out' }).count()); i++) {
+    if (await page.locator('.encounter .btn').count()) { if (i < 6) await shot('03c-camp-event.png'); await page.locator('.encounter .btn').first().click(); }
+    else if (await page.locator('.phone .btn:not([disabled])').count()) await page.locator('.phone .btn:not([disabled])').last().click();
+    await page.waitForTimeout(400);
+  }
   for (let i = 0; i < 40; i++) {
     if (await page.locator('.encounter .btn').count()) { if (i === 10) await shot('04-encounter.png'); await page.locator('.encounter .btn').first().click(); }
     else if (await page.locator('.grabbtn').count()) await page.locator('.grabbtn').dispatchEvent('pointerdown');
