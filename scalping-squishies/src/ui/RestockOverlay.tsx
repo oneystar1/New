@@ -3,7 +3,8 @@ import { useGame } from '../engine/store';
 import { STORE_BY_ID } from '../engine/data/stores';
 import { PHONE_ACTIONS } from '../engine/data/restock';
 import { ITEM_BY_ID, RARITY_LABEL, VARIANT_LABEL } from '../engine/data/items';
-import { encounterDef, DOORS_SECONDS, CAMP_SECONDS, SKIP_CAMP_PENALTY } from '../engine/restock';
+import { encounterDef, DOORS_SECONDS, CAMP_SECONDS, SKIP_CAMP_PENALTY, neighborName, hasChair } from '../engine/restock';
+import { computeModifiers, incomePerSecond } from '../engine/sim';
 import { formatCash } from '../engine/math';
 import { Sprite } from '../art/Sprite';
 import { Portrait, StoreSprite } from '../art/Portrait';
@@ -52,15 +53,37 @@ export function RestockOverlay() {
   const ahead = run.rivals.slice(0, run.position);
   const extra = Math.max(0, run.position - run.rivals.length);
   const firstOffer = s.offers[0];
+  const ips = Math.max(1, incomePerSecond(s, computeModifiers(s, Date.now()), true));
+  const fill = (t: string) => t
+    .replace(/\{neighbor\}/g, neighborName(run))
+    .replace(/\{coffee\}/g, formatCash(Math.max(10, ips * 30)))
+    .replace(/\{solo\}/g, formatCash(Math.max(3, ips * 3)))
+    .replace(/\{spot\}/g, formatCash(ips * 60));
+  // A ticket in hand changes what the choices actually do; say so on the buttons.
+  const fillLabel = (t: string) => {
+    let out = fill(t);
+    if (run.ticketLocked) {
+      out = out.replace(/\(lose \d spots?[^)]*\)/, '(🎟️ ticket holds your spot)')
+        .replace(', they might wedge in anyway', '')
+        .replace(', 50% keep your spot', ', ticket keeps your spot')
+        .replace('Sell the spot', 'Sell the ticket');
+    }
+    return out;
+  };
+  const phoneBlurb = (id: string, blurb: string) => {
+    if (id !== 'nap') return blurb;
+    if (run.ticketLocked) return '-6 heat. Your ticket holds your spot while you sleep.';
+    return hasChair(run) ? '-6 heat. In a chair: 35% chance you wake up two spots back.' : '-6 heat. Standing: 60% chance you wake up two spots back.';
+  };
 
   const choices = (onPick: (i: number) => void) => enc && (
     <div className="encounter mt">
-      <div className="row"><Portrait kind={enc.kind === 'employee' && run.phase === 'doors' ? 'manager' : enc.kind} size={40} seed={5} /><div className="grow">{enc.text}</div></div>
+      <div className="row"><Portrait kind={enc.kind === 'employee' && run.phase === 'doors' ? 'manager' : enc.kind} size={40} seed={5} /><div className="grow">{fill(enc.text)}</div></div>
       {run.eventExpiresIn !== null && enc.timed && (
         <div className="progress mt" style={{ height: 6 }}><i style={{ width: `${(run.eventExpiresIn / enc.timed) * 100}%`, background: 'var(--red)' }} /></div>
       )}
       <div className="row mt" style={{ flexWrap: 'wrap' }}>
-        {enc.choices.map((c, i) => <button key={i} className={`btn grow ${enc.timed ? 'gold' : ''}`} onClick={() => onPick(i)}>{c.label}</button>)}
+        {enc.choices.map((c, i) => <button key={i} className={`btn grow ${enc.timed ? 'gold' : ''}`} onClick={() => onPick(i)}>{fillLabel(c.label)}</button>)}
       </div>
     </div>
   );
@@ -90,7 +113,7 @@ export function RestockOverlay() {
           <>
             <div className="progress"><i style={{ width: `${(run.campLeft / CAMP_SECONDS) * 100}%` }} /></div>
             <div className="row between small mt">
-              <span>You are <b>#{run.position + 1}</b> in line</span>
+              <span>You are <b>#{run.position + 1}</b> in line{run.ticketLocked ? ' 🎟️ locked' : ''}</span>
               <span>~<b>{run.remaining}</b> left for you</span>
             </div>
             <div className="lineviz">
@@ -118,12 +141,12 @@ export function RestockOverlay() {
                 <div className="small">Waiting. Phone out?</div>
                 <div className="row mt" style={{ flexWrap: 'wrap' }}>
                   {PHONE_ACTIONS.map((a) => (
-                    <button key={a.id} className="btn sm grow" disabled={run.phoneUsed.includes(a.id)} title={a.blurb} onClick={() => { if (a.id === 'message') { restockPhone('message'); setPhoneOpen(true); } else restockPhone(a.id); }}>
+                    <button key={a.id} className="btn sm grow" disabled={run.phoneUsed.includes(a.id)} title={phoneBlurb(a.id, a.blurb)} onClick={() => { if (a.id === 'message') { restockPhone('message'); setPhoneOpen(true); } else restockPhone(a.id); }}>
                       {a.icon} {a.label}{run.phoneUsed.includes(a.id) ? ' ✓' : ''}
                     </button>
                   ))}
                 </div>
-                <div className="small mt" style={{ color: 'var(--muted)' }}>{PHONE_ACTIONS.map((a) => `${a.icon} ${a.blurb}`).join(' · ')}</div>
+                <div className="small mt" style={{ color: 'var(--muted)' }}>{PHONE_ACTIONS.map((a) => `${a.icon} ${phoneBlurb(a.id, a.blurb)}`).join(' · ')}</div>
               </div>
             )}
             <div className="runlog">{run.log.slice(-2).map((l, i) => <div key={i}>{l}</div>)}</div>

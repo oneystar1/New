@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { initialState } from '../src/engine/state';
 import { computeModifiers, tick } from '../src/engine/sim';
-import { startRun, openDoors, grab, tickRun, choose, finishRun, restockReady, isBanned, TAPS_PER_UNIT, RESTOCK_COOLDOWN_SECONDS, BAN_SECONDS, chooseCamp, chooseSkip, tickCamp, campChoose, phoneAction, computeRemaining, SKIP_CAMP_PENALTY } from '../src/engine/restock';
+import { startRun, openDoors, grab, tickRun, choose, finishRun, restockReady, isBanned, TAPS_PER_UNIT, RESTOCK_COOLDOWN_SECONDS, BAN_SECONDS, chooseCamp, chooseSkip, tickCamp, campChoose, phoneAction, computeRemaining, SKIP_CAMP_PENALTY, campEventPool, hasChair } from '../src/engine/restock';
 import { makeOffer, PRICING } from '../src/engine/deals';
 import { RIVALS } from '../src/engine/data/restock';
 import { makeRng } from '../src/engine/math';
@@ -269,5 +269,87 @@ describe('camp phase', () => {
     const plain = startRun(s, 'bullseye', computeModifiers(s, T0), T0 + 1, makeRng(5))!;
     expect(next.stock).toBe(plain.stock + 4);
     expect(s.restockIntel.bullseye).toBeUndefined();
+  });
+  it('a ticket holds your spot: naps, bathroom breaks and rain cannot move you back until you sell it', () => {
+    const s = ready();
+    s.cash = 1e6; s.heat = 30;
+    const run = startRun(s, 'bullseye', computeModifiers(s, T0), T0, makeRng(9))!;
+    chooseCamp(run);
+    run.position = 5;
+    run.encounter = 'camp_ticket'; run.eventExpiresIn = 3;
+    campChoose(s, run, 0, makeRng(1));
+    expect(run.ticketLocked).toBe(true);
+    expect(run.position).toBe(2);
+    run.encounter = 'camp_pee';
+    campChoose(s, run, 1, makeRng(1)); // just go
+    expect(run.position).toBe(2);
+    run.encounter = 'camp_rain';
+    campChoose(s, run, 1, makeRng(1)); // sit in the car
+    expect(run.position).toBe(2);
+    phoneAction(s, run, 'nap', () => 0.0); // the bad branch
+    expect(run.position).toBe(2);
+    run.encounter = 'camp_spot';
+    campChoose(s, run, 0, makeRng(1)); // sell the ticket
+    expect(run.ticketLocked).toBe(false);
+    expect(run.position).toBe(7);
+  });
+  it('one-off camp events fire once; gear-gated events need the gear you had when the run started', () => {
+    const s = ready();
+    const run = startRun(s, 'bullseye', computeModifiers(s, T0), T0, makeRng(9))!;
+    chooseCamp(run);
+    const ids = () => campEventPool(run).map((e) => e.id);
+    expect(ids()).not.toContain('camp_chair');
+    expect(ids()).not.toContain('camp_security');
+    expect(ids()).toContain('camp_ticket');
+    run.seenEvents.push('camp_ticket', 'camp_pee');
+    expect(ids()).not.toContain('camp_ticket');
+    expect(ids()).not.toContain('camp_pee');
+    expect(ids()).toContain('line_cut'); // repeatable
+    expect(campEventPool(run, ['u_chair', 'u_tent']).map((e) => e.id)).toEqual(expect.arrayContaining(['camp_chair', 'camp_security']));
+    // every event drawn by the clock is unique while it is a one-off
+    const seen: string[] = [];
+    const rng = makeRng(77);
+    for (let i = 0; i < 40; i++) {
+      run.encounter = null; run.eventExpiresIn = null;
+      tickCamp(run, 7, rng);
+      if (run.phase !== 'camp') break;
+      if (run.encounter) seen.push(run.encounter);
+    }
+    const onceIds = ['camp_coffee', 'camp_spot', 'camp_rain'];
+    for (const id of onceIds) expect(seen.filter((x) => x === id).length).toBeLessThanOrEqual(1);
+  });
+  it('giving Grandpa Ron the chair means you nap standing up', () => {
+    const s = ready();
+    s.upgrades.push('u_chair');
+    const run = startRun(s, 'bullseye', computeModifiers(s, T0), T0, makeRng(9))!;
+    chooseCamp(run);
+    expect(hasChair(run)).toBe(true);
+    expect(campEventPool(run).map((e) => e.id)).toContain('camp_chair');
+    run.encounter = 'camp_chair';
+    campChoose(s, run, 0, makeRng(1));
+    expect(run.chairGiven).toBe(true);
+    expect(hasChair(run)).toBe(false);
+    // standing nap: 60% bad branch, so rand 0.5 moves you back; in a chair 0.5 would not
+    run.position = 3;
+    phoneAction(s, run, 'nap', () => 0.5);
+    expect(run.position).toBe(5);
+  });
+  it('the sleeping kid ahead of you: letting him sleep costs nothing, stepping around him moves you up', () => {
+    const s = ready();
+    const run = startRun(s, 'bullseye', computeModifiers(s, T0), T0, makeRng(9))!;
+    chooseCamp(run);
+    run.position = 4; run.heat = 10;
+    run.encounter = 'line_kid';
+    campChoose(s, run, 0, makeRng(1));
+    expect(run.position).toBe(4);
+    expect(run.heat).toBe(7);
+    run.encounter = 'line_kid';
+    campChoose(s, run, 1, makeRng(1));
+    expect(run.position).toBe(3);
+    expect(run.heat).toBe(9);
+    // three bros let in = three spots
+    run.encounter = 'line_bro';
+    campChoose(s, run, 0, makeRng(1));
+    expect(run.position).toBe(6);
   });
 });

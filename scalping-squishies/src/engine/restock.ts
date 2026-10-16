@@ -41,6 +41,7 @@ export function startRun(s: GameState, storeId: string, m: Modifiers, now: numbe
   const rivals: Rival[] = [];
   for (let i = 0; i < ahead; i++) rivals.push(makeRival(weightedPick(RIVAL_WEIGHTS, rand), rand));
   const run: RestockRun = {
+    upgradesSnapshot: [...s.upgrades],
     storeId,
     phase: 'choice',
     position: rivals.length,
@@ -48,6 +49,9 @@ export function startRun(s: GameState, storeId: string, m: Modifiers, now: numbe
     nextCampEventIn: 2.5,
     eventExpiresIn: null,
     phoneUsed: [],
+    seenEvents: [],
+    ticketLocked: false,
+    chairGiven: false,
     momDiscount: 0,
     doorsPenalty: 0,
     coffeeRounds: 0,
@@ -118,12 +122,42 @@ export function tickCamp(run: RestockRun, dt: number, rand: () => number): void 
   run.nextCampEventIn -= dt;
   if (run.campLeft <= 0) { openDoors(run); return; }
   if (run.nextCampEventIn <= 0) {
-    const pool = ENCOUNTERS.filter((e) => e.line);
+    const pool = campEventPool(run);
+    if (pool.length === 0) { run.nextCampEventIn = 99; return; }
     const enc = pool[Math.floor(rand() * pool.length)];
     run.encounter = enc.id;
+    run.seenEvents.push(enc.id);
     run.eventExpiresIn = enc.timed ?? null;
     run.nextCampEventIn = CAMP_EVENT_EVERY_SECONDS + rand() * 2;
   }
+}
+
+/** Camp events that make sense right now: one-offs not yet seen, gear-gated ones only with the gear. */
+export function campEventPool(run: RestockRun, upgrades: string[] = run.upgradesSnapshot): EncounterDef[] {
+  return ENCOUNTERS.filter((e) => e.line && !(e.once && run.seenEvents.includes(e.id)) && (!e.requires || upgrades.includes(e.requires)));
+}
+
+/** The nearest named person in line, for message text. */
+export function neighborName(run: RestockRun): string {
+  const mom = run.rivals.find((r) => r.kind === 'mom');
+  if (mom) return 'the Kube Mom';
+  const g = run.rivals.find((r) => r.kind === 'grandpa');
+  if (g) return 'Grandpa Ron';
+  const k = run.rivals.find((r) => r.kind === 'kid');
+  if (k) return "the kid's dad";
+  return 'the guy behind you';
+}
+
+/** Do you have a chair to sit in right now? (Owned, and not given away this camp.) */
+export function hasChair(run: RestockRun): boolean {
+  return run.upgradesSnapshot.includes('u_chair') && !run.chairGiven;
+}
+
+/** Move back in line, unless a ticket holds your place. Returns whether you actually moved. */
+function fallBack(run: RestockRun, n: number): boolean {
+  if (run.ticketLocked) return false;
+  run.position += n;
+  return true;
 }
 
 /** Phone actions while waiting. Each can be used once per camp. */
@@ -139,9 +173,13 @@ export function phoneAction(s: GameState, run: RestockRun, id: 'message' | 'inte
     }
     case 'nap': {
       s.heat = Math.max(0, s.heat - 6);
-      if (rand() < 0.35) { run.position += 2; run.log.push('You wake up. Two people are standing where you were standing.'); return 'You wake up two spots back. Heat -6 though.'; }
-      run.log.push('Twenty minutes of chair sleep. Heat -6.');
-      return 'Chair sleep. Heat -6. Nobody moved.';
+      const chair = hasChair(run);
+      if (rand() < (chair ? 0.35 : 0.6)) {
+        if (fallBack(run, 2)) { run.log.push('You wake up. Two people are standing where you were standing.'); return 'You wake up two spots back. Heat -6 though.'; }
+        run.log.push('You wake up. Someone tried your spot. Your ticket was in your hand.'); return 'Someone tried. The ticket held. Heat -6.';
+      }
+      run.log.push(chair ? 'Twenty minutes of chair sleep. Heat -6.' : 'You nod off standing up like a horse. Heat -6.');
+      return chair ? 'Chair sleep. Heat -6. Nobody moved.' : 'Slept standing up. Heat -6. Nobody moved.';
     }
     case 'message':
       return 'Phone out. One message, then back to the line.';
@@ -161,10 +199,11 @@ export function campChoose(s: GameState, run: RestockRun, choiceIdx: number, ran
   let msg = '';
   switch (c.effect) {
     case 'holdSpot':
-      if (rand() < 0.7) msg = 'She held it. She even glared at the guy who tried to slide in. Respect.';
-      else { run.position += 2; msg = '"Oh, I thought you left." Two spots gone.'; }
+      if (rand() < 0.7) msg = `${neighborName(run)} held it, and glared at the guy who tried to slide in. Respect.`;
+      else if (fallBack(run, 2)) msg = '"Oh, I thought you left." Two spots gone.';
+      else msg = '"Oh, I thought you left." Your ticket says otherwise.';
       break;
-    case 'justGo': run.position += 2; msg = 'Relief. Also two people are in your spot.'; break;
+    case 'justGo': msg = fallBack(run, 2) ? 'Relief. Also two people are in your spot.' : 'Relief. Your ticket held the spot. Civilization.'; break;
     case 'holdIt': run.doorsPenalty += 3; msg = 'You hold it. You will be slower at the shelf. Worth it. Maybe.'; break;
     case 'coffeeRound': {
       const cost = Math.max(10, ips * 30);
@@ -178,16 +217,23 @@ export function campChoose(s: GameState, run: RestockRun, choiceIdx: number, ran
     }
     case 'coffeeSolo': { const cost = Math.max(3, ips * 3); s.cash = Math.max(0, s.cash - cost); msg = 'One coffee. Nobody else gets one. Nobody forgets.'; break; }
     case 'nothing': msg = 'You stay put.'; break;
-    case 'grabTicket': run.position = Math.max(0, run.position - 3); run.ticketsGrabbed += 1; msg = 'Ticket in hand. Your spot is locked and three people who blinked are behind you.'; break;
-    case 'sellSpot': { const cash = ips * 60; earn(s, cash); run.position += 5; run.spotsSold += 1; msg = `Sold the spot for ${formatCash(cash)} and a taquito. Five people ahead of you now.`; break; }
+    case 'grabTicket': run.position = Math.max(0, run.position - 3); run.ticketsGrabbed += 1; run.ticketLocked = true; msg = 'Ticket in hand. Your place is locked, and three people who blinked are behind you.'; break;
+    case 'sellSpot': { const cash = ips * 60; earn(s, cash); run.position += 5; run.spotsSold += 1; run.ticketLocked = false; msg = `Sold ${run.ticketsGrabbed ? 'the ticket' : 'the spot'} for ${formatCash(cash)} and a taquito. Five people ahead of you now.`; break; }
     case 'stayRain': run.position = Math.max(0, run.position - 3); run.heat = Math.max(0, run.heat - 1); msg = 'Soaked. Three people gave up. You did not.'; break;
-    case 'carRain': run.position += 2; msg = 'Dry, warm, two spots back.'; break;
-    case 'giveChair': run.heat -= 4; msg = 'He sits. He tells you about 1987. Heat -4.'; break;
+    case 'carRain': msg = fallBack(run, 2) ? 'Dry, warm, two spots back.' : 'Dry, warm, and your ticket kept the spot.'; break;
+    case 'giveChair': run.heat -= 4; run.chairGiven = true; msg = 'He sits. He tells you about 1987. You are standing now. Heat -4.'; break;
     case 'ignoreGrandpa': run.heat += 2; msg = 'You look at your phone very hard. +2 heat.'; break;
-    case 'complySecurity': run.position += 1; msg = 'Tent down. In the shuffle someone steps in front of you.'; break;
-    case 'argueSecurity': run.heat += 4; if (rand() < 0.5) msg = 'He shrugs and moves on. +4 heat, spot kept.'; else { run.position += 2; msg = 'He makes you move. Two spots gone, +4 heat.'; } break;
-    case 'letCut': run.position += 1; run.heat -= 3; msg = 'She cuts. The kid did not pee.'; break;
-    case 'refuseCut': run.heat += 2; if (rand() < 0.4) { run.position += 1; msg = 'She argues loudly. The employee lets her in first anyway.'; } else msg = '"No." She mutters something about resellers. You hold your spot.'; break;
+    case 'complySecurity': msg = fallBack(run, 1) ? 'Tent down. In the shuffle someone steps in front of you.' : 'Tent down. Ticket out. Nobody moves.'; break;
+    case 'argueSecurity': run.heat += 4; if (rand() < 0.5) msg = 'He shrugs and moves on. +4 heat, spot kept.'; else msg = fallBack(run, 2) ? 'He makes you move. Two spots gone, +4 heat.' : 'He makes you move the tent. The ticket keeps the spot. +4 heat.'; break;
+    case 'letSleep': run.heat -= 3; msg = 'You let him sleep. His dad nods at you. Heat -3.'; break;
+    case 'stepAround': run.heat += 2; run.position = Math.max(0, run.position - 1); msg = 'You step around a sleeping child. His dad saw. +2 heat, one spot up.'; break;
+    case 'brosIn': run.heat -= 1; msg = fallBack(run, 3) ? 'The bros set up ahead of you. The speaker is louder now. Three spots gone.' : 'The bros set up behind your ticket. The speaker is still loud.'; break;
+    case 'brosBack': run.heat += 2;
+      if (rand() < 0.6) msg = '"My bad, my bad." They go to the back. The speaker does not get quieter.';
+      else msg = fallBack(run, 3) ? 'They wedge in anyway. "We were saving this spot, bro." Three spots gone, +2 heat.' : 'They try to wedge in. You hold up the ticket. They go to the back.';
+      break;
+    case 'letCut': run.heat -= 3; msg = fallBack(run, 1) ? 'They cut. The kid did not pee.' : 'They cut in behind your ticket. The kid did not pee.'; break;
+    case 'refuseCut': run.heat += 2; if (rand() < 0.4) msg = fallBack(run, 1) ? 'Loud argument. The employee lets them in first anyway.' : 'Loud argument. Your ticket wins. The employee shrugs.'; else msg = '"No." Muttering about resellers. You hold your spot.'; break;
     default: msg = ''; break;
   }
   run.remaining = computeRemaining(run);

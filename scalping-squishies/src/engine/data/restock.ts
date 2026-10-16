@@ -43,6 +43,7 @@ export interface EncounterChoice {
   label: string;
   /** Effect applied when picked; `chance` is probability the good branch happens. */
   effect: 'spareKid' | 'snatchKid' | 'argueMom' | 'complimentMom' | 'crawlMom' | 'splitShelf' | 'noSplit' | 'comply' | 'cousins' | 'letCut' | 'refuseCut' | 'raceBro' | 'fudBro' | 'halvesBro'
+    | 'letSleep' | 'stepAround' | 'brosIn' | 'brosBack'
     | 'holdSpot' | 'justGo' | 'holdIt' | 'coffeeRound' | 'coffeeSolo' | 'nothing' | 'grabTicket' | 'sellSpot' | 'stayRain' | 'carRain' | 'giveChair' | 'ignoreGrandpa' | 'complySecurity' | 'argueSecurity';
 }
 
@@ -57,6 +58,10 @@ export interface EncounterDef {
   /** Timed event: seconds to respond before it resolves on its own (`onExpire`). */
   timed?: number;
   onExpire?: EncounterChoice['effect'];
+  /** Fires at most once per camp. */
+  once?: boolean;
+  /** Only makes sense if you own this gear. */
+  requires?: string;
 }
 
 export const ENCOUNTERS: EncounterDef[] = [
@@ -130,45 +135,45 @@ export const ENCOUNTERS: EncounterDef[] = [
     id: 'line_bro', kind: 'sneakerbro', icon: '🔊', line: true,
     text: 'Three sneaker bros in matching hoodies arrive at 4am with a tent, a Bluetooth speaker and a cook-group leak of the restock time. The moms were already here.',
     choices: [
-      { label: 'Let them vibe', effect: 'letCut' },
-      { label: '"Line\'s back there, bro" (+2 heat)', effect: 'refuseCut' },
+      { label: 'Let them in (lose 3 spots)', effect: 'brosIn' },
+      { label: '"Line\'s back there, bro" (+2 heat, they might wedge in anyway)', effect: 'brosBack' },
     ],
   },
   {
-    id: 'camp_pee', kind: 'kid', icon: '🚻', line: true,
+    id: 'camp_pee', kind: 'kid', icon: '🚻', line: true, once: true,
     text: 'You have to pee. Badly. The gas station is across the lot and the line is not getting shorter.',
     choices: [
-      { label: 'Ask the Kube Mom to hold your spot', effect: 'holdSpot' },
+      { label: 'Ask {neighbor} to hold your spot', effect: 'holdSpot' },
       { label: 'Just go (lose 2 spots)', effect: 'justGo' },
       { label: 'Hold it (doors clock -3s)', effect: 'holdIt' },
     ],
   },
   {
-    id: 'camp_coffee', kind: 'grandpa', icon: '☕', line: true,
-    text: 'Grandpa Ron is taking coffee orders for the line. "My treat if you cover the next round."',
+    id: 'camp_coffee', kind: 'grandpa', icon: '☕', line: true, once: true,
+    text: 'A coffee run is forming. {neighbor} is collecting orders. "Somebody cover the line and we all remember you."',
     choices: [
-      { label: 'Buy a round for the line (-cash, -5 heat, moms take fewer)', effect: 'coffeeRound' },
-      { label: 'Just one for you', effect: 'coffeeSolo' },
+      { label: 'Buy a round for the line ({coffee}, -5 heat, moms take fewer)', effect: 'coffeeRound' },
+      { label: 'Just one for you ({solo})', effect: 'coffeeSolo' },
       { label: 'Pass', effect: 'nothing' },
     ],
   },
   {
-    id: 'camp_ticket', kind: 'employee', icon: '🎟️', line: true, timed: 3, onExpire: 'nothing',
-    text: 'An employee comes out with numbered tickets. "One per person, right now." GRAB ONE.',
+    id: 'camp_ticket', kind: 'employee', icon: '🎟️', line: true, timed: 3, onExpire: 'nothing', once: true,
+    text: 'An employee comes out with numbered tickets. "One per person, right now." A ticket locks your place. GRAB ONE.',
     choices: [
       { label: '🎟️ Grab a ticket!', effect: 'grabTicket' },
     ],
   },
   {
-    id: 'camp_spot', kind: 'reseller', icon: '💵', line: true,
-    text: 'Guy behind you leans in. "Twenty bucks for your spot? I\'ll throw in a gas station taquito."',
+    id: 'camp_spot', kind: 'reseller', icon: '💵', line: true, once: true,
+    text: 'Guy behind you leans in. "Cash for your spot? I\'ll throw in a gas station taquito."',
     choices: [
-      { label: 'Sell the spot (cash, +5 spots back)', effect: 'sellSpot' },
+      { label: 'Sell the spot ({spot}, +5 spots back)', effect: 'sellSpot' },
       { label: 'Keep it', effect: 'nothing' },
     ],
   },
   {
-    id: 'camp_rain', kind: 'mom', icon: '🌧️', line: true,
+    id: 'camp_rain', kind: 'mom', icon: '🌧️', line: true, once: true,
     text: 'It starts raining sideways. Half the line looks at their cars.',
     choices: [
       { label: 'Stay in it (people leave, you move up 3)', effect: 'stayRain' },
@@ -176,7 +181,7 @@ export const ENCOUNTERS: EncounterDef[] = [
     ],
   },
   {
-    id: 'camp_chair', kind: 'grandpa', icon: '🪑', line: true,
+    id: 'camp_chair', kind: 'grandpa', icon: '🪑', line: true, once: true, requires: 'u_chair',
     text: 'Grandpa Ron has been standing for an hour. He is looking at your folding chair.',
     choices: [
       { label: 'Give him the chair (-4 heat)', effect: 'giveChair' },
@@ -184,7 +189,7 @@ export const ENCOUNTERS: EncounterDef[] = [
     ],
   },
   {
-    id: 'camp_security', kind: 'employee', icon: '🚔', line: true,
+    id: 'camp_security', kind: 'employee', icon: '🚔', line: true, once: true, requires: 'u_tent',
     text: 'Mall security: "Tents down, folks. Store policy." He is looking at your tent.',
     choices: [
       { label: 'Comply (lose 1 spot in the shuffle)', effect: 'complySecurity' },
@@ -203,8 +208,8 @@ export const ENCOUNTERS: EncounterDef[] = [
     id: 'line_kid', kind: 'kid', icon: '🧒', line: true,
     text: 'The kid in front of you has been here since 5am with his dad. He is asleep standing up.',
     choices: [
-      { label: 'Let him stay ahead', effect: 'letCut' },
-      { label: '"Line\'s moving, buddy" (+2 heat)', effect: 'refuseCut' },
+      { label: 'Let him sleep (-3 heat)', effect: 'letSleep' },
+      { label: 'Step around him (move up 1, +2 heat)', effect: 'stepAround' },
     ],
   },
 ];
@@ -212,7 +217,7 @@ export const ENCOUNTERS: EncounterDef[] = [
 export const PHONE_ACTIONS = [
   { id: 'message', icon: '💬', label: 'Answer a message', blurb: 'Handle one Marketplace offer without leaving the line.' },
   { id: 'intel', icon: '📱', label: 'Scroll the group', blurb: 'Someone always leaks the pallet count. Next run here gets +4 stock.' },
-  { id: 'nap', icon: '😴', label: 'Nap in the chair', blurb: '-6 heat. 35% chance you wake up two spots back.' },
+  { id: 'nap', icon: '😴', label: 'Nap', blurb: '-6 heat. In a chair: 35% chance you wake up two spots back. Standing: 60%.' },
 ] as const;
 
 export const INTEL_LINES = [

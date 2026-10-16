@@ -135,6 +135,8 @@ export interface Rival {
 export interface RestockRun {
   storeId: string;
   phase: 'choice' | 'camp' | 'doors' | 'done';
+  /** Upgrades at the moment the run started (gear-gated events). */
+  upgradesSnapshot: string[];
   /** People ahead of you right now. Moves during the camp phase. */
   position: number;
   /** Camp phase clock. */
@@ -144,6 +146,12 @@ export interface RestockRun {
   eventExpiresIn: number | null;
   /** Phone actions used this camp. */
   phoneUsed: string[];
+  /** One-off camp events already seen this camp. */
+  seenEvents: string[];
+  /** A numbered ticket locks your place against everything but selling it. */
+  ticketLocked: boolean;
+  /** You gave your folding chair to Grandpa Ron; naps are standing-up naps now. */
+  chairGiven: boolean;
   /** Kube Moms take one fewer each after a coffee round. */
   momDiscount: number;
   /** Seconds knocked off the doors clock by camp choices (held it in). */

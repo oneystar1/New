@@ -111,16 +111,27 @@ three phases:
    it; camp and the line phase plays out.
 2. **Camp.** 25 seconds. Your spot is a live number and what is left on
    the shelf is recomputed from it. Every 4 to 6 seconds an event pauses
-   the clock: you have to pee (ask a mom to hold your spot 70/30, just go
-   -2 spots, hold it -3s on the doors clock), Grandpa Ron takes coffee
-   orders (buy a round: 30s of income, -5 heat, moms take one fewer each),
-   an employee hands out numbered tickets (3-second timed tap: +3 spots,
-   miss it and lose one), the guy behind you offers cash for your spot
-   (60s of income, +5 spots back), rain (stay: +3 spots; car: -2), Grandpa
-   needs your chair (-4 heat or +2), mall security wants the tents down,
-   plus the cutters. Between events your phone works, each once per camp:
-   answer one Marketplace message inline, scroll the group for intel (+4
-   stock on the next run here), or nap (-6 heat, 35% to lose 2 spots).
+   the clock. One-offs fire at most once per camp: you have to pee (ask
+   your named neighbor to hold your spot 70/30, just go -2 spots, hold it
+   -3s on the doors clock), a coffee run (buy a round: 30s of income, -5
+   heat, moms take one fewer each; solo cup: 3s of income; prices are
+   shown on the buttons), an employee hands out numbered tickets (3-second
+   timed tap: +3 spots and your place is **locked**, nothing but selling it
+   can move you back; miss it and lose one), the guy behind you offers
+   cash for your spot (60s of income, +5 spots back, clears the ticket),
+   rain (stay: +3 spots; car: -2). Gear-gated one-offs only appear with
+   the gear you had when the run started: Grandpa needs your chair (-4
+   heat and you nap standing from then on, or +2 heat), mall security
+   wants the tents down (lose 1 in the shuffle, or argue +4 heat 50/50).
+   Repeatable: the "my kid has to pee" cutter (let her -3 heat, refuse +2
+   heat with a 40% she gets in anyway), three sneaker bros arriving (let
+   them in -3 spots, send them back +2 heat with a 40% they wedge in), the
+   kid asleep ahead of you (let him sleep -3 heat, step around him +1 spot
+   +2 heat). With a ticket in hand the buttons say so instead of
+   promising a spot loss that will not happen. Between events your phone
+   works, each once per camp: answer one Marketplace message inline,
+   scroll the group for intel (+4 stock on the next run here), or nap (-6
+   heat; 35% to lose 2 spots in a chair, 60% standing, 0% with a ticket).
 3. **Doors.** 12 seconds (minus any held-bladder penalty). Three taps of GRAB secure one unit, up to your
    carry (4, +3 minivan, +6 "cousins"). Every ~3 to 5 seconds an encounter
    pauses the clock: kid reaches for the last one (spare: -1 unit, -4 heat;
