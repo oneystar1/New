@@ -12,7 +12,11 @@ const { chromium } = require(process.env.PLAYWRIGHT_PATH || '/opt/node-tools/nod
 const PORT = 8174;
 const OUT = process.env.SHOT_DIR || 'docs/screenshots';
 mkdirSync(OUT, { recursive: true });
-const server = spawn('npx', ['--yes', 'vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'ignore' });
+// Own process group so the whole preview tree dies at the end (npx -> node -> vite).
+const server = spawn('npx', ['--yes', 'vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'ignore', detached: true });
+const killServer = () => { try { process.kill(-server.pid, 'SIGTERM'); } catch { server.kill(); } };
+// Hard stop so a stuck page fails the CI step instead of hanging until the job timeout.
+setTimeout(() => { console.error('smoke: timed out after 4 minutes'); killServer(); process.exit(2); }, 240_000).unref();
 await new Promise((r) => setTimeout(r, 2500));
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 414, height: 860 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
@@ -106,7 +110,7 @@ try {
   console.log('persisted ok');
 } finally {
   await browser.close();
-  server.kill();
+  killServer();
 }
 if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
 console.log('smoke ok');
