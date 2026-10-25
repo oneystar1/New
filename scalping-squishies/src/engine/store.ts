@@ -7,7 +7,7 @@ import { TUTORIAL } from './data/tutorial';
 import { RANKED_RIVALS } from './data/rivals';
 import { CITY_BY_ID } from './data/cities';
 import { storage, haptic } from '../platform/native';
-import { pushSave, pullSave, fetchGrants, claimGrant, submitScore, cloudEnabled } from '../net/api';
+import { pushSave, pullSave, fetchGrants, claimGrant, submitScore, cloudEnabled, deleteCloudData } from '../net/api';
 import { ITEM_BY_ID } from './data/items';
 import { initialState, deserialize, serialize, SAVE_KEY } from './state';
 import {
@@ -59,6 +59,8 @@ interface GameStore {
   cloudPush: () => Promise<void>;
   /** Apply purchases recorded by the server webhook that this device has not seen. */
   cloudClaimGrants: () => Promise<void>;
+  /** Delete everything on the server for this device (privacy policy promise). */
+  cloudDelete: () => Promise<boolean>;
   setHandle: (h: string) => void;
   setTutorialChoice: (c: GameState['tutorialChoice']) => void;
   replayTutorial: () => void;
@@ -236,6 +238,12 @@ export const useGame = create<GameStore>((set, get) => {
         toast('Newer cloud save found and loaded', '☁️', 'info');
       }
       if (s.conWeek.units > 0) void submitScore(s.conWeek.units, s.handle || 'Anonymous Scalper');
+    },
+    cloudDelete: async () => {
+      if (!cloudEnabled()) return false;
+      const ok = await deleteCloudData();
+      toast(ok ? 'Cloud data deleted' : 'Could not reach the server', ok ? '🗑️' : '❌', ok ? 'good' : 'bad');
+      return ok;
     },
     cloudClaimGrants: async () => {
       if (!cloudEnabled()) return;

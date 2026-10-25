@@ -32,9 +32,9 @@ What is done, what you do, and what still needs code.
       (the mystery pulls), no real gambling
 - [ ] App Tracking Transparency: the AdMob plugin prompts on first ad request;
       add `NSUserTrackingUsageDescription` to Info.plist
-- [ ] Deploy the backend (see `server/README.md`) and set `VITE_API_URL`
+- [ ] Deploy the backend: add `FLY_API_TOKEN` and friends (see `docs/ci.md`), CI does the rest; then set the `SS_API_URL` variable
 
-## On a Mac with Xcode
+## On a Mac with Xcode (optional: CI does this without one, see `docs/ci.md`)
 
 ```sh
 npm install

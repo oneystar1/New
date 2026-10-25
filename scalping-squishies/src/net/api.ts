@@ -63,3 +63,10 @@ export async function fetchLeaderboard(): Promise<{ week: string; top: Leaderboa
 export async function submitScore(score: number, name: string): Promise<void> {
   await call('/v1/leaderboard', { method: 'POST', body: JSON.stringify({ score, name }) });
 }
+
+/** Right to erasure: wipe everything the server holds for this device, then sign out. */
+export async function deleteCloudData(): Promise<boolean> {
+  const r = await call<{ ok: boolean }>('/v1/me', { method: 'DELETE' });
+  if (r?.status === 200) { token = null; return true; }
+  return false;
+}

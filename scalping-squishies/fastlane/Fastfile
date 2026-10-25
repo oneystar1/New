@@ -1,0 +1,66 @@
+# Scalping Squishies iOS lanes. Run by .github/workflows/scalping-squishies-ios.yml
+# on a macOS runner; also works on a Mac with the same env vars exported.
+default_platform(:ios)
+
+APP_ID = "com.oneycollectibles.scalpingsquishies"
+XCODEPROJ = "ios/App/App.xcodeproj"
+WORKSPACE = "ios/App/App.xcworkspace"
+
+platform :ios do
+  desc "Create the app record if needed, sign with match, build, upload to TestFlight"
+  lane :beta do
+    setup_ci if ENV["CI"]
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_content: ENV.fetch("ASC_KEY_CONTENT"),
+      is_key_content_base64: true,
+      in_house: false
+    )
+
+    # Registers the bundle id and creates the App Store Connect record the
+    # first time; a no-op once they exist.
+    create_app_online(
+      api_key: api_key,
+      app_identifier: APP_ID,
+      app_name: "Scalping Squishies",
+      app_version: "0.1.0",
+      language: "English",
+      sku: "SCALPINGSQUISHIES001",
+      skip_itc: false
+    )
+
+    # Distribution cert + App Store profile, created on first run and reused after.
+    match(type: "appstore", api_key: api_key, app_identifier: [APP_ID], readonly: false)
+
+    build = latest_testflight_build_number(api_key: api_key, app_identifier: APP_ID, initial_build_number: 0) + 1
+    increment_build_number(build_number: build, xcodeproj: XCODEPROJ)
+
+    update_code_signing_settings(
+      path: XCODEPROJ,
+      targets: ["App"],
+      use_automatic_signing: false,
+      team_id: ENV.fetch("APPLE_TEAM_ID"),
+      code_sign_identity: "Apple Distribution",
+      bundle_identifier: APP_ID,
+      profile_name: ENV.fetch("sigh_#{APP_ID}_appstore_profile-name")
+    )
+
+    build_app(
+      workspace: WORKSPACE,
+      scheme: "App",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "build",
+      output_name: "ScalpingSquishies.ipa",
+      clean: true
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true,
+      changelog: "CI build #{build}"
+    )
+  end
+end

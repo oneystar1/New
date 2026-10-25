@@ -2,3 +2,11 @@ node_modules/
 tests/shots/
 .DS_Store
 __pycache__/
+# Scalping Squishies: generated native project, build output, local secrets
+scalping-squishies/ios/
+scalping-squishies/android/
+scalping-squishies/build/
+scalping-squishies/backups/
+scalping-squishies/.env.local
+scalping-squishies/fastlane/report.xml
+*.ipa

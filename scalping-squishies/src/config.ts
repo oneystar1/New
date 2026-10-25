@@ -15,6 +15,10 @@ export const CONFIG = {
   },
   /** RevenueCat public SDK key for iOS. Empty = purchases unavailable. */
   revenueCatIosKey: env.VITE_RC_IOS_KEY ?? '',
+  /** Where feedback goes. Empty hides the mail link and points at the support page. */
+  supportEmail: env.VITE_SUPPORT_EMAIL ?? '',
+  /** Public web home (privacy and support pages live next to it). */
+  siteUrl: (env.VITE_SITE_URL || 'https://oneystar1.github.io/New/').replace(/\/?$/, '/'),
   /** Build label shown in settings. */
   version: env.VITE_APP_VERSION ?? '0.1.0',
 };

@@ -12,6 +12,7 @@ import { DatabaseSync } from 'node:sqlite';
 export function createApp(opts = {}) {
   const secret = opts.secret ?? process.env.SS_SECRET ?? 'dev-secret-change-me';
   const rcSecret = opts.rcWebhookSecret ?? process.env.SS_RC_WEBHOOK_SECRET ?? '';
+  const adminToken = opts.adminToken ?? process.env.SS_ADMIN_TOKEN ?? '';
   const db = new DatabaseSync(opts.dbPath ?? process.env.SS_DB ?? ':memory:');
   db.exec(`
     PRAGMA journal_mode = WAL;
@@ -25,6 +26,7 @@ export function createApp(opts = {}) {
   `);
   const q = {
     userByDevice: db.prepare('SELECT * FROM users WHERE device_id = ?'),
+    userExists: db.prepare('SELECT 1 FROM users WHERE id = ?'),
     insertUser: db.prepare('INSERT INTO users (id, device_id, created_at, last_seen, name) VALUES (?, ?, ?, ?, ?)'),
     touchUser: db.prepare('UPDATE users SET last_seen = ? WHERE id = ?'),
     getSave: db.prepare('SELECT * FROM saves WHERE user_id = ?'),
@@ -91,6 +93,13 @@ export function createApp(opts = {}) {
     try {
       if (path === '/v1/health') return json(res, 200, { ok: true, week: weekKey() });
 
+      // Soft-launch dashboard numbers. Only exists when SS_ADMIN_TOKEN is set.
+      if (path === '/v1/admin/stats' && req.method === 'GET') {
+        if (!adminToken || auth !== adminToken) return json(res, 404, { error: 'not_found' });
+        const days = Math.min(90, Math.max(1, Number(url.searchParams.get('days') ?? 14)));
+        return json(res, 200, computeStats(db, days, Date.now()));
+      }
+
       if (path === '/v1/auth/anon' && req.method === 'POST') {
         const { deviceId } = await readBody(req, 10_000);
         if (typeof deviceId !== 'string' || deviceId.length < 8 || deviceId.length > 128) return json(res, 400, { error: 'bad_device' });
@@ -114,7 +123,7 @@ export function createApp(opts = {}) {
         return json(res, 200, { ok: true });
       }
 
-      if (!userId) return json(res, 401, { error: 'unauthorized' });
+      if (!userId || !q.userExists.get(userId)) return json(res, 401, { error: 'unauthorized' });
 
       if (path === '/v1/save' && req.method === 'GET') {
         const row = q.getSave.get(userId);
@@ -160,6 +169,14 @@ export function createApp(opts = {}) {
         return json(res, r.changes ? 200 : 409, { ok: r.changes > 0 });
       }
 
+      // Right to erasure: wipes everything we hold for this user. The device
+      // signs in again as a brand-new anonymous user afterwards.
+      if (path === '/v1/me' && req.method === 'DELETE') {
+        for (const table of ['saves', 'events', 'scores', 'grants']) db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).run(userId);
+        db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+        return json(res, 200, { ok: true });
+      }
+
       return json(res, 404, { error: 'not_found' });
     } catch (e) {
       return json(res, 400, { error: String(e.message ?? e) });
@@ -168,6 +185,48 @@ export function createApp(opts = {}) {
 
   const server = createServer((req, res) => { void handle(req, res); });
   return { server, db, tokenFor, weekKey };
+}
+
+/**
+ * Soft-launch numbers over the last `days` days: installs, D1/D7 retention,
+ * DAU, rewarded ad views per DAU, starter pack conversion, grants by product.
+ * Pure read; used by GET /v1/admin/stats and the server tests.
+ */
+export function computeStats(db, days, now = Date.now()) {
+  const DAY = 86_400_000;
+  const since = now - days * DAY;
+  const dayOf = (t) => new Date(t).toISOString().slice(0, 10);
+  const installs = db.prepare('SELECT id, created_at FROM users WHERE created_at >= ? AND created_at <= ?').all(since, now);
+  const active = db.prepare("SELECT DISTINCT user_id, date(at / 1000, 'unixepoch') AS d FROM events WHERE at >= ? AND at <= ?").all(since, now + DAY);
+  const activeSet = new Set(active.map((r) => `${r.user_id}|${r.d}`));
+  const retention = (offset) => {
+    const eligible = installs.filter((u) => u.created_at + (offset + 1) * DAY <= now);
+    const retained = eligible.filter((u) => activeSet.has(`${u.id}|${dayOf(u.created_at + offset * DAY)}`));
+    return { eligible: eligible.length, retained: retained.length, rate: eligible.length ? retained.length / eligible.length : null };
+  };
+  const daily = db.prepare(`
+    SELECT date(at / 1000, 'unixepoch') AS day, COUNT(DISTINCT user_id) AS dau,
+           SUM(event = 'ad_rewarded') AS rewarded, SUM(event = 'ad_shown') AS adsShown,
+           SUM(event = 'restock_done') AS restocks, SUM(event = 'iap_purchase') AS purchases
+    FROM events WHERE at >= ? AND at <= ? GROUP BY day ORDER BY day`).all(since, now).map((r) => ({ ...r, rewardedPerDau: r.dau ? r.rewarded / r.dau : 0 }));
+  const installsByDay = {};
+  for (const u of installs) installsByDay[dayOf(u.created_at)] = (installsByDay[dayOf(u.created_at)] ?? 0) + 1;
+  for (const d of daily) d.installs = installsByDay[d.day] ?? 0;
+  const starterEligible = installs.filter((u) => u.created_at + 3 * DAY <= now);
+  const starterBuyers = new Set(db.prepare("SELECT user_id FROM grants WHERE product_id = 'ss_starter'").all().map((r) => r.user_id));
+  for (const r of db.prepare("SELECT DISTINCT user_id FROM events WHERE event = 'iap_purchase' AND props LIKE '%ss_starter%'").all()) starterBuyers.add(r.user_id);
+  const starterConverted = starterEligible.filter((u) => starterBuyers.has(u.id)).length;
+  const grantsByProduct = {};
+  for (const r of db.prepare('SELECT product_id, COUNT(*) AS n FROM grants WHERE created_at >= ? GROUP BY product_id').all(since)) grantsByProduct[r.product_id] = r.n;
+  const platforms = {};
+  for (const r of db.prepare('SELECT platform, COUNT(DISTINCT user_id) AS n FROM events WHERE at >= ? GROUP BY platform').all(since)) platforms[r.platform] = r.n;
+  const totalUsers = db.prepare('SELECT COUNT(*) AS n FROM users').get().n;
+  return {
+    generatedAt: now, days, totalUsers, installs: installs.length,
+    d1: retention(1), d7: retention(7),
+    starter: { eligible: starterEligible.length, converted: starterConverted, rate: starterEligible.length ? starterConverted / starterEligible.length : null },
+    daily, grantsByProduct, platforms,
+  };
 }
 
 /** Consumable product ids (Clout packs, bundles) vs lifetime/subscription. */

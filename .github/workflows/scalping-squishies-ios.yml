@@ -1,0 +1,101 @@
+# Scalping Squishies iOS: builds the Capacitor shell on a macOS runner,
+# signs it with fastlane match, uploads to TestFlight. No Mac needed.
+# Required secrets: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_CONTENT (base64 .p8),
+# APPLE_TEAM_ID, MATCH_GIT_URL, MATCH_PASSWORD, MATCH_GIT_BASIC_AUTHORIZATION.
+# Optional secrets: ADMOB_APP_ID, ADMOB_REWARDED_UNIT, ADMOB_INTERSTITIAL_UNIT,
+# RC_IOS_KEY. Optional vars: SS_API_URL, SS_SUPPORT_EMAIL, SS_SITE_URL.
+# See scalping-squishies/docs/ci.md.
+name: Scalping Squishies iOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      admob_testing:
+        description: Use Google's test ad units (keep true until the store release)
+        type: choice
+        options: ['true', 'false']
+        default: 'true'
+  push:
+    tags: ['ss-ios-v*']
+
+concurrency:
+  group: ss-ios
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: scalping-squishies
+
+jobs:
+  testflight:
+    name: Build and upload to TestFlight
+    runs-on: macos-15
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the secrets are in place
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+        run: |
+          missing=""
+          for v in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_CONTENT APPLE_TEAM_ID MATCH_GIT_URL MATCH_PASSWORD MATCH_GIT_BASIC_AUTHORIZATION; do
+            [ -z "${!v}" ] && missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secrets:$missing. See scalping-squishies/docs/ci.md."
+            exit 1
+          fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: scalping-squishies/package-lock.json
+      - run: npm ci
+      - name: Build the web bundle
+        env:
+          VITE_API_URL: ${{ vars.SS_API_URL }}
+          VITE_SUPPORT_EMAIL: ${{ vars.SS_SUPPORT_EMAIL }}
+          VITE_SITE_URL: ${{ vars.SS_SITE_URL }}
+          VITE_ADMOB_REWARDED: ${{ secrets.ADMOB_REWARDED_UNIT }}
+          VITE_ADMOB_INTERSTITIAL: ${{ secrets.ADMOB_INTERSTITIAL_UNIT }}
+          VITE_ADMOB_TESTING: ${{ github.event.inputs.admob_testing || 'true' }}
+          VITE_RC_IOS_KEY: ${{ secrets.RC_IOS_KEY }}
+          VITE_APP_VERSION: 0.1.${{ github.run_number }}
+        run: npx tsc --noEmit && npx vite build
+      - name: Generate the Xcode project
+        run: |
+          [ -d ios ] || npx cap add ios
+          npx cap sync ios
+      - name: App icon and launch screen from assets/
+        run: npx --yes @capacitor/assets generate --ios --iconBackgroundColor '#1a1030' --iconBackgroundColorDark '#1a1030' --splashBackgroundColor '#1a1030' --splashBackgroundColorDark '#1a1030'
+      - name: Info.plist keys (AdMob app id, tracking prompt, SKAdNetwork, encryption)
+        env:
+          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+        run: bash tools/ios-plist.sh ios/App/App/Info.plist
+      - name: Sign and upload to TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          FASTLANE_SKIP_UPDATE_CHECK: '1'
+          FASTLANE_HIDE_CHANGELOG: '1'
+          CI: 'true'
+        run: fastlane ios beta
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-build-logs
+          path: |
+            ~/Library/Logs/gym
+            scalping-squishies/fastlane/report.xml
+          if-no-files-found: ignore

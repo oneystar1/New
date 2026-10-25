@@ -15,7 +15,9 @@
     "test:server": "node --test server/test.mjs",
     "balance": "tsx tools/balance.ts",
     "cap:add:ios": "npx cap add ios",
-    "cap:sync": "npm run build && npx cap sync"
+    "cap:sync": "npm run build && npx cap sync",
+    "dashboard": "node tools/dashboard.mjs",
+    "icons": "node tools/icons.mjs"
   },
   "license": "MIT",
   "dependencies": {

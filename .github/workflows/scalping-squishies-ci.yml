@@ -1,0 +1,81 @@
+# Scalping Squishies: typecheck, tests, build, headless smoke test, then
+# deploy the web build to GitHub Pages. Runs on every push that touches the
+# game. Secrets/vars it reads (all optional): SS_API_URL, SS_SUPPORT_EMAIL.
+name: Scalping Squishies
+
+on:
+  push:
+    branches: [main, claude/scalp-street-idle-game]
+    paths: ['scalping-squishies/**', '.github/workflows/scalping-squishies-ci.yml']
+  pull_request:
+    paths: ['scalping-squishies/**']
+  workflow_dispatch:
+
+concurrency:
+  group: ss-web-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: scalping-squishies
+
+jobs:
+  test:
+    name: Typecheck, test, build, smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: scalping-squishies/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: npm run test:server
+      - name: Build
+        env:
+          VITE_API_URL: ${{ vars.SS_API_URL }}
+          VITE_SUPPORT_EMAIL: ${{ vars.SS_SUPPORT_EMAIL }}
+          VITE_SITE_URL: ${{ vars.SS_SITE_URL }}
+          VITE_APP_VERSION: 0.1.${{ github.run_number }}
+        run: npx vite build
+      - name: Install Chromium for the smoke test
+        run: |
+          npm i --no-save playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - name: Smoke test (headless Chromium, phone viewport)
+        env:
+          PLAYWRIGHT_PATH: playwright
+        run: npm run smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: scalping-squishies/docs/screenshots
+          if-no-files-found: ignore
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          path: scalping-squishies/dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - id: deployment
+        uses: actions/deploy-pages@v4

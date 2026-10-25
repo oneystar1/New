@@ -22,21 +22,22 @@ play-tested beyond you.
 
 The next step. Everything after this needs a public link.
 
-- [ ] **me** GitHub Actions: typecheck, vitest, server tests, build, smoke
-      on every push.
-- [ ] **me** Deploy the web build to GitHub Pages from the same workflow.
+- [x] **me** GitHub Actions: typecheck, vitest, server tests, build, smoke
+      on every push (`.github/workflows/scalping-squishies-ci.yml`).
+- [x] **me** Deploy the web build to GitHub Pages from the same workflow
+      (you flip Settings → Pages → Source: GitHub Actions once).
       Public URL on day one, free, and it is the link for playtests,
       the App Store "marketing URL", and TikTok bios.
-- [ ] **me** Privacy policy and support pages (static, in `public/`),
+- [x] **me** Privacy policy and support pages (static, in `public/`),
       covering local save, optional cloud save, AdMob, RevenueCat, and
       the contact address. App Review requires both URLs.
-- [ ] **me** Dockerfile + one-command deploy notes for `server/` (Fly.io
+- [x] **me** Dockerfile + one-command deploy notes for `server/` (Fly.io
       or Railway), health check, backup of the SQLite file.
-- [ ] **me** Export `icon.svg` to 1024 px PNG, an App Store icon set, and
+- [x] **me** Export `icon.svg` to 1024 px PNG, an App Store icon set, and
       a launch screen that matches the splash.
-- [ ] **me** In-game "Send feedback" link (mailto or a form) in Settings
+- [x] **me** In-game "Send feedback" link (mailto or a form) in Settings
       so testers can report without leaving the game.
-- [ ] **me** `tools/dashboard.mjs`: read the `events` table and print D1 /
+- [x] **me** `tools/dashboard.mjs`: read the `events` table and print D1 /
       D7 retention, ad views per DAU, starter pack conversion. The
       soft-launch gates below need these numbers.
 - [ ] **you** Buy a domain (or use a subdomain you own) for the backend
@@ -58,13 +59,13 @@ Start the Apple one today; approval can take several days.
 - [ ] Name check: search the App Store, USPTO TESS, and Google for
       "Scalping Squishies" before paying for anything with the name on it.
 
-## Phase 2: first device build (one day on a Mac, you + me)
+## Phase 2: first device build (no Mac needed, you + me)
 
-- [ ] `npm run cap:add:ios`, `npm run cap:sync`, open in Xcode.
-- [ ] Info.plist: `GADApplicationIdentifier`,
-      `NSUserTrackingUsageDescription`, `SKAdNetworkItems`.
-- [ ] Signing team, icons from phase 0, launch screen.
-- [ ] `.env.local` with real keys, `VITE_ADMOB_TESTING=true` still.
+- [x] `scalping-squishies-ios.yml` builds, signs and uploads to TestFlight
+      on a GitHub macOS runner. Setup steps and secret names: `docs/ci.md`.
+- [x] Info.plist keys, icons and launch screen applied by the workflow.
+- [ ] **you** App Store Connect API key, a private certs repo, the
+      secrets in `docs/ci.md`, then run the workflow once.
 - [ ] Run on a real phone: verify a rewarded ad, a sandbox purchase,
       restore purchases, offline earnings after backgrounding, a local
       notification, and the save surviving a force-quit.
@@ -101,8 +102,8 @@ Start the Apple one today; approval can take several days.
 
 ## Order of the next five actions
 
-1. me: CI + GitHub Pages deploy (public link).
+1. you: Settings → Pages → Source: GitHub Actions (public link goes live on the next push).
 2. you: start the Apple Developer enrollment.
-3. me: privacy, support, feedback link, icon set, backend Dockerfile.
-4. you: RevenueCat, AdMob, IAP records, domain.
-5. both: Mac day, TestFlight build 1.
+3. you: Fly.io token + the three server secrets (`docs/ci.md` §2); the next push deploys the backend.
+4. you: when Apple approves, the iOS secrets (`docs/ci.md` §3) and run the iOS workflow once.
+5. you: RevenueCat, AdMob, IAP records in App Store Connect, domain.

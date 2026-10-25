@@ -10,6 +10,8 @@ Web first (PWA), built to wrap into an iOS app with Capacitor.
 
 ![line](docs/screenshots/03-line.png) ![shelf](docs/screenshots/07-shelf.png) ![deals](docs/screenshots/06-deals.png)
 
+CI, GitHub Pages deploy, Fly.io backend deploy and no-Mac TestFlight builds: see `docs/ci.md`.
+
 ## Run it
 
 ```sh

@@ -1,4 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { CONFIG } from '../config';
+import { getDeviceId } from '../net/identity';
+import { cloudEnabled } from '../net/api';
 import { useGame } from '../engine/store';
 import { UPGRADES } from '../engine/data/upgrades';
 import { ACHIEVEMENTS } from '../engine/data/achievements';
@@ -162,7 +165,15 @@ function Settings() {
   const reset = useGame((g) => g.reset);
   const toast = useGame((g) => g.toast);
   const replayTutorial = useGame((g) => g.replayTutorial);
+  const cloudDelete = useGame((g) => g.cloudDelete);
   const [txt, setTxt] = useState('');
+  const [deviceId, setDeviceId] = useState('');
+  useEffect(() => { void getDeviceId().then(setDeviceId); }, []);
+  const feedbackBody = encodeURIComponent(`\n\n---\nScalping Squishies v${CONFIG.version}\nDevice id: ${deviceId}\nPlatform: ${typeof navigator !== 'undefined' ? navigator.userAgent : ''}\nLifetime: ${formatCash(s.stats.lifetimeCashEarned)} · relocations ${s.stats.prestiges}`);
+  const feedbackHref = CONFIG.supportEmail
+    ? `mailto:${CONFIG.supportEmail}?subject=${encodeURIComponent('Scalping Squishies feedback')}&body=${feedbackBody}`
+    : `${CONFIG.siteUrl}support.html`;
+  const link = { textDecoration: 'none' } as const;
   return (
     <div>
       <div className="card">
@@ -180,6 +191,21 @@ function Settings() {
           <button className="btn sm" onClick={() => (importSave(txt) ? toast('Save imported', '✅', 'good') : toast('Invalid save code', '❌', 'bad'))}>Import</button>
           <button className="btn sm ghost" style={{ marginLeft: 'auto', color: 'var(--red)' }} onClick={() => { if (confirm('Wipe everything and start over?')) reset(); }}>Hard reset</button>
         </div>
+      </div>
+      <div className="card">
+        <h3>Help & legal</h3>
+        <div className="row mt" style={{ flexWrap: 'wrap', gap: 8 }}>
+          <a className="btn sm" style={link} href={feedbackHref} target="_blank" rel="noopener">✉️ Send feedback</a>
+          <a className="btn sm ghost" style={link} href={`${CONFIG.siteUrl}support.html`} target="_blank" rel="noopener">Support</a>
+          <a className="btn sm ghost" style={link} href={`${CONFIG.siteUrl}privacy.html`} target="_blank" rel="noopener">Privacy policy</a>
+        </div>
+        {cloudEnabled() && (
+          <div className="row between mt">
+            <span>Cloud data (save, scores, purchases on our server)</span>
+            <button className="btn sm ghost" style={{ color: 'var(--red)' }} onClick={() => { if (confirm('Delete everything stored for this device on the server? Your local save stays.')) void cloudDelete(); }}>Delete</button>
+          </div>
+        )}
+        <div className="small mt" style={{ color: 'var(--muted)', wordBreak: 'break-all' }}>v{CONFIG.version} · device id {deviceId || '…'}</div>
       </div>
       <div className="debug">
         Stats: taps {s.stats.taps} · pulls {s.stats.pulls} · units {s.stats.unitsBought} · cycles {s.stats.sales} · ads {s.stats.adsWatched} · relocations {s.stats.prestiges} · lifetime {formatCash(s.stats.lifetimeCashEarned)}

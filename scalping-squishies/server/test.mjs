@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createApp } from './index.mjs';
+import { createApp, computeStats } from './index.mjs';
 
 async function boot() {
-  const app = createApp({ secret: 's', rcWebhookSecret: 'rc' });
+  const app = createApp({ secret: 's', rcWebhookSecret: 'rc', adminToken: 'adm' });
   await new Promise((r) => app.server.listen(0, r));
   const base = `http://127.0.0.1:${app.server.address().port}`;
   const call = (path, init = {}, token) => fetch(base + path, { ...init, headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}), ...(init.headers ?? {}) } }).then(async (r) => ({ status: r.status, body: await r.json() }));
@@ -71,5 +71,54 @@ test('RevenueCat webhook needs the secret and grants are claimable exactly once'
   const g2 = await t.call('/v1/grants', {}, token);
   assert.equal(g2.body.grants.length, 2);
   assert.ok(g2.body.entitlements.some((e) => e.product_id === 'ss_vip' && e.kind === 'subscription'));
+  await t.close();
+});
+
+test('delete my data wipes every table for that user and invalidates the token', async () => {
+  const t = await boot();
+  const { body: { token, userId } } = await t.call('/v1/auth/anon', { method: 'POST', body: JSON.stringify({ deviceId: 'device-dddd-4444' }) });
+  await t.call('/v1/save', { method: 'PUT', body: JSON.stringify({ json: '{"cash":1}', playSeconds: 100, lifetime: 5 }) }, token);
+  await t.call('/v1/events', { method: 'POST', body: JSON.stringify({ platform: 'web', events: [{ event: 'session_start', at: Date.now() }] }) }, token);
+  await t.call('/v1/leaderboard', { method: 'POST', body: JSON.stringify({ score: 5, name: 'Me' }) }, token);
+  assert.equal((await t.call('/v1/me', { method: 'DELETE' }, token)).status, 200);
+  for (const table of ['users', 'saves', 'events', 'scores', 'grants']) {
+    const col = table === 'users' ? 'id' : 'user_id';
+    assert.equal(t.app.db.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE ${col} = ?`).get(userId).n, 0, table);
+  }
+  assert.equal((await t.call('/v1/save', {}, token)).status, 401);
+  // the same device signs in again as a fresh user
+  const again = await t.call('/v1/auth/anon', { method: 'POST', body: JSON.stringify({ deviceId: 'device-dddd-4444' }) });
+  assert.equal(again.status, 200);
+  assert.notEqual(again.body.userId, userId);
+  await t.close();
+});
+
+test('admin stats: gated by SS_ADMIN_TOKEN, computes retention and conversion', async () => {
+  const t = await boot();
+  const DAY = 86_400_000;
+  const now = Date.now();
+  const users = [];
+  for (const d of ['device-eeee-0001', 'device-eeee-0002', 'device-eeee-0003']) users.push((await t.call('/v1/auth/anon', { method: 'POST', body: JSON.stringify({ deviceId: d }) })).body);
+  // user 0 comes back on day 1 and day 7 and watches two rewarded ads; user 1 only installs; user 2 comes back day 1 only
+  const post = (u, events) => t.call('/v1/events', { method: 'POST', body: JSON.stringify({ platform: 'ios', events }) }, u.token);
+  await post(users[0], [{ event: 'session_start', at: now }, { event: 'session_start', at: now + DAY }, { event: 'ad_rewarded', at: now + DAY }, { event: 'ad_rewarded', at: now + DAY + 1 }, { event: 'session_start', at: now + 7 * DAY }]);
+  await post(users[1], [{ event: 'session_start', at: now }]);
+  await post(users[2], [{ event: 'session_start', at: now }, { event: 'iap_purchase', props: { productId: 'ss_starter' }, at: now + DAY }]);
+  assert.equal((await t.call('/v1/admin/stats')).status, 404);
+  assert.equal((await t.call('/v1/admin/stats', {}, 'wrong')).status, 404);
+  const live = await t.call('/v1/admin/stats?days=7', {}, 'adm');
+  assert.equal(live.status, 200);
+  assert.equal(live.body.installs, 3);
+  assert.equal(live.body.d1.eligible, 0); // nobody is two days old yet
+  const s = computeStats(t.app.db, 14, now + 9 * DAY);
+  assert.equal(s.installs, 3);
+  assert.deepEqual([s.d1.eligible, s.d1.retained], [3, 2]);
+  assert.deepEqual([s.d7.eligible, s.d7.retained], [3, 1]);
+  assert.deepEqual([s.starter.eligible, s.starter.converted], [3, 1]);
+  const day1 = s.daily.find((d) => d.day === new Date(now + DAY).toISOString().slice(0, 10));
+  assert.equal(day1.dau, 2);
+  assert.equal(day1.rewarded, 2);
+  assert.equal(day1.rewardedPerDau, 1);
+  assert.equal(s.platforms.ios, 3);
   await t.close();
 });

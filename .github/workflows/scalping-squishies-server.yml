@@ -1,0 +1,50 @@
+# Scalping Squishies API: runs the server tests on every change to server/,
+# and deploys to Fly.io when FLY_API_TOKEN is set. Optional secrets used on
+# deploy: SS_SECRET, SS_RC_WEBHOOK_SECRET, SS_ADMIN_TOKEN (set once as Fly
+# secrets; the script only sets them when the GitHub secret is present).
+name: Scalping Squishies API
+
+on:
+  push:
+    branches: [main, claude/scalp-street-idle-game]
+    paths: ['scalping-squishies/server/**', 'scalping-squishies/fly.toml', '.github/workflows/scalping-squishies-server.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: ss-api
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: scalping-squishies
+
+jobs:
+  deploy:
+    name: Test and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run test:server
+      - name: Is a Fly token configured?
+        id: gate
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          if [ -z "$FLY_API_TOKEN" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::FLY_API_TOKEN is not set. Server tests passed; deploy skipped. See docs/ci.md."
+          fi
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+        if: steps.gate.outputs.skip != 'true'
+      - name: Deploy
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          SS_SECRET: ${{ secrets.SS_SECRET }}
+          SS_RC_WEBHOOK_SECRET: ${{ secrets.SS_RC_WEBHOOK_SECRET }}
+          SS_ADMIN_TOKEN: ${{ secrets.SS_ADMIN_TOKEN }}
+        run: bash server/deploy.sh
