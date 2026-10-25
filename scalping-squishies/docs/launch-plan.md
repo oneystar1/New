@@ -56,8 +56,19 @@ Start the Apple one today; approval can take several days.
 - [ ] RevenueCat project, iOS app, entitlements `noads`, `vip`, `pass`,
       webhook pointed at the deployed backend.
 - [ ] AdMob account, app id, one rewarded and one interstitial unit.
-- [ ] Name check: search the App Store, USPTO TESS, and Google for
-      "Scalping Squishies" before paying for anything with the name on it.
+- [x] Name check (done 2026-10-25). No app or game named "Scalping
+      Squishies" exists. But **SQUISHIES** alone is a live US registration
+      (Reg. 5662213, Jan 2019, serial 87442573) in Class 9 "game software;
+      computer game software for mobile phones", owned by Bilal Chbib of
+      Brainseed Factory, the studio behind the "Squishies" VR puzzle game
+      on Steam. Same class, same dominant word. Unregistered "Squishies"
+      is also generic for the toys, which helps, but a trademark attorney
+      should give an opinion before the name goes on an App Store listing
+      ($300 to $600 for a clearance opinion). Fallbacks that keep the joke
+      and avoid the word: "Scalp Street", "Squish Flip", "Scalping Squish".
+- [ ] **you** Decide on the name after that opinion. Everything in the
+      repo reads the name from `capacitor.config.ts`, `index.html`,
+      `manifest.webmanifest`, `Splash.tsx` and the fastlane `app_name`.
 
 ## Phase 2: first device build (no Mac needed, you + me)
 
