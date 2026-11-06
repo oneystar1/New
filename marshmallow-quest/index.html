@@ -1,0 +1,574 @@
+<title>Marshmallow Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<style>
+/* Layout: one-screen arcade cabinet. A 256x224 SNES-size canvas scaled with crisp pixels,
+   centered on a dark cabinet background, touch pad under it on phones. Single dark look. */
+:root{
+  --bg:#17111c; --panel:#241a2c; --line:#4a3756; --fg:#f6ecdc; --muted:#b9a5c6;
+  --accent:#ffb347; --fire:#ff5a2b; --mallow:#fff6e8;
+  --font-pixel:"Press Start 2P", "Courier New", monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-pixel);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:8px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:8px;overflow:hidden}
+#wrap{flex:1 1 auto;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges;background:#000;max-width:100%;max-height:100%;
+  border:4px solid var(--line);box-shadow:0 0 0 2px #000,0 12px 40px #000c;touch-action:none}
+#top{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.6}
+#top b{color:var(--accent);font-weight:normal}
+#pad{display:none;width:100%;max-width:420px;justify-content:space-between;align-items:center;gap:12px;padding-bottom:env(safe-area-inset-bottom,0px)}
+body.touch #pad{display:flex}
+body.touch #top{display:none}
+.dpad{position:relative;width:132px;height:132px}
+.dpad button,.btns button{position:absolute;background:var(--panel);border:3px solid var(--line);color:var(--fg);
+  font-family:var(--font-pixel);font-size:12px;border-radius:8px;width:44px;height:44px;touch-action:none;user-select:none;-webkit-user-select:none}
+.dpad button:active,.btns button:active,.dpad button.on,.btns button.on{background:var(--line)}
+.dpad .u{left:44px;top:0}.dpad .d{left:44px;top:88px}.dpad .l{left:0;top:44px}.dpad .r{left:88px;top:44px}
+.btns{position:relative;width:132px;height:132px}
+.btns button{width:56px;height:56px;border-radius:50%}
+.btns .b{left:0;top:66px;border-color:#5a7fc6}.btns .a{left:70px;top:22px;border-color:var(--fire)}
+.btns .s{left:30px;top:100px;width:70px;height:28px;border-radius:14px;font-size:8px}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+<div id="top">Arrows/WASD move &nbsp;·&nbsp; <b>Z</b> or <b>J</b> sword &nbsp;·&nbsp; <b>X</b> or <b>K</b> spear &nbsp;·&nbsp; <b>Enter</b> start/pause &nbsp;·&nbsp; <b>M</b> mute</div>
+<div id="wrap"><canvas id="c" width="256" height="224" aria-label="Marshmallow Quest game screen"></canvas></div>
+<div id="pad">
+  <div class="dpad"><button class="u" data-k="up" aria-label="Up">▲</button><button class="l" data-k="left" aria-label="Left">◀</button><button class="r" data-k="right" aria-label="Right">▶</button><button class="d" data-k="down" aria-label="Down">▼</button></div>
+  <div class="btns"><button class="b" data-k="b" aria-label="Spear">B</button><button class="a" data-k="a" aria-label="Sword">A</button><button class="s" data-k="start" aria-label="Start">START</button></div>
+</div>
+<script>
+// ===================== MARSHMALLOW QUEST =====================
+// A 16-bit top-down adventure. You are Puff, a marshmallow. Your buddies were
+// carried off to Ember Keep by the fire monsters. Get too close to fire and you
+// toast; toast all the way and you melt. Find the Fire Spear to put flames out.
+'use strict';
+const W=256,H=224,T=16;
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+ctx.imageSmoothingEnabled=false;
+
+// ---------- input ----------
+const keys={up:0,down:0,left:0,right:0,a:0,b:0,start:0,mute:0};
+const pressed={};
+const KEYMAP={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',
+  KeyZ:'a',KeyJ:'a',Space:'a',KeyX:'b',KeyK:'b',ShiftLeft:'b',Enter:'start',Escape:'start',KeyM:'mute'};
+addEventListener('keydown',e=>{const k=KEYMAP[e.code];if(!k)return;e.preventDefault();if(!keys[k])pressed[k]=1;keys[k]=1;audio.unlock();});
+addEventListener('keyup',e=>{const k=KEYMAP[e.code];if(!k)return;e.preventDefault();keys[k]=0;});
+function justPressed(k){const v=pressed[k];pressed[k]=0;return !!v;}
+// touch pad
+const pad=document.getElementById('pad');
+function bindBtn(btn){const k=btn.dataset.k;
+  const on=e=>{e.preventDefault();btn.classList.add('on');if(!keys[k])pressed[k]=1;keys[k]=1;audio.unlock();};
+  const off=e=>{e.preventDefault();btn.classList.remove('on');keys[k]=0;};
+  btn.addEventListener('pointerdown',on);btn.addEventListener('pointerup',off);btn.addEventListener('pointercancel',off);btn.addEventListener('pointerleave',off);
+  btn.addEventListener('contextmenu',e=>e.preventDefault());}
+pad.querySelectorAll('button').forEach(bindBtn);
+addEventListener('touchstart',()=>document.body.classList.add('touch'),{once:true,passive:true});
+if(matchMedia('(pointer:coarse)').matches)document.body.classList.add('touch');
+
+// ---------- audio (tiny chiptune synth) ----------
+const audio={ctx:null,muted:false,unlock(){if(!this.ctx){try{this.ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}
+  if(this.ctx&&this.ctx.state==='suspended')this.ctx.resume();},
+  tone(f,d,type='square',vol=0.08,slide=0){if(!this.ctx||this.muted)return;const t=this.ctx.currentTime;const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+    o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(20,f+slide),t+d);
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+d);o.connect(g);g.connect(this.ctx.destination);o.start(t);o.stop(t+d);},
+  sfx(n){switch(n){
+    case 'sword':this.tone(900,0.08,'square',0.05,-500);break;
+    case 'spear':this.tone(300,0.18,'sawtooth',0.05,900);break;
+    case 'hit':this.tone(200,0.1,'square',0.07,-120);break;
+    case 'hurt':this.tone(140,0.25,'sawtooth',0.08,-90);break;
+    case 'douse':this.tone(1200,0.3,'triangle',0.07,-900);setTimeout(()=>this.tone(500,0.2,'sine',0.05,-300),80);break;
+    case 'item':[523,659,784,1046].forEach((f,i)=>setTimeout(()=>this.tone(f,0.15,'square',0.06),i*90));break;
+    case 'free':[784,988,1175,1568,1175,1568].forEach((f,i)=>setTimeout(()=>this.tone(f,0.14,'triangle',0.07),i*80));break;
+    case 'glaze':this.tone(660,0.12,'sine',0.06,400);break;
+    case 'door':this.tone(220,0.15,'triangle',0.06,-100);break;
+    case 'text':this.tone(1500,0.02,'square',0.02);break;
+    case 'melt':[400,330,260,180,120].forEach((f,i)=>setTimeout(()=>this.tone(f,0.3,'sawtooth',0.06,-40),i*160));break;
+    case 'boss':this.tone(90,0.4,'sawtooth',0.1,-40);break;
+    case 'win':[523,659,784,1046,784,1046,1318].forEach((f,i)=>setTimeout(()=>this.tone(f,0.2,'square',0.06),i*120));break;
+  }}
+};
+
+// ---------- pixel art helpers ----------
+const PAL={'.':null,'K':'#1c1018','W':'#fff6e8','w':'#e9d6c4','g':'#c99a5a','b':'#8a5a2a','d':'#4a2a14',
+  'R':'#ff3b1f','O':'#ff8c1a','Y':'#ffd23f','y':'#fff3a0','P':'#ff5aa5','p':'#ffb6d9','B':'#4f7fe6','L':'#9cc8ff',
+  'G':'#3fa34d','E':'#246b2e','S':'#8c8ca0','s':'#55556a','H':'#c76b3a','T':'#2a1a14','I':'#9fe9ff','i':'#e6fbff','M':'#d6b45a','m':'#f0d58a'};
+function spr(rows,pal=PAL){const h=rows.length,w=rows[0].length;const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
+  for(let j=0;j<h;j++)for(let i=0;i<w;i++){const col=pal[rows[j][i]];if(col){x.fillStyle=col;x.fillRect(i,j,1,1);}}return c;}
+function flipX(c){const o=document.createElement('canvas');o.width=c.width;o.height=c.height;const x=o.getContext('2d');x.translate(c.width,0);x.scale(-1,1);x.drawImage(c,0,0);return o;}
+
+// Ember: small flame monster, two flicker frames
+const EMBER=[spr([
+'......RR........','.....RROR.......','....RROOR.......','...RROOYOR......','..RROOYYOOR.....','..ROOYYYYOR.....','.RROYYyYYOOR....','.ROOYKYYKYOR....',
+'.ROOYyYYyYOR....','.ROOYYKKYYOR....','..ROOYYYYOOR....','..RROOOOOORR....','...RRRRRRRR.....','....RR..RR......','................','................']),
+spr(['.......R........','......RR........','.....RROR.......','....RROOR...R...','...RROOYOR.RR...','..RROOYYOORR....','..ROOYYYYOR.....','.RROYKYYKYOR....',
+'.ROOYyYYyYOR....','.ROOYYKKYYOR....','.ROOOYYYYOOR....','..RROOOOOORR....','...RRRRRRRR.....','....RR..RR......','................','................'])];
+// Torch Knight: armored fire soldier
+const KNIGHT=[spr([
+'......RO........','.....ROYR.......','....ROYYOR......','....sSSSSs......','...sSSSSSSs.....','...sSKSSKSs.....','...sSSSSSSs.....','....ssSSss......',
+'..ssSSSSSSss....','.sSSsSSSSsSSs...','.sSSsSSSSsSSs...','.ss.sSSSSs.ss...','....sSSSSs......','....ss..ss......','...sss..sss.....','................']),
+spr(['......OR........','.....ROYR.......','....RYOOR.......','....sSSSSs......','...sSSSSSSs.....','...sSKSSKSs.....','...sSSSSSSs.....','....ssSSss......',
+'..ssSSSSSSss....','.sSSsSSSSsSSs...','.sSSsSSSSsSSs...','.ss.sSSSSs.ss...','....sSSSSs......','...ss....ss.....','..sss....sss....','................'])];
+// Pyre Lord boss 32x32
+const BOSS=[spr([
+'..............RR................','............RRROR...............','..........RRROOOOR.....R........','.........RROOOYOOR....RR........','........RROOYYYYOOR..RRR........',
+'.......RROOYYYYYYOOR.RR.........','......RROOYYYYYYYYOORR..........','......ROOYYYYYYYYYYOOR..........','.....RROOYYYKKYYKKYYOR..........','.....ROOOYYYKKYYKKYYOOR.........',
+'.....ROOOYYYYYYYYYYYOOR.........','.....ROOOYYYYKKKKYYYOOR.........','.....RROOYYYKYYYYKYYOR..........','......ROOOYYYYYYYYOOOR..........','......RROOOYYYYYYOOORR..........',
+'.......RROOOOOOOOOORR...........','........RRROOOOOORRR............','..........RRRRRRRR..............','.......sSSSSSSSSSSSSs...........','......sSSSSsSSSSsSSSSs..........',
+'.....sSSSSSsSSSSsSSSSSs.........','.....sSSSSSSSSSSSSSSSSs.........','.....sSSSsSSSSSSSSsSSSs.........','.....sSSSsSSSSSSSSsSSSs.........','......ssssSSSSSSSSssss..........',
+'.........sSSSSSSSSs.............','.........sSSSsSSSSs.............','.........sSSSsSSSSs.............','.........sSSSsSSSSs.............','........sSSSSsSSSSSs............',
+'........ssssssssssss............','................................']),
+spr([
+'...............R................','.............RROR...............','...........RRROOOR....R.........','..........RROOOYOOR..RR.........','.........RROOYYYYOOR.RR.........',
+'.......RRROOYYYYYYOORR..........','......RROOYYYYYYYYOOR...........','......ROOYYYYYYYYYYOOR..........','.....RROOYYYKKYYKKYYOR..........','.....ROOOYYYKKYYKKYYOOR.........',
+'.....ROOOYYYYYYYYYYYOOR.........','.....ROOOYYYYKKKKYYYOOR.........','.....RROOYYYKYYYYKYYOR..........','......ROOOYYYYYYYYOOOR..........','......RROOOYYYYYYOOORR..........',
+'.......RROOOOOOOOOORR...........','........RRROOOOOORRR............','..........RRRRRRRR..............','.......sSSSSSSSSSSSSs...........','......sSSSSsSSSSsSSSSs..........',
+'.....sSSSSSsSSSSsSSSSSs.........','.....sSSSSSSSSSSSSSSSSs.........','.....sSSSsSSSSSSSSsSSSs.........','.....sSSSsSSSSSSSSsSSSs.........','......ssssSSSSSSSSssss..........',
+'.........sSSSSSSSSs.............','.........sSSSsSSSSs.............','.........sSSSsSSSSs.............','.........sSSSsSSSSs.............','........sSSSSsSSSSSs............',
+'........ssssssssssss............','................................'])];
+const CHEST=spr(['................','..dddddddddddd..','.dbbbbbbbbbbbbd.','.dbggggggggggbd.','.dbbbbbbbbbbbbd.','.dddddddddddddd.','.dbbbbbbMMbbbbd.','.dbbbbbbMMbbbbd.',
+'.dbbbbbbbbbbbbd.','.dbbbbbbbbbbbbd.','.dddddddddddddd.','................','................','................','................','................']);
+const CHEST_OPEN=spr(['................','................','................','................','.dddddddddddddd.','.dKKKKKKKKKKKKd.','.dKKKKKKMMKKKKd.','.dbbbbbbMMbbbbd.',
+'.dbbbbbbbbbbbbd.','.dbbbbbbbbbbbbd.','.dddddddddddddd.','................','................','................','................','................']);
+const SWORD_ICON=spr(['.......I........','......IiI.......','......IiI.......','......IiI.......','......IiI.......','......IiI.......','......IiI.......','....bbIiIbb.....','......bbb.......','......gbg.......','......gbg.......','......gbg.......','.......M........','................','................','................']);
+const SPEAR_ICON=spr(['.......B........','......BLB.......','......BLB.......','.....BLIB.......','......BLB.......','......ISI.......','......gbg.......','......gbg.......','......gbg.......','......gbg.......','......gbg.......','......gbg.......','......gbg.......','......gbg.......','.......M........','................']);
+const JAR=spr(['................','................','.....PPPPPP.....','....PppppppP....','....PPPPPPPP....','.....WWWWWW.....','....WpWWWWpW....','....WWWpWWWW....','....WWWWWWWW....','....WWpWWWpW....','.....WWWWWW.....','................','................','................','................','................']);
+const HEART=spr(['.RR.RR.','RRRRRRR','RRRRRRR','.RRRRR.','..RRR..','...R...']);
+const CAGE_WOOD=spr(['.dddddddddddddd.','.d..d..d..d..d..','.d..d..d..d..d..','.d..d..d..d..d..','.dddddddddddddd.','.d..d..d..d..d..','.d..d..d..d..d..','.d..d..d..d..d..',
+'.dddddddddddddd.','.d..d..d..d..d..','.d..d..d..d..d..','.d..d..d..d..d..','.dddddddddddddd.','.d..d..d..d..d..','.d..d..d..d..d..','.dddddddddddddd.']);
+const FIREBALL=spr(['..RR..','.ROOR.','ROYYOR','ROYYOR','.ROOR.','..RR..']);
+const SIGN=spr(['................','..dddddddddddd..','.dggggggggggggd.','.dgbbgbbbgbbggd.','.dggggggggggggd.','.dgbbbgbbgbbggd.','.dggggggggggggd.','..dddddddddddd..','.......dd.......','.......dd.......','.......dd.......','.......dd.......','................','................','................','................']);
+
+// Marshmallow body drawn procedurally so it can toast from white to brown to char.
+function toastColor(t){ // t 0..1
+  const stops=[[255,246,232],[255,228,190],[222,170,90],[140,80,30],[40,22,18]];
+  const s=Math.min(3.999,t*4),i=Math.floor(s),f=s-i;const a=stops[i],b=stops[i+1];
+  return `rgb(${a[0]+(b[0]-a[0])*f|0},${a[1]+(b[1]-a[1])*f|0},${a[2]+(b[2]-a[2])*f|0})`;}
+function shade(c,k){const m=c.match(/\d+/g).map(Number);return `rgb(${m[0]*k|0},${m[1]*k|0},${m[2]*k|0})`;}
+// dir: 0 down,1 up,2 left,3 right. frame: walk phase. mood: 'ok','sad','happy'
+function drawMallow(x,y,dir,frame,toast,mood='ok',scale=1){
+  const col=toastColor(toast),dark=shade(col,0.78),light=shade(col,1.0);
+  const bob=frame%2?1:0;x=Math.round(x);y=Math.round(y)+bob;
+  ctx.fillStyle='#0004';ctx.fillRect(x+3,y+14,10,2);
+  // body: rounded cylinder 12x12
+  ctx.fillStyle=dark;ctx.fillRect(x+2,y+4,12,10);ctx.fillRect(x+3,y+3,10,12);
+  ctx.fillStyle=col;ctx.fillRect(x+3,y+4,10,9);ctx.fillRect(x+4,y+3,8,1);
+  ctx.fillStyle='#ffffff55';ctx.fillRect(x+4,y+4,2,1);ctx.fillRect(x+4,y+5,1,2);
+  // feet
+  ctx.fillStyle=dark;const f=frame%2?1:-1;ctx.fillRect(x+4+(frame?f:0),y+14,3,1);ctx.fillRect(x+9-(frame?f:0),y+14,3,1);
+  // face
+  ctx.fillStyle='#1c1018';
+  if(dir===0){ctx.fillRect(x+5,y+7,2,2);ctx.fillRect(x+9,y+7,2,2);
+    if(mood==='happy'){ctx.fillRect(x+6,y+10,4,1);ctx.fillRect(x+5,y+9,1,1);ctx.fillRect(x+10,y+9,1,1);}
+    else if(mood==='sad'){ctx.fillRect(x+6,y+11,4,1);ctx.fillRect(x+5,y+12,1,1);ctx.fillRect(x+10,y+12,1,1);}
+    else ctx.fillRect(x+7,y+10,2,1);
+    ctx.fillStyle='#ff9bb0aa';ctx.fillRect(x+4,y+9,1,1);ctx.fillRect(x+11,y+9,1,1);}
+  else if(dir===2){ctx.fillRect(x+4,y+7,2,2);ctx.fillRect(x+4,y+10,2,1);}
+  else if(dir===3){ctx.fillRect(x+10,y+7,2,2);ctx.fillRect(x+10,y+10,2,1);}
+  // dir 1 (up): back of head, no face
+}
+// Donut house: 48x48 ring-shaped house with frosting roof and a door in the hole.
+function drawDonutHouse(x,y,style){
+  const glaze=['#ff7fb0','#8ad7ff','#ffd36b'][style],ring='#d9a257',ringD='#a8713a',sprin=['#fff','#ff3b1f','#3fa34d','#4f7fe6','#ffd23f'];
+  x=Math.round(x);y=Math.round(y);
+  ctx.fillStyle='#0005';ctx.fillRect(x+2,y+50,44,4);
+  // ring body
+  ctx.fillStyle=ringD;ctx.beginPath();ctx.ellipse(x+24,y+31,24,22,0,0,7);ctx.fill();
+  ctx.fillStyle=ring;ctx.beginPath();ctx.ellipse(x+24,y+27,23,20,0,0,7);ctx.fill();
+  // frosting
+  ctx.fillStyle=glaze;ctx.beginPath();ctx.ellipse(x+24,y+21,21,14,0,0,7);ctx.fill();
+  ctx.fillStyle=glaze;for(let i=0;i<9;i++)ctx.fillRect(x+4+i*5,y+30+(i%2)*3,4,4);
+  // sprinkles
+  const rnd=seeded(style*7+1);for(let i=0;i<14;i++){ctx.fillStyle=sprin[i%5];const a=rnd()*6.28,r=rnd()*10+3;ctx.fillRect(x+24+Math.cos(a)*r*1.6|0,y+18+Math.sin(a)*r|0,3,1);}
+  // hole = door
+  ctx.fillStyle='#2a1a14';ctx.fillRect(x+19,y+28,10,24);ctx.fillStyle='#1c1018';ctx.fillRect(x+20,y+31,8,21);
+  ctx.fillStyle='#ffd23f';ctx.fillRect(x+26,y+39,1,1);
+  // windows
+  ctx.fillStyle='#fff3a0';ctx.fillRect(x+8,y+26,5,5);ctx.fillRect(x+35,y+26,5,5);ctx.fillStyle='#8a5a2a';ctx.fillRect(x+10,y+26,1,5);ctx.fillRect(x+37,y+26,1,5);
+  // chimney puff
+  ctx.fillStyle='#8a5a2a';ctx.fillRect(x+33,y+6,4,8);ctx.fillStyle='#ffffff88';ctx.fillRect(x+32,y+3,6,3);
+}
+function seeded(s){return()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;};}
+
+// ---------- tiles ----------
+const SOLID=new Set(['t','~','r','#','L','H','D','@']);
+const tileCache={};
+function tile(ch,frame){const key=ch+frame;if(tileCache[key])return tileCache[key];
+  const c=document.createElement('canvas');c.width=T;c.height=T;const x=c.getContext('2d');const rnd=seeded(ch.charCodeAt(0)*31+7);
+  const px=(col,i,j,w=1,h=1)=>{x.fillStyle=col;x.fillRect(i,j,w,h);};
+  switch(ch){
+    case '.':case 'f':px('#5cb85a',0,0,16,16);for(let i=0;i<7;i++)px('#4ea04f',rnd()*16|0,rnd()*16|0,2,1);
+      if(ch==='f'){px('#ff5aa5',3,4,2,2);px('#ffd23f',10,9,2,2);px('#fff',12,3,2,2);px('#246b2e',4,6,1,2);px('#246b2e',11,11,1,2);}break;
+    case 't':px('#5cb85a',0,0,16,16);px('#1d5a26',1,2,14,12);px('#246b2e',2,1,12,13);px('#3fa34d',3,2,10,9);px('#5fcf6a',4,3,4,3);px('#5fcf6a',9,5,2,2);px('#4a2a14',6,12,4,4);px('#2a1a14',6,14,4,2);break;
+    case '~':px(frame?'#2f6fd8':'#3a7ce6',0,0,16,16);px('#9cc8ff',2+(frame?4:0),3,4,1);px('#9cc8ff',9-(frame?3:0),10,4,1);px('#5f9fff',5,7,3,1);break;
+    case 'p':px('#d8b676',0,0,16,16);for(let i=0;i<5;i++)px('#c6a060',rnd()*16|0,rnd()*16|0,2,1);px('#e8cc90',3,3,2,1);break;
+    case 'r':px('#7d7d94',0,0,16,16);px('#9a9ab0',1,1,14,13);px('#b4b4c8',2,2,12,4);px('#6a6a80',0,13,16,3);px('#8c8ca0',4,7,3,3);px('#6a6a80',10,5,3,2);break;
+    case '#':px('#55556a',0,0,16,16);for(let j=0;j<4;j++)for(let i=0;i<2;i++){const off=(j%2)*8;px('#8c8ca0',(i*16+off+1)%16,j*4+1,6,2);}px('#3a3a4c',0,15,16,1);break;
+    case '_':px('#8c8ca0',0,0,16,16);px('#9a9ab0',1,1,14,14);px('#7d7d94',8,0,1,16);px('#7d7d94',0,8,16,1);break;
+    case 'c':px('#9a1f2a',0,0,16,16);px('#b8303c',2,2,12,12);px('#ffd23f',7,7,2,2);break;
+    case 'L':px(frame?'#ff5a1f':'#ff7a1f',0,0,16,16);px('#ffd23f',2+(frame?5:0),4,4,2);px('#ffd23f',9-(frame?4:0),11,3,2);px('#c42b0f',6,8,3,1);px('#c42b0f',12,2,2,2);break;
+    case 'x':px('#4a3c52',0,0,16,16);for(let i=0;i<6;i++)px('#403346',rnd()*16|0,rnd()*16|0,2,1);break;
+    case 'D':px('#120c16',0,0,16,16);break;
+    case 'H':px('#d9a257',0,0,16,16);px('#c48f48',0,0,16,2);px('#ff7fb0',0,2,16,3);px('#ff7fb0',3,5,2,2);px('#ff7fb0',10,5,3,2);px('#a8713a',0,15,16,1);break;
+    case 'w':px('#c98b4a',0,0,16,16);px('#b67a3e',0,7,16,1);px('#b67a3e',0,15,16,1);px('#d9a257',3,2,10,1);break;
+    case '@':px('#c98b4a',0,0,16,16);px('#8a5a2a',2,2,12,12);px('#d9a257',3,3,10,10);px('#ff7fb0',6,6,4,4);break; // table
+    case 'S':px('#c98b4a',0,0,16,16);px('#8a5a2a',3,10,10,4);px('#d9a257',4,4,8,6);break; // stool/decor
+    case 'g':px('#8c8ca0',0,0,16,16);px('#9a9ab0',1,1,14,14);px('#ffd23f',3,3,10,10);px('#d6b45a',5,5,6,6);break; // gold tile
+    default:px('#ff00ff',0,0,16,16);
+  }
+  tileCache[key]=c;return c;}
+
+// ---------- map building ----------
+function newMap(w,h,fill){return{w,h,t:Array.from({length:h},()=>Array(w).fill(fill)),objs:[],enemies:[],style:0};}
+function rect(m,x,y,w,h,ch){for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++)if(i>=0&&j>=0&&i<m.w&&j<m.h)m.t[j][i]=ch;}
+function scatter(m,x,y,w,h,ch,n,rnd){for(let k=0;k<n;k++){const i=x+(rnd()*w|0),j=y+(rnd()*h|0);if(m.t[j][i]==='.')m.t[j][i]=ch;}}
+function house(m,x,y,style,to){rect(m,x,y,3,3,'H');m.t[y+2][x+1]='p';m.objs.push({type:'house',x:x*T-8,y:y*T-8,style});m.objs.push({type:'warp',x:x+1,y:y+2,to,tx:5,ty:7,dir:1});}
+
+const MAPS={};
+// ---- Overworld 48x56: Donut Village south, Toasty Woods middle, Cinder Cave east, Ember Keep north ----
+{const m=newMap(48,56,'.');m.name='Sugarfield';m.wall='t';const rnd=seeded(42);
+  rect(m,0,0,48,56,'t');rect(m,2,2,44,52,'.');
+  // village: path grid
+  rect(m,4,50,40,2,'p');rect(m,23,8,2,46,'p');
+  scatter(m,2,40,44,13,'f',40,rnd);
+  house(m,8,45,0,'house0');house(m,19,45,1,'house1');house(m,33,45,2,'house2');
+  m.objs.push({type:'sign',x:14,y:51,text:"DONUT VILLAGE. Pop. 12 marshmallows... now 7.|The Elder lives in the pink donut."});
+  m.objs.push({type:'sign',x:25,y:40,text:"NORTH: Toasty Woods, then Ember Keep.|Fire monsters ahead! Stay cool, stay white."});
+  // woods: tree clusters with clearings
+  const clusters=[[3,22,9,6],[14,16,7,5],[30,14,8,6],[36,24,8,5],[5,30,10,5],[28,30,8,6],[14,34,6,4],[33,36,8,4],[8,10,8,5],[38,2,8,6],[2,2,10,6]];
+  for(const c of clusters)rect(m,c[0],c[1],c[2],c[3],'t');
+  rect(m,10,25,4,3,'.');
+  scatter(m,2,8,44,30,'t',60,rnd);scatter(m,2,8,44,30,'f',25,rnd);
+  rect(m,22,8,4,46,'p');rect(m,23,8,2,46,'p');
+  // pond
+  rect(m,8,36,7,4,'~');rect(m,7,37,9,2,'~');
+  // east path to cave
+  rect(m,25,20,19,2,'p');rect(m,38,12,8,8,'r');rect(m,40,14,4,4,'x');rect(m,41,18,2,2,'p');rect(m,42,20,1,1,'p');
+  m.t[14][41]='x';m.t[15][41]='x';m.t[16][41]='x';m.t[17][41]='x';m.t[18][41]='x';m.t[18][42]='x';m.t[19][41]='r';m.t[19][42]='x';
+  m.objs.push({type:'warp',x:42,y:19,to:'cave',tx:2,ty:14,dir:3,w:1,h:1});
+  m.objs.push({type:'sign',x:36,y:21,text:"CINDER CAVE. Something cold burns inside.|Legend says the FIRE SPEAR sleeps here."});
+  // forest buddy cage
+  rect(m,32,27,5,3,'.');m.objs.push({type:'buddy',id:'fluff',x:34,y:28,cage:'wood',name:'Fluff'});
+  rect(m,30,29,1,2,'p');rect(m,26,20,1,1,'p');
+  // clear a walkway to the cage from the east path
+  rect(m,34,22,2,6,'p');
+  // glaze jars
+  m.objs.push({type:'jar',x:11,y:26});m.objs.push({type:'jar',x:30,y:34});m.objs.push({type:'jar',x:20,y:12});
+  // castle front
+  rect(m,12,2,24,8,'#');rect(m,14,4,20,5,'_');rect(m,23,9,2,1,'_');rect(m,23,8,2,1,'_');
+  rect(m,10,10,28,1,'r');rect(m,22,10,4,1,'p');
+  m.objs.push({type:'firegate',id:'gate',x:23,y:9,w:2});
+  m.objs.push({type:'warp',x:23,y:7,w:2,h:1,to:'castle',tx:19,ty:29,dir:1,needs:'gate'});
+  m.objs.push({type:'sign',x:20,y:11,text:"EMBER KEEP. Home of the Pyre Lord.|The gate burns. Only the Fire Spear can douse it."});
+  m.objs.push({type:'torch',x:21,y:10});m.objs.push({type:'torch',x:26,y:10});
+  // enemies
+  [[12,18],[30,18],[20,28],[38,30],[8,34],[28,36],[16,22],[40,8],[6,12],[34,10],[26,14]].forEach(p=>m.enemies.push({kind:'ember',x:p[0],y:p[1]}));
+  m.spawn={x:24,y:52};MAPS.overworld=m;}
+// ---- Donut house interiors 12x10 ----
+function interior(name,style,npc,extra){const m=newMap(12,10,'w');m.name=name;rect(m,0,0,12,10,'H');rect(m,1,1,10,8,'w');rect(m,0,9,12,1,'D');
+  m.t[9][5]='w';m.objs.push({type:'warp',x:5,y:9,to:'overworld',tx:extra.ox,ty:extra.oy,dir:0,w:1,h:1,silent:true});
+  m.t[2][2]='@';m.t[2][9]='S';m.t[7][9]='S';m.objs.push(Object.assign({type:'npc',x:6,y:3},npc));if(extra.objs)m.objs.push(...extra.objs);m.style=style;m.interior=true;return m;}
+MAPS.house0=interior('Elder Puffington\'s Donut',0,{name:'Elder',style:0.2,
+  lines:["Puff! Thank goodness you are still white.|The fire monsters took Fluff, Mallo, Squish, Dot and Bibi to EMBER KEEP.","Take my old sword. Press A to swing it.|Fire monsters burn, so hit and back away!","Stay away from flames or you will TOAST.|Toast all the way... and you melt."],
+  gives:'sword',after:["Watch your TOAST meter, Puff.|Glaze jars and a rest at home cool you down."]},{ox:9,oy:48});
+MAPS.house1=interior('Baker Crumb\'s Donut',1,{name:'Baker',style:0.05,
+  lines:["Welcome, Puff! Have a glazed donut. It cools the soul.|...There. White as fresh snow.","Fluff was dragged into TOASTY WOODS, east of the path.|Break the wooden cage with your sword."],heal:true,after:["Come back any time you feel toasty.|Donuts cure everything."]},{ox:20,oy:48});
+MAPS.house2=interior('Granny Sprinkle\'s Donut',2,{name:'Granny',style:0.4,
+  lines:["In my day we had the FIRE SPEAR. One poke and whoosh,|a flame goes out like a birthday candle.","It was lost in CINDER CAVE to the east.|Only the spear can douse the gate of Ember Keep.","And here is the secret, dearie: a doused flame cage|turns a toasted marshmallow WHITE again."],heal:true,after:["Press B to thrust the spear once you find it.|It reaches farther than a sword, too."]},{ox:34,oy:48});
+// ---- Cinder Cave 30x18 ----
+{const m=newMap(30,18,'r');m.name='Cinder Cave';m.wall='r';
+  rect(m,1,12,8,5,'x');rect(m,8,8,4,9,'x');rect(m,11,8,8,3,'x');rect(m,17,3,4,8,'x');rect(m,20,3,8,5,'x');rect(m,20,8,3,8,'x');rect(m,22,13,6,3,'x');
+  rect(m,4,9,4,3,'x');rect(m,3,3,6,5,'x');rect(m,8,4,2,4,'x');rect(m,12,3,5,3,'x');rect(m,9,3,3,2,'x');
+  rect(m,5,13,2,2,'L');rect(m,13,9,2,1,'L');rect(m,22,4,2,2,'L');rect(m,25,6,2,2,'L');rect(m,23,14,2,1,'L');
+  m.t[14][0]='x';m.objs.push({type:'warp',x:0,y:14,to:'overworld',tx:42,ty:20,dir:0,w:1,h:1});
+  m.objs.push({type:'chest',id:'spear',x:26,y:13,item:'spear'});
+  m.objs.push({type:'buddy',id:'mallo',x:4,y:4,cage:'wood',name:'Mallo'});
+  m.objs.push({type:'jar',x:18,y:9});m.objs.push({type:'jar',x:26,y:3});
+  m.objs.push({type:'sign',x:10,y:10,text:"Lava hurts to stand near. Hug the far wall."});
+  [[6,15],[10,12],[15,9],[18,5],[24,4],[21,12],[26,15],[13,4]].forEach(p=>m.enemies.push({kind:'ember',x:p[0],y:p[1]}));
+  m.spawn={x:2,y:14};MAPS.cave=m;}
+// ---- Ember Keep 40x32 ----
+{const m=newMap(40,32,'#');m.name='Ember Keep';m.wall='#';
+  rect(m,14,22,12,9,'_');rect(m,19,22,2,9,'c');          // entry hall
+  rect(m,2,22,12,7,'_');rect(m,26,22,12,7,'_');          // side rooms (buddy cages)
+  rect(m,18,14,4,8,'_');rect(m,19,14,2,8,'c');           // corridor up
+  rect(m,6,12,28,4,'_');                                 // long gallery
+  rect(m,2,4,10,8,'_');rect(m,28,4,10,8,'_');            // upper side rooms
+  rect(m,14,2,12,12,'_');rect(m,19,2,2,12,'c');          // throne room
+  rect(m,18,14,4,1,'g');rect(m,18,13,4,1,'_');           // boss door row (locked)
+  rect(m,8,25,2,2,'L');rect(m,30,25,2,2,'L');rect(m,10,13,3,2,'L');rect(m,27,13,3,2,'L');rect(m,15,5,2,2,'L');rect(m,23,5,2,2,'L');
+  rect(m,19,31,2,1,'_');m.objs.push({type:'warp',x:19,y:31,w:2,h:1,to:'overworld',tx:23,ty:10,dir:0});
+  m.objs.push({type:'bossdoor',x:18,y:13,w:4});
+  m.objs.push({type:'buddy',id:'squish',x:5,y:25,cage:'fire',name:'Squish'});
+  m.objs.push({type:'buddy',id:'dot',x:34,y:25,cage:'fire',name:'Dot'});
+  m.objs.push({type:'buddy',id:'bibi',x:6,y:7,cage:'fire',name:'Bibi'});
+  m.objs.push({type:'buddy',id:'king',x:19,y:4,cage:'boss',name:'King Mallow',w:2});
+  m.objs.push({type:'torch',x:16,y:23,shoot:1});m.objs.push({type:'torch',x:23,y:23,shoot:1});
+  m.objs.push({type:'torch',x:8,y:12,shoot:2});m.objs.push({type:'torch',x:31,y:12,shoot:2});
+  m.objs.push({type:'torch',x:30,y:6,shoot:1});m.objs.push({type:'torch',x:35,y:9,shoot:2});
+  m.objs.push({type:'jar',x:3,y:28});m.objs.push({type:'jar',x:36,y:28});m.objs.push({type:'jar',x:33,y:5});m.objs.push({type:'jar',x:19,y:16});
+  m.objs.push({type:'sign',x:17,y:28,text:"Welcome to EMBER KEEP, soft one.|Three cages, three flames. Free them all and the throne room opens."});
+  m.objs.push({type:'sign',x:9,y:15,text:"Torch statues spit fire. Step aside, or douse them with the spear."});
+  [[6,24],[10,27],[30,24],[34,27],[12,13],[24,13],[4,6],[9,9],[32,8],[29,10],[20,19]].forEach(p=>m.enemies.push({kind:'knight',x:p[0],y:p[1]}));
+  [[16,26],[24,26],[20,14]].forEach(p=>m.enemies.push({kind:'ember',x:p[0],y:p[1]}));
+  m.enemies.push({kind:'boss',x:19,y:8});
+  m.spawn={x:19,y:29};MAPS.castle=m;}
+
+// ---------- game state ----------
+const G={scene:'title',map:null,mapName:'',cam:{x:0,y:0},t:0,frame:0,fade:0,fadeTo:null,
+  flags:{sword:false,spear:false,gate:false,bossDead:false},freed:{},opened:{},lastHome:{map:'overworld',x:24,y:52},
+  msg:null,msgQ:[],msgChar:0,msgCb:null,ents:[],fx:[],shots:[],shake:0,win:false,paused:false,deaths:0};
+const BUDDIES=['fluff','mallo','squish','dot','bibi','king'];
+function freedCount(){return BUDDIES.filter(b=>G.freed[b]).length;}
+function flagged(id){return !!(G.flags[id]||G.freed[id]||G.opened[id]);}
+
+// ---------- entities ----------
+function mkPlayer(x,y){return{type:'player',x,y,w:10,h:10,dir:0,frame:0,anim:0,toast:0,hurt:0,atk:0,atkType:null,speed:1.1,kb:{x:0,y:0},equip:'sword'};}
+function mkEnemy(e){const base={type:'enemy',kind:e.kind,x:e.x*T+3,y:e.y*T+3,w:10,h:10,vx:0,vy:0,hurt:0,think:0,dead:0,home:{x:e.x*T+3,y:e.y*T+3}};
+  if(e.kind==='ember')Object.assign(base,{hp:2,speed:0.55,heat:1.0,radius:30});
+  if(e.kind==='knight')Object.assign(base,{hp:4,speed:0.8,heat:0.8,radius:26,sword:true});
+  if(e.kind==='boss')Object.assign(base,{hp:9,speed:0.9,heat:1.6,radius:46,w:22,h:22,x:e.x*T-3,y:e.y*T+2,boss:true,phase:0,spit:0});
+  return base;}
+function loadMap(name,tx,ty,dir){const m=MAPS[name];G.map=m;G.mapName=name;G.frame=0;
+  G.ents=[];G.shots=[];G.fx=[];
+  for(const e of m.enemies){if(e.kind==='boss'&&G.flags.bossDead)continue;G.ents.push(mkEnemy(e));}
+  // solid tiles for objects
+  m.solidObj={};for(const o of m.objs){if(o.type==='buddy'&&!G.freed[o.id]){const w=o.w||1;for(let i=0;i<w;i++)m.solidObj[(o.x+i)+','+o.y]=1;}
+    if(o.type==='chest'||o.type==='sign'||o.type==='npc'||o.type==='torch')m.solidObj[o.x+','+o.y]=1;
+    if(o.type==='firegate'&&!G.flags.gate)for(let i=0;i<o.w;i++)m.solidObj[(o.x+i)+','+o.y]=1;
+    if(o.type==='bossdoor'&&freedCount()<5)for(let i=0;i<o.w;i++)m.solidObj[(o.x+i)+','+o.y]=1;}
+  P.x=tx*T+3;P.y=ty*T+3;P.dir=dir==null?P.dir:dir;P.kb.x=P.kb.y=0;P.atk=0;
+  if(m.interior){G.lastHome={map:name,x:tx,y:ty};}
+  updateCam(true);}
+const P=mkPlayer(0,0);
+
+function solidAt(px,py){const m=G.map;const i=Math.floor(px/T),j=Math.floor(py/T);if(i<0||j<0||i>=m.w||j>=m.h)return true;
+  if(SOLID.has(m.t[j][i]))return true;if(m.solidObj[i+','+j])return true;return false;}
+function hitsWall(x,y,w,h){return solidAt(x,y)||solidAt(x+w-1,y)||solidAt(x,y+h-1)||solidAt(x+w-1,y+h-1);}
+function moveEnt(e,dx,dy){let moved=false;if(dx){const nx=e.x+dx;if(!hitsWall(nx,e.y,e.w,e.h)){e.x=nx;moved=true;}}
+  if(dy){const ny=e.y+dy;if(!hitsWall(e.x,ny,e.w,e.h)){e.y=ny;moved=true;}}return moved;}
+function overlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
+function dist(a,b){const dx=(a.x+a.w/2)-(b.x+b.w/2),dy=(a.y+a.h/2)-(b.y+b.h/2);return Math.hypot(dx,dy);}
+function updateCam(snap){const m=G.map;let cx=P.x+P.w/2-W/2,cy=P.y+P.h/2-(H-24)/2;
+  cx=Math.max(0,Math.min(m.w*T-W,cx));cy=Math.max(0,Math.min(m.h*T-(H-24),cy));
+  if(m.w*T<W)cx=(m.w*T-W)/2;if(m.h*T<H-24)cy=(m.h*T-(H-24))/2;
+  if(snap){G.cam.x=cx;G.cam.y=cy;}else{G.cam.x+=(cx-G.cam.x)*0.2;G.cam.y+=(cy-G.cam.y)*0.2;}}
+function say(text,cb){const parts=Array.isArray(text)?text:[text];G.msgQ=parts.slice();G.msgCb=cb||null;nextMsg();}
+function nextMsg(){if(G.msgQ.length){G.msg=G.msgQ.shift();G.msgChar=0;}else{G.msg=null;const cb=G.msgCb;G.msgCb=null;if(cb)cb();}}
+function puff(x,y,col,n=6){for(let i=0;i<n;i++)G.fx.push({x,y,vx:(Math.random()-0.5)*1.6,vy:(Math.random()-0.9)*1.6,life:20+Math.random()*15,col});}
+
+// ---------- update: player ----------
+function attackBox(){const r=P.atkType==='spear'?26:16;const cx=P.x+P.w/2,cy=P.y+P.h/2;
+  if(P.dir===0)return{x:cx-7,y:cy+2,w:14,h:r};if(P.dir===1)return{x:cx-7,y:cy-2-r,w:14,h:r};
+  if(P.dir===2)return{x:cx-2-r,y:cy-7,w:r,h:14};return{x:cx+2,y:cy-7,w:r,h:14};}
+function facingTile(){let i=Math.floor((P.x+P.w/2)/T),j=Math.floor((P.y+P.h/2)/T);if(P.dir===0)j++;else if(P.dir===1)j--;else if(P.dir===2)i--;else i++;return{i,j};}
+function objAt(i,j,type){return G.map.objs.find(o=>(!type||o.type===type)&&i>=o.x&&i<o.x+(o.w||1)&&j>=o.y&&j<o.y+(o.h||1));}
+function interact(){const f=facingTile();const o=objAt(f.i,f.j);if(!o)return false;
+  if(o.type==='sign'){say(o.text.split('|'));return true;}
+  if(o.type==='npc'){const talked=o.talked;o.talked=true;
+    say(talked?o.after:o.lines,()=>{if(o.gives&&!G.flags[o.gives]){G.flags[o.gives]=true;audio.sfx('item');say(["Puff got the SWORD!|Press A to swing. Hit fire monsters, then back off before you toast."]);}
+      if(o.heal&&P.toast>0.05){P.toast=0;audio.sfx('glaze');puff(P.x+5,P.y+5,'#fff',10);}});return true;}
+  if(o.type==='chest'&&!G.opened[o.id]){G.opened[o.id]=true;G.flags[o.item]=true;audio.sfx('item');
+    if(o.item==='spear'){P.equip='spear';say(["Puff got the FIRE SPEAR!|Press B to thrust it. One poke puts any flame out.","Doused flames can't toast you. And a doused cage|turns a toasted buddy white again. Now, to Ember Keep!"]);}return true;}
+  return false;}
+function updatePlayer(){
+  if(P.hurt>0)P.hurt--;
+  if(P.kb.x||P.kb.y){moveEnt(P,P.kb.x,P.kb.y);P.kb.x*=0.8;P.kb.y*=0.8;if(Math.abs(P.kb.x)<0.1)P.kb.x=0;if(Math.abs(P.kb.y)<0.1)P.kb.y=0;}
+  if(P.atk>0){P.atk--;if(P.atk===0)P.atkType=null;return;}
+  let dx=0,dy=0;if(keys.left)dx=-1;else if(keys.right)dx=1;if(keys.up)dy=-1;else if(keys.down)dy=1;
+  if(dx&&dy){dx*=0.75;dy*=0.75;}
+  if(dx||dy){if(Math.abs(dx)>Math.abs(dy)||(dx&&!dy))P.dir=dx<0?2:3;else P.dir=dy<0?1:0;
+    moveEnt(P,dx*P.speed,dy*P.speed);P.anim++;if(P.anim%10===0)P.frame=(P.frame+1)%2;}else P.anim=0;
+  if(justPressed('a')){if(!interact()&&G.flags.sword){P.atk=14;P.atkType='sword';audio.sfx('sword');hitThings();}}
+  if(justPressed('b')){if(G.flags.spear){P.atk=16;P.atkType='spear';audio.sfx('spear');hitThings();}else if(!interact()&&G.flags.sword){P.atk=14;P.atkType='sword';audio.sfx('sword');hitThings();}}
+  // warps
+  const ci=Math.floor((P.x+P.w/2)/T),cj=Math.floor((P.y+P.h/2)/T);
+  for(const o of G.map.objs){if(o.type!=='warp')continue;if(o.needs&&!G.flags[o.needs])continue;
+    if(ci>=o.x&&ci<o.x+(o.w||1)&&cj>=o.y&&cj<o.y+(o.h||1)){if(!o.silent)audio.sfx('door');startFade(()=>loadMap(o.to,o.tx,o.ty,o.dir));return;}}
+  // jars
+  for(const o of G.map.objs){if(o.type==='jar'&&!o.taken&&ci===o.x&&cj===o.y){o.taken=true;P.toast=Math.max(0,P.toast-0.6);audio.sfx('glaze');puff(P.x+5,P.y+5,'#ffb6d9',8);}}
+}
+function hitThings(){const box=attackBox();const spear=P.atkType==='spear';
+  for(const e of G.ents){if(e.type!=='enemy'||e.dead||e.hurt)continue;if(!overlap(box,e)){continue;}
+    if(e.boss){if(!spear){audio.sfx('hit');puff(e.x+11,e.y+11,'#ff8c1a',4);continue;}e.hp-=1;e.hurt=30;audio.sfx('douse');puff(e.x+11,e.y+11,'#9cc8ff',10);G.shake=8;
+      if(e.hp<=0){e.dead=60;G.flags.bossDead=true;audio.sfx('win');}continue;}
+    if(spear){e.hp=0;e.dead=20;audio.sfx('douse');puff(e.x+5,e.y+5,'#9cc8ff',10);}
+    else{e.hp--;e.hurt=20;audio.sfx('hit');puff(e.x+5,e.y+5,'#ffd23f',5);const a=Math.atan2(e.y-P.y,e.x-P.x);e.vx=Math.cos(a)*3;e.vy=Math.sin(a)*3;if(e.hp<=0)e.dead=20;}}
+  // objects: cages, gate, torches, boss door
+  for(const o of G.map.objs){
+    const ob={x:o.x*T,y:o.y*T,w:(o.w||1)*T,h:T};if(!overlap(box,ob))continue;
+    if(o.type==='buddy'&&!G.freed[o.id]){
+      if(o.cage==='wood'&&!spear){o.hits=(o.hits||0)+1;audio.sfx('hit');puff(ob.x+8,ob.y+8,'#8a5a2a',5);if(o.hits>=3)freeBuddy(o);}
+      else if(o.cage==='wood'&&spear){audio.sfx('hit');puff(ob.x+8,ob.y+8,'#8a5a2a',3);}
+      else if(o.cage==='fire'){if(spear)freeBuddy(o);else{audio.sfx('hit');P.toast=Math.min(1,P.toast+0.08);}}
+      else if(o.cage==='boss'&&G.flags.bossDead&&spear)freeBuddy(o);}
+    if(o.type==='firegate'&&!G.flags.gate){if(spear){G.flags.gate=true;audio.sfx('douse');puff(ob.x+16,ob.y+8,'#9cc8ff',16);delete G.map.solidObj[o.x+','+o.y];delete G.map.solidObj[(o.x+1)+','+o.y];say(["The flames hiss and die. The gate of Ember Keep is open!"]);}else{audio.sfx('hit');P.toast=Math.min(1,P.toast+0.08);}}
+    if(o.type==='torch'&&!o.out&&spear){o.out=true;audio.sfx('douse');puff(ob.x+8,ob.y+4,'#9cc8ff',8);}
+  }}
+function freeBuddy(o){G.freed[o.id]=true;audio.sfx('free');const w=o.w||1;for(let i=0;i<w;i++)delete G.map.solidObj[(o.x+i)+','+o.y];
+  puff(o.x*T+8*w,o.y*T+8,'#fff',14);o.freedAt=G.t;
+  const n=freedCount();
+  if(o.cage==='boss'){say([`${o.name} is free! "My subjects... and my old friend Puff.|Thank you. Ember Keep is ours once more!"`],()=>{G.win=true;G.scene='win';audio.sfx('win');});return;}
+  const lines=[`${o.name} is free!|"Puff! You came! I was getting so toasty in there."`];
+  if(n===5){lines.push("A deep rumble... the throne room door slides open.|The Pyre Lord is waiting.");delete G.map.solidObj['18,13'];delete G.map.solidObj['19,13'];delete G.map.solidObj['20,13'];delete G.map.solidObj['21,13'];}
+  else lines.push(`${6-n} buddies still need rescuing.`);
+  say(lines);}
+
+// ---------- update: enemies, shots, heat ----------
+function updateEnemies(){
+  for(const e of G.ents){if(e.type!=='enemy')continue;
+    if(e.dead){e.dead--;if(e.dead<=0)e.gone=true;continue;}
+    if(e.hurt){e.hurt--;moveEnt(e,e.vx,e.vy);e.vx*=0.8;e.vy*=0.8;continue;}
+    const d=dist(e,P);
+    if(e.boss){e.phase++;const a=Math.atan2(P.y-e.y,P.x-e.x);
+      if(e.phase%180<100){moveEnt(e,Math.cos(a)*e.speed,Math.sin(a)*e.speed);}
+      else{moveEnt(e,Math.cos(a+Math.PI/2)*e.speed,Math.sin(a+Math.PI/2)*e.speed);
+        if(e.phase%30===0){for(let k=-1;k<=1;k++){const b=a+k*0.35;G.shots.push({x:e.x+8,y:e.y+8,vx:Math.cos(b)*1.6,vy:Math.sin(b)*1.6,life:120});}audio.sfx('boss');}}
+    }else{
+      e.think--;
+      if(d<90){const a=Math.atan2(P.y-e.y,P.x-e.x);e.vx=Math.cos(a)*e.speed;e.vy=Math.sin(a)*e.speed;if(e.kind==='knight'&&d<34&&e.think<0){e.think=50;}}
+      else if(e.think<0){e.think=40+Math.random()*60;const a=Math.random()*6.28;const go=Math.random()<0.7;e.vx=go?Math.cos(a)*e.speed*0.6:0;e.vy=go?Math.sin(a)*e.speed*0.6:0;}
+      if(!moveEnt(e,e.vx,e.vy)){e.vx=-e.vx;e.vy=-e.vy;}
+    }
+    // contact
+    if(overlap(e,P)&&!P.hurt){P.hurt=40;P.toast=Math.min(1,P.toast+(e.boss?0.25:0.15));audio.sfx('hurt');G.shake=5;
+      const a=Math.atan2(P.y-e.y,P.x-e.x);P.kb.x=Math.cos(a)*3.5;P.kb.y=Math.sin(a)*3.5;}
+  }
+  G.ents=G.ents.filter(e=>!e.gone);
+  // torches
+  for(const o of G.map.objs){if(o.type!=='torch'||o.out||!o.shoot)continue;
+    if(G.t%(o.shoot===1?90:130)===0&&dist({x:o.x*T,y:o.y*T,w:16,h:16},P)<140){const a=Math.atan2(P.y-o.y*T,P.x-o.x*T);G.shots.push({x:o.x*T+5,y:o.y*T+2,vx:Math.cos(a)*1.3,vy:Math.sin(a)*1.3,life:150});}}
+  // shots
+  for(const s of G.shots){s.x+=s.vx;s.y+=s.vy;s.life--;if(solidAt(s.x+3,s.y+3))s.life=0;
+    const sb={x:s.x,y:s.y,w:6,h:6};
+    if(P.atk&&P.atkType==='spear'&&overlap(attackBox(),sb)){s.life=0;puff(s.x+3,s.y+3,'#9cc8ff',4);audio.sfx('douse');continue;}
+    if(overlap(sb,P)&&!P.hurt){s.life=0;P.hurt=40;P.toast=Math.min(1,P.toast+0.12);audio.sfx('hurt');G.shake=4;}}
+  G.shots=G.shots.filter(s=>s.life>0);
+  // radiant heat: being near fire toasts you
+  let heat=0;
+  for(const e of G.ents){if(e.type!=='enemy'||e.dead)continue;const d=dist(e,P);if(d<e.radius)heat+=e.heat*(1-d/e.radius);}
+  for(const o of G.map.objs){if((o.type==='torch'&&!o.out)||(o.type==='firegate'&&!G.flags.gate)||(o.type==='buddy'&&o.cage==='fire'&&!G.freed[o.id])){
+    const d=dist({x:o.x*T,y:o.y*T,w:(o.w||1)*T,h:T},P);if(d<28)heat+=0.6*(1-d/28);}}
+  const ci=Math.floor((P.x+P.w/2)/T),cj=Math.floor((P.y+P.h/2)/T);
+  for(let j=cj-1;j<=cj+1;j++)for(let i=ci-1;i<=ci+1;i++){if(j>=0&&i>=0&&j<G.map.h&&i<G.map.w&&G.map.t[j][i]==='L')heat+=0.5;}
+  if(heat>0){P.toast=Math.min(1,P.toast+heat*0.0022);P.heating=true;}else{P.heating=false;P.toast=Math.max(0,P.toast-(G.map.interior?0.004:0.0006));}
+  if(P.toast>=1&&!P.melting){P.melting=90;audio.sfx('melt');}
+}
+function updateMelt(){P.melting--;if(P.melting<=0){P.melting=0;P.toast=0;G.deaths++;startFade(()=>{P.hurt=60;loadMap(G.lastHome.map,G.lastHome.x,G.lastHome.y,0);say(["Puff melted into a puddle... but the Elder's|glaze put you back together. Try again!"]);});P.melting=0;P.toast=0;}}
+function startFade(cb){G.fade=1;G.fadeTo=cb;}
+
+// ---------- render ----------
+const HUD=24;
+function drawMap(){const m=G.map,cx=Math.round(G.cam.x),cy=Math.round(G.cam.y);const f=(G.t>>4)&1;
+  const i0=Math.max(0,Math.floor(cx/T)),j0=Math.max(0,Math.floor(cy/T)),i1=Math.min(m.w-1,Math.floor((cx+W)/T)),j1=Math.min(m.h-1,Math.floor((cy+H)/T));
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++)ctx.drawImage(tile(m.t[j][i],f),i*T-cx,j*T-cy);
+  for(const o of m.objs){const ox=o.x*T-cx,oy=o.y*T-cy;
+    if(o.type==='house')drawDonutHouse(o.x-cx,o.y-cy,o.style);
+    else if(o.type==='sign')ctx.drawImage(SIGN,ox,oy);
+    else if(o.type==='chest')ctx.drawImage(G.opened[o.id]?CHEST_OPEN:CHEST,ox,oy);
+    else if(o.type==='jar'&&!o.taken)ctx.drawImage(JAR,ox,oy-(G.t>>3&1));
+    else if(o.type==='torch'){ctx.fillStyle='#55556a';ctx.fillRect(ox+4,oy+6,8,10);ctx.fillStyle='#8c8ca0';ctx.fillRect(ox+5,oy+6,6,8);
+      if(!o.out)drawFlame(ox+4,oy-6,8,f);else{ctx.fillStyle='#777';ctx.fillRect(ox+6,oy+2,4,3);}}
+    else if(o.type==='firegate'&&!G.flags.gate){for(let i=0;i<o.w;i++)drawFlame(ox+i*T+2,oy-4,12,(f+i)&1);}
+    else if(o.type==='bossdoor'&&freedCount()<5){for(let i=0;i<o.w;i++){ctx.fillStyle='#2a1a14';ctx.fillRect(ox+i*T,oy,16,16);ctx.fillStyle='#d6b45a';ctx.fillRect(ox+i*T+2,oy+2,12,12);ctx.fillStyle='#8a5a2a';ctx.fillRect(ox+i*T+6,oy+6,4,4);}}
+    else if(o.type==='npc'){drawMallow(ox+3,oy+2,0,(G.t>>5)&1,o.style,'happy');}
+    else if(o.type==='buddy'){const w=o.w||1;
+      if(G.freed[o.id]){const dy=Math.sin(G.t/8)*2;if(w===2){drawCrown(ox+10,oy-6+dy);drawMallow(ox+8,oy+2+dy,0,(G.t>>4)&1,0,'happy');}else drawMallow(ox+3,oy+2+dy,0,(G.t>>4)&1,0,'happy');}
+      else{const toast=o.cage==='wood'?0.15:0.75;
+        if(w===2){ctx.fillStyle='#d6b45a';ctx.fillRect(ox,oy-6,32,22);ctx.fillStyle='#b8303c';ctx.fillRect(ox+2,oy-4,28,18);drawCrown(ox+10,oy-6);drawMallow(ox+8,oy+2,0,0,G.flags.bossDead?0.3:0.9,'sad');
+          if(!G.flags.bossDead)for(let i=0;i<2;i++)drawFlame(ox+i*T+2,oy-4,12,(f+i)&1);}
+        else{drawMallow(ox+3,oy+2,0,0,toast,'sad');if(o.cage==='wood')ctx.drawImage(CAGE_WOOD,ox,oy);else drawFlame(ox+2,oy-6,12,f);}}}
+  }}
+function drawCrown(x,y){ctx.fillStyle='#ffd23f';ctx.fillRect(x,y+3,12,4);ctx.fillRect(x,y,2,3);ctx.fillRect(x+5,y,2,3);ctx.fillRect(x+10,y,2,3);ctx.fillStyle='#ff3b1f';ctx.fillRect(x+5,y+4,2,2);}
+function drawFlame(x,y,w,f){const h=w+6;ctx.fillStyle='#ff3b1f';ctx.fillRect(x+1,y+4,w-2,h-4);ctx.fillRect(x+w/2-1+(f?2:-2),y+1,2,4);
+  ctx.fillStyle='#ff8c1a';ctx.fillRect(x+2,y+6,w-4,h-7);ctx.fillRect(x+w/2-2+(f?-1:1),y+3,2,3);ctx.fillStyle='#ffd23f';ctx.fillRect(x+3,y+9,w-6,h-10);}
+function drawEnts(){const cx=Math.round(G.cam.x),cy=Math.round(G.cam.y);const f=(G.t>>3)&1;
+  const list=[...G.ents.map(e=>({z:e.y+e.h,e})),{z:P.y+P.h,e:P}].sort((a,b)=>a.z-b.z);
+  for(const{e}of list){const x=Math.round(e.x-cx),y=Math.round(e.y-cy);
+    if(e.type==='player'){if(P.hurt&&(G.t&2))continue;
+      if(P.melting){const k=P.melting/90;ctx.fillStyle=toastColor(1);ctx.fillRect(x-4+(1-k)*-4,y+10,18+(1-k)*8,5);ctx.save();ctx.translate(x+8,y+15);ctx.scale(1,Math.max(0.05,k));ctx.translate(-x-8,-y-15);drawMallow(x-3,y-3,0,0,1,'sad');ctx.restore();continue;}
+      drawWeapon(x-3,y-3,true);drawMallow(x-3,y-3,P.dir,P.anim?P.frame:0,P.toast,P.heating?'sad':'ok');drawWeapon(x-3,y-3,false);continue;}
+    if(e.dead){ctx.globalAlpha=Math.min(1,e.dead/20);ctx.fillStyle='#9cc8ff';const s=e.boss?22:10;ctx.fillRect(x,y+s-4,s,4);ctx.globalAlpha=1;
+      for(let k=0;k<3;k++){ctx.fillStyle='#ffffffaa';ctx.fillRect(x+k*4+(G.t%7),y-e.dead/2-k*3,3,3);}continue;}
+    if(e.hurt&&(G.t&2))continue;
+    if(e.boss){ctx.drawImage(BOSS[f],x-5,y-10);if(e.hurt){ctx.fillStyle='#9cc8ff66';ctx.fillRect(x-5,y-10,32,32);}}
+    else ctx.drawImage((e.kind==='knight'?KNIGHT:EMBER)[f],x-3,y-5);}
+  for(const s of G.shots)ctx.drawImage(FIREBALL,Math.round(s.x-cx),Math.round(s.y-cy));
+  for(const p of G.fx){p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life--;ctx.fillStyle=p.col;ctx.fillRect(Math.round(p.x-cx),Math.round(p.y-cy),2,2);}
+  G.fx=G.fx.filter(p=>p.life>0);}
+function drawWeapon(x,y,behind){if(!P.atk)return;const spear=P.atkType==='spear';const len=spear?22:13;const prog=1-P.atk/(spear?16:14);
+  const ext=spear?Math.round(len*Math.min(1,prog*2.2)):len;const col=spear?'#4f7fe6':'#e6fbff',tip=spear?'#9cc8ff':'#9fe9ff';
+  const up=P.dir===1,down=P.dir===0;if(behind!==up)return; // sword behind body when facing up
+  ctx.fillStyle='#8a5a2a';
+  if(down){ctx.fillRect(x+7,y+10,2,3);ctx.fillStyle=col;ctx.fillRect(x+7,y+13,2,ext);ctx.fillStyle=tip;ctx.fillRect(x+7,y+13+ext-2,2,2);}
+  else if(up){ctx.fillRect(x+7,y+3,2,3);ctx.fillStyle=col;ctx.fillRect(x+7,y+3-ext,2,ext);ctx.fillStyle=tip;ctx.fillRect(x+7,y+3-ext,2,2);}
+  else if(P.dir===2){ctx.fillRect(x+1,y+8,3,2);ctx.fillStyle=col;ctx.fillRect(x+1-ext,y+8,ext,2);ctx.fillStyle=tip;ctx.fillRect(x+1-ext,y+8,2,2);}
+  else{ctx.fillRect(x+12,y+8,3,2);ctx.fillStyle=col;ctx.fillRect(x+15,y+8,ext,2);ctx.fillStyle=tip;ctx.fillRect(x+15+ext-2,y+8,2,2);}}
+function text(s,x,y,col='#fff6e8',align='left'){ctx.font='8px "Press Start 2P", monospace';ctx.textAlign=align;ctx.textBaseline='top';ctx.fillStyle='#1c1018';ctx.fillText(s,x+1,y+1);ctx.fillStyle=col;ctx.fillText(s,x,y);}
+function drawHUD(){ctx.fillStyle='#17111c';ctx.fillRect(0,H-HUD,W,HUD);ctx.fillStyle='#4a3756';ctx.fillRect(0,H-HUD,W,1);
+  // toast meter
+  text('TOAST',4,H-18,'#b9a5c6');ctx.fillStyle='#2a1a14';ctx.fillRect(48,H-19,70,10);
+  const g=ctx.createLinearGradient(49,0,117,0);g.addColorStop(0,'#fff6e8');g.addColorStop(0.5,'#deaa5a');g.addColorStop(1,'#40160f');
+  ctx.fillStyle=g;ctx.fillRect(49,H-18,Math.round(68*P.toast),8);ctx.fillStyle=P.toast>0.75&&(G.t>>3&1)?'#ff3b1f':'#8a5a2a';ctx.fillRect(48,H-19,70,1);ctx.fillRect(48,H-10,70,1);ctx.fillRect(48,H-19,1,10);ctx.fillRect(117,H-19,1,10);
+  if(P.heating&&(G.t>>3&1))text('HOT!',121,H-18,'#ff5a2b');
+  // items
+  ctx.fillStyle='#241a2c';ctx.fillRect(150,H-22,20,20);ctx.fillRect(174,H-22,20,20);ctx.fillStyle='#4a3756';ctx.strokeStyle='#4a3756';ctx.strokeRect(150.5,H-21.5,19,19);ctx.strokeRect(174.5,H-21.5,19,19);
+  text('A',152,H-21,'#ff5a2b');text('B',176,H-21,'#5a7fc6');
+  if(G.flags.sword)ctx.drawImage(SWORD_ICON,152,H-20);if(G.flags.spear)ctx.drawImage(SPEAR_ICON,176,H-20);
+  // buddies
+  for(let i=0;i<6;i++){const id=BUDDIES[i];ctx.fillStyle=G.freed[id]?'#fff6e8':'#4a3756';ctx.fillRect(199+i*8,H-13,6,7);ctx.fillStyle=G.freed[id]?'#1c1018':'#241a2c';ctx.fillRect(200+i*8,H-11,1,1);ctx.fillRect(203+i*8,H-11,1,1);}
+  text('BUDDIES',199,H-22,'#b9a5c6');}
+function drawMsg(){if(!G.msg)return;const lines=G.msg.split('|');ctx.fillStyle='#17111cee';ctx.fillRect(8,H-HUD-46,W-16,42);ctx.strokeStyle='#ffb347';ctx.strokeRect(8.5,H-HUD-45.5,W-17,41);
+  const total=lines.join('').length;if(G.msgChar<total){G.msgChar+=1.5;if(G.t%3===0)audio.sfx('text');}let left=G.msgChar;
+  lines.forEach((l,i)=>{const n=Math.max(0,Math.min(l.length,Math.round(left)));left-=l.length;text(l.slice(0,n),14,H-HUD-39+i*12);});
+  if(G.msgChar>=total&&(G.t>>4&1))text('▼',W-20,H-HUD-14,'#ffb347');}
+function drawTitle(){ctx.fillStyle='#17111c';ctx.fillRect(0,0,W,H);
+  for(let i=0;i<16;i++)for(let j=0;j<4;j++)ctx.drawImage(tile(((i+j)%5===0)?'f':'.',0),i*T,160+j*T);
+  drawDonutHouse(20,112,0);drawDonutHouse(190,112,2);drawMallow(120,146,0,(G.t>>4)&1,0,'happy');
+  ctx.drawImage(EMBER[(G.t>>3)&1],60,150);ctx.drawImage(EMBER[(G.t>>3)&1^1],176,150);
+  text('MARSHMALLOW',W/2,30,'#fff6e8','center');text('QUEST',W/2,46,'#ffb347','center');
+  text('Free your buddies from',W/2,76,'#b9a5c6','center');text('Ember Keep. Don\'t melt!',W/2,88,'#b9a5c6','center');
+  if(G.t>>5&1)text('PRESS START',W/2,120,'#fff6e8','center');
+  ctx.font='8px "Press Start 2P", monospace';}
+function drawWin(){ctx.fillStyle='#17111c';ctx.fillRect(0,0,W,H);
+  for(let i=0;i<16;i++)for(let j=0;j<3;j++)ctx.drawImage(tile('.',0),i*T,176+j*T);
+  text('ALL BUDDIES FREED!',W/2,24,'#ffb347','center');
+  const names=['Puff','Fluff','Mallo','Squish','Dot','Bibi'];
+  for(let i=0;i<6;i++){const dy=Math.sin(G.t/8+i)*3;drawMallow(28+i*34,150+dy,0,(G.t>>4)&1,0,'happy');}
+  drawCrown(130,120);drawMallow(128,128,0,0,0,'happy');
+  text('Ember Keep is cool again.',W/2,60,'#fff6e8','center');text('Donut Village celebrates',W/2,76,'#b9a5c6','center');text('with a glaze party.',W/2,88,'#b9a5c6','center');
+  text('Melted '+G.deaths+' time'+(G.deaths===1?'':'s'),W/2,104,'#b9a5c6','center');
+  if(G.t>>5&1)text('PRESS START',W/2,200,'#fff6e8','center');}
+
+// ---------- main loop ----------
+function newGame(){G.flags={sword:false,spear:false,gate:false,bossDead:false};G.freed={};G.opened={};G.deaths=0;G.win=false;G.msg=null;G.msgQ=[];
+  for(const k in MAPS)for(const o of MAPS[k].objs){delete o.taken;delete o.talked;delete o.hits;delete o.out;}
+  P.toast=0;P.equip='sword';P.melting=0;P.hurt=0;G.lastHome={map:'house0',x:5,y:7};
+  loadMap('overworld',24,52,1);G.scene='play';
+  say(["Donut Village, one quiet morning...|Puff's five best buddies are missing.","Scorch marks lead north to EMBER KEEP.|Maybe the Elder in the pink donut house can help."]);}
+function step(){G.t++;
+  if(justPressed('mute')){audio.muted=!audio.muted;}
+  if(G.scene==='title'){if(justPressed('start')||justPressed('a')){audio.unlock();newGame();}pressed.a=0;pressed.b=0;return;}
+  if(G.scene==='win'){if(justPressed('start')||justPressed('a')){G.scene='title';}return;}
+  if(G.fade){G.fade+=G.fadeTo?0.08:-0.08;if(G.fade>=1&&G.fadeTo){const cb=G.fadeTo;G.fadeTo=null;cb();}if(G.fade<=0)G.fade=0;return;}
+  if(justPressed('start'))G.paused=!G.paused;if(G.paused)return;
+  if(G.msg){if(justPressed('a')||justPressed('b')||justPressed('start')){const total=G.msg.split('|').join('').length;if(G.msgChar<total)G.msgChar=total;else nextMsg();}pressed.a=0;pressed.b=0;return;}
+  if(P.melting){updateMelt();return;}
+  updatePlayer();updateEnemies();updateCam(false);if(G.shake>0)G.shake--;}
+function render(){ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,H);
+  if(G.scene==='title'){drawTitle();return;}if(G.scene==='win'){drawWin();return;}
+  ctx.save();if(G.shake){ctx.translate((Math.random()-0.5)*G.shake,(Math.random()-0.5)*G.shake);}
+  ctx.beginPath();ctx.rect(0,0,W,H-HUD);ctx.clip();drawMap();drawEnts();ctx.restore();
+  drawHUD();drawMsg();
+  if(G.paused){ctx.fillStyle='#17111caa';ctx.fillRect(0,0,W,H-HUD);text('PAUSED',W/2,90,'#ffb347','center');text(G.map.name,W/2,106,'#b9a5c6','center');text('Buddies freed: '+freedCount()+'/6',W/2,122,'#fff6e8','center');}
+  if(G.fade){ctx.fillStyle='rgba(23,17,28,'+Math.min(1,G.fade)+')';ctx.fillRect(0,0,W,H);}}
+let last=0,acc=0;
+function loop(ts){requestAnimationFrame(loop);const dt=Math.min(100,ts-last);last=ts;acc+=dt;while(acc>=1000/60){step();acc-=1000/60;}render();}
+function fit(){const wrap=document.getElementById('wrap');const s=Math.max(1,Math.floor(Math.min(wrap.clientWidth/W,wrap.clientHeight/H)));cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';}
+addEventListener('resize',fit);fit();
+document.fonts&&document.fonts.load('8px "Press Start 2P"').finally(()=>{});
+requestAnimationFrame(loop);
+</script>
