@@ -19,26 +19,35 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;background:#000;max
   border:4px solid var(--line);box-shadow:0 0 0 2px #000,0 12px 40px #000c;touch-action:none}
 #top{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.6}
 #top b{color:var(--accent);font-weight:normal}
-#pad{display:none;width:100%;max-width:420px;justify-content:space-between;align-items:center;gap:12px;padding-bottom:env(safe-area-inset-bottom,0px)}
+#pad{display:none;width:100%;max-width:440px;justify-content:space-between;align-items:center;gap:12px;
+  margin:auto 0;padding-bottom:env(safe-area-inset-bottom,0px);flex:0 0 auto}
+body.touch #wrap{flex:0 0 auto}
+.mid{display:flex;flex-direction:column;align-items:center;gap:10px}
+.mid button{position:static;width:72px;height:30px;border-radius:15px;font-size:8px}
 body.touch #pad{display:flex}
 body.touch #top{display:none}
-.dpad{position:relative;width:132px;height:132px}
-.dpad button,.btns button{position:absolute;background:var(--panel);border:3px solid var(--line);color:var(--fg);
+body.touch #wrap{align-items:flex-start}
+.stick{position:relative;width:136px;height:136px;border-radius:50%;background:var(--panel);border:3px solid var(--line);box-shadow:inset 0 0 0 18px #1c1422;touch-action:none;user-select:none;-webkit-user-select:none}
+.stick .knob{position:absolute;left:43px;top:43px;width:50px;height:50px;border-radius:50%;background:var(--line);border:3px solid var(--muted);box-sizing:border-box;box-shadow:0 3px 0 #000a;pointer-events:none;transition:transform .05s}
+.stick.on .knob{background:var(--accent);border-color:#fff}
+.stick::before{content:"";position:absolute;left:62px;top:14px;width:12px;height:12px;border-left:3px solid var(--line);border-top:3px solid var(--line);transform:rotate(45deg);opacity:.6}
+.btns button{position:absolute;background:var(--panel);border:3px solid var(--line);color:var(--fg);
   font-family:var(--font-pixel);font-size:12px;border-radius:8px;width:44px;height:44px;touch-action:none;user-select:none;-webkit-user-select:none}
-.dpad button:active,.btns button:active,.dpad button.on,.btns button.on{background:var(--line)}
-.dpad .u{left:44px;top:0}.dpad .d{left:44px;top:88px}.dpad .l{left:0;top:44px}.dpad .r{left:88px;top:44px}
-.btns{position:relative;width:132px;height:132px}
+.btns button:active,.btns button.on{background:var(--line)}
+.btns{position:relative;width:136px;height:136px}
 .btns button{width:56px;height:56px;border-radius:50%}
-.btns .b{left:0;top:66px;border-color:#5a7fc6}.btns .a{left:70px;top:22px;border-color:var(--fire)}
-.btns .s{left:30px;top:100px;width:70px;height:28px;border-radius:14px;font-size:8px}
+.btns .b{left:4px;top:70px;border-color:#5a7fc6}.btns .a{left:72px;top:26px;border-color:var(--fire)}
+.mid button{background:var(--panel);border:3px solid var(--line);color:var(--fg);font-family:var(--font-pixel);touch-action:none;user-select:none;-webkit-user-select:none}
+.mid button.on{background:var(--line)}
 button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>
 <div id="top">Arrows/WASD move &nbsp;·&nbsp; <b>Z</b> or <b>J</b> sword &nbsp;·&nbsp; <b>X</b> or <b>K</b> spear &nbsp;·&nbsp; <b>Enter</b> start/pause &nbsp;·&nbsp; <b>M</b> mute</div>
 <div id="wrap"><canvas id="c" width="256" height="224" aria-label="Marshmallow Quest game screen"></canvas></div>
 <div id="pad">
-  <div class="dpad"><button class="u" data-k="up" aria-label="Up">▲</button><button class="l" data-k="left" aria-label="Left">◀</button><button class="r" data-k="right" aria-label="Right">▶</button><button class="d" data-k="down" aria-label="Down">▼</button></div>
-  <div class="btns"><button class="b" data-k="b" aria-label="Spear">B</button><button class="a" data-k="a" aria-label="Sword">A</button><button class="s" data-k="start" aria-label="Start">START</button></div>
+  <div class="stick" id="stick" aria-label="Joystick"><div class="knob" id="knob"></div></div>
+  <div class="mid"><button class="s" data-k="start" aria-label="Start">START</button></div>
+  <div class="btns"><button class="b" data-k="b" aria-label="Spear">B</button><button class="a" data-k="a" aria-label="Sword">A</button></div>
 </div>
 <script>
 // ===================== MARSHMALLOW QUEST =====================
@@ -66,8 +75,19 @@ function bindBtn(btn){const k=btn.dataset.k;
   btn.addEventListener('pointerdown',on);btn.addEventListener('pointerup',off);btn.addEventListener('pointercancel',off);btn.addEventListener('pointerleave',off);
   btn.addEventListener('contextmenu',e=>e.preventDefault());}
 pad.querySelectorAll('button').forEach(bindBtn);
+// analog joystick
+const joy={x:0,y:0,on:false};
+{const st=document.getElementById('stick'),kn=document.getElementById('knob');let pid=null;
+  const upd=e=>{const r=st.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const max=r.width/2-12;const d=Math.hypot(dx,dy);
+    if(d>max){dx=dx/d*max;dy=dy/d*max;}kn.style.transform=`translate(${dx}px,${dy}px)`;const m=Math.min(1,d/max);
+    if(m<0.18){joy.x=joy.y=0;}else{const a=Math.atan2(dy,dx);const k=(m-0.18)/0.82;joy.x=Math.cos(a)*k;joy.y=Math.sin(a)*k;}};
+  st.addEventListener('pointerdown',e=>{e.preventDefault();pid=e.pointerId;try{st.setPointerCapture(pid);}catch(err){}st.classList.add('on');joy.on=true;audio.unlock();upd(e);});
+  st.addEventListener('pointermove',e=>{if(e.pointerId===pid)upd(e);});
+  const end=e=>{if(e.pointerId!==pid)return;pid=null;joy.on=false;joy.x=joy.y=0;st.classList.remove('on');kn.style.transform='';};
+  st.addEventListener('pointerup',end);st.addEventListener('pointercancel',end);st.addEventListener('contextmenu',e=>e.preventDefault());}
 addEventListener('touchstart',()=>document.body.classList.add('touch'),{once:true,passive:true});
 if(matchMedia('(pointer:coarse)').matches)document.body.classList.add('touch');
+addEventListener('touchstart',()=>{if(typeof fit==='function')fit();},{once:true,passive:true});
 
 // ---------- audio (tiny chiptune synth) ----------
 const audio={ctx:null,muted:false,unlock(){if(!this.ctx){try{this.ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}
@@ -375,6 +395,9 @@ function solidAt(px,py){const m=G.map;const i=Math.floor(px/T),j=Math.floor(py/T
 function hitsWall(x,y,w,h){return solidAt(x,y)||solidAt(x+w-1,y)||solidAt(x,y+h-1)||solidAt(x+w-1,y+h-1);}
 function moveEnt(e,dx,dy){let moved=false;if(dx){const nx=e.x+dx;if(!hitsWall(nx,e.y,e.w,e.h)){e.x=nx;moved=true;}}
   if(dy){const ny=e.y+dy;if(!hitsWall(e.x,ny,e.w,e.h)){e.y=ny;moved=true;}}return moved;}
+// Zelda-style corner sliding: if blocked on one axis, nudge along the other when only a corner is clipped.
+function slideMove(e,dx,dy){if(dx){if(!moveEnt(e,dx,0)&&!dy){for(const n of[1,-1,2,-2,3,-3]){if(!hitsWall(e.x+dx,e.y+n,e.w,e.h)){e.y+=Math.sign(n)*Math.min(Math.abs(n),1);break;}}}}
+  if(dy){if(!moveEnt(e,0,dy)&&!dx){for(const n of[1,-1,2,-2,3,-3]){if(!hitsWall(e.x+n,e.y+dy,e.w,e.h)){e.x+=Math.sign(n)*Math.min(Math.abs(n),1);break;}}}}}
 function overlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
 function dist(a,b){const dx=(a.x+a.w/2)-(b.x+b.w/2),dy=(a.y+a.h/2)-(b.y+b.h/2);return Math.hypot(dx,dy);}
 function updateCam(snap){const m=G.map;let cx=P.x+P.w/2-W/2,cy=P.y+P.h/2-(H-24)/2;
@@ -403,9 +426,12 @@ function updatePlayer(){
   if(P.kb.x||P.kb.y){moveEnt(P,P.kb.x,P.kb.y);P.kb.x*=0.8;P.kb.y*=0.8;if(Math.abs(P.kb.x)<0.1)P.kb.x=0;if(Math.abs(P.kb.y)<0.1)P.kb.y=0;}
   if(P.atk>0){P.atk--;if(P.atk===0)P.atkType=null;return;}
   let dx=0,dy=0;if(keys.left)dx=-1;else if(keys.right)dx=1;if(keys.up)dy=-1;else if(keys.down)dy=1;
-  if(dx&&dy){dx*=0.75;dy*=0.75;}
-  if(dx||dy){if(Math.abs(dx)>Math.abs(dy)||(dx&&!dy))P.dir=dx<0?2:3;else P.dir=dy<0?1:0;
-    moveEnt(P,dx*P.speed,dy*P.speed);P.anim++;if(P.anim%10===0)P.frame=(P.frame+1)%2;}else P.anim=0;
+  if(dx&&dy){dx*=0.7071;dy*=0.7071;}
+  if(joy.on&&(joy.x||joy.y)){const m=Math.hypot(joy.x,joy.y);const k=0.45+0.55*Math.min(1,m);dx=joy.x/m*k;dy=joy.y/m*k;}
+  if(dx||dy){const ax=Math.abs(dx),ay=Math.abs(dy);
+    // only change facing when the new axis clearly dominates, so diagonals don't flicker
+    if(ax>ay*1.15)P.dir=dx<0?2:3;else if(ay>ax*1.15)P.dir=dy<0?1:0;
+    slideMove(P,dx*P.speed,dy*P.speed);P.anim++;if(P.anim%8===0)P.frame=(P.frame+1)%4;}else P.anim=0;
   if(justPressed('a')){if(!interact()&&G.flags.sword){P.atk=14;P.atkType='sword';audio.sfx('sword');hitThings();}}
   if(justPressed('b')){if(G.flags.spear){P.atk=16;P.atkType='spear';audio.sfx('spear');hitThings();}else if(!interact()&&G.flags.sword){P.atk=14;P.atkType='sword';audio.sfx('sword');hitThings();}}
   // warps
@@ -536,13 +562,13 @@ function drawEnts(){const cx=Math.round(G.cam.x),cy=Math.round(G.cam.y);const f=
   for(const p of G.fx){p.x+=p.vx;p.y+=p.vy;p.vy+=p.col==='#ffd23f'?0:0.05;p.life--;ctx.fillStyle=p.col;ctx.fillRect(Math.round(p.x-cx),Math.round(p.y-cy),2,2);}
   G.fx=G.fx.filter(p=>p.life>0);}
 function drawWeapon(x,y,behind){if(!P.atk)return;const spear=P.atkType==='spear';
-  const hx=x+8,hy=y+9;const base=[Math.PI,0,Math.PI/2,-Math.PI/2][P.dir]; // angle of "forward"
+  const hx=x+8,hy=y+9;const base=[Math.PI,0,-Math.PI/2,Math.PI/2][P.dir]; // canvas rotation is clockwise, so left is -90deg
   if(behind!==(P.dir===1))return;
   ctx.save();ctx.translate(hx,hy);
   if(spear){const prog=1-P.atk/16;const ext=Math.round(14*Math.min(1,prog*2.2)-(prog>0.7?(prog-0.7)*20:0));
-    ctx.rotate(base);ctx.drawImage(SPEAR,-8,-16-ext+4,16,16);ctx.restore();return;}
+    ctx.rotate(base);ctx.drawImage(SPEAR,-8,-16-ext+(P.dir===1?-2:4),16,16);ctx.restore();return;}
   const prog=1-P.atk/14;const sweep=-1.3+prog*2.6;ctx.rotate(base+sweep);
-  ctx.drawImage(SWORD,-8,-15,16,16);ctx.restore();
+  ctx.drawImage(SWORD,-8,P.dir===1?-19:-15,16,16);ctx.restore();
   // slash arc
   ctx.save();ctx.translate(hx,hy);ctx.rotate(base);ctx.strokeStyle='rgba(255,255,255,'+(0.5-prog*0.4)+')';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,13,-Math.PI/2-1.3,-Math.PI/2+sweep);ctx.stroke();ctx.restore();}
 
@@ -647,7 +673,7 @@ function render(){ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,H);lights=[]
   if(G.fade){ctx.fillStyle='rgba(23,17,28,'+Math.min(1,G.fade)+')';ctx.fillRect(0,0,W,H);}}
 let last=0,acc=0;
 function loop(ts){requestAnimationFrame(loop);const dt=Math.min(100,ts-last);last=ts;acc+=dt;while(acc>=1000/60){step();acc-=1000/60;}render();}
-function fit(){const wrapEl=document.getElementById('wrap');let s=Math.min(wrapEl.clientWidth/W,wrapEl.clientHeight/H);s=s>=2?Math.floor(s):Math.max(0.9,s);cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';}
+function fit(){const wrapEl=document.getElementById('wrap');const touch=document.body.classList.contains('touch');let s=touch?Math.min(wrapEl.clientWidth/W,innerHeight*0.56/H):Math.min(wrapEl.clientWidth/W,wrapEl.clientHeight/H);s=s>=2?Math.floor(s):Math.max(0.9,s);cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';}
 addEventListener('resize',fit);fit();
 if(document.fonts)document.fonts.load('8px "Press Start 2P"').catch(()=>{});
 requestAnimationFrame(loop);
