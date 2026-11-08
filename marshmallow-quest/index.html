@@ -37,6 +37,16 @@ body.touch #wrap{align-items:flex-start;flex:0 0 auto}
 .btns button:active,.btns button.on{background:var(--line)}
 .btns .b{left:0;top:72px;border-color:#5a7fc6}.btns .a{left:88px;top:20px;border-color:var(--fire)}.btns .c{left:52px;top:88px;width:44px;height:44px;border-color:#7cc47a;font-size:8px}.btns .i{left:30px;top:14px;width:44px;height:44px;border-color:#c9a0ff;font-size:8px}
 button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (orientation:landscape){
+  body.touch{padding-block:4px}
+  body.touch #wrap{flex:1 1 auto;align-items:center}
+  body.touch #pad{position:fixed;inset:0;margin:0;max-width:none;padding:0 max(10px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));box-sizing:border-box;align-items:flex-end;pointer-events:none;opacity:.85}
+  body.touch #pad>*{pointer-events:auto}
+  body.touch .mid{position:fixed;top:max(8px,env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px))}
+  body.touch .stick{width:120px;height:120px}
+  body.touch .stick .knob{left:35px;top:35px}
+  body.touch .stick::before{left:54px}
+}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>
 <div id="top">Arrows/WASD move &nbsp;·&nbsp; <b>Z</b>/<b>J</b> sword &nbsp;·&nbsp; <b>X</b>/<b>K</b> spear &nbsp;·&nbsp; <b>C</b>/<b>L</b>/<b>Shift</b> roll &nbsp;·&nbsp; <b>V</b>/<b>I</b> item &nbsp;·&nbsp; <b>Enter</b> start/pause &nbsp;·&nbsp; <b>M</b> mute &nbsp;·&nbsp; gamepad ok</div>
@@ -78,12 +88,18 @@ const joy={x:0,y:0,on:false};
 {const st=document.getElementById('stick'),kn=document.getElementById('knob');let pid=null;
   const upd=e=>{const r=st.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const max=r.width/2-12;const d=Math.hypot(dx,dy);
     if(d>max){dx=dx/d*max;dy=dy/d*max;}kn.style.transform=`translate(${dx}px,${dy}px)`;const m=Math.min(1,d/max);
-    if(m<0.18){joy.x=joy.y=0;}else{const a=Math.atan2(dy,dx);const k=(m-0.18)/0.82;joy.x=Math.cos(a)*k;joy.y=Math.sin(a)*k;}};
+    if(m<0.18){joy.x=joy.y=0;}else{const a=Math.atan2(dy,dx);const k=(m-0.18)/0.82;joy.x=Math.cos(a)*k;joy.y=Math.sin(a)*k;}
+    let dir=null;if(m>0.5)dir=Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'up':'down');else if(m<0.3)dir=null;else dir=joy.lastDir;
+    if(dir&&dir!==joy.lastDir)pressed[dir]=1;joy.lastDir=dir;};
   st.addEventListener('pointerdown',e=>{e.preventDefault();pid=e.pointerId;try{st.setPointerCapture(pid);}catch(err){}st.classList.add('on');joy.on=true;audio.unlock();upd(e);});
   st.addEventListener('pointermove',e=>{if(e.pointerId===pid)upd(e);});
-  const end=e=>{if(e.pointerId!==pid)return;pid=null;joy.on=false;joy.x=joy.y=0;st.classList.remove('on');kn.style.transform='';};
+  const end=e=>{if(e.pointerId!==pid)return;pid=null;joy.on=false;joy.x=joy.y=0;joy.lastDir=null;st.classList.remove('on');kn.style.transform='';};
   st.addEventListener('pointerup',end);st.addEventListener('pointercancel',end);st.addEventListener('contextmenu',e=>e.preventDefault());}
 addEventListener('touchstart',()=>{document.body.classList.add('touch');if(typeof fit==='function')fit();},{once:true,passive:true});
+let tapZones=[];
+cv.addEventListener('pointerdown',e=>{e.preventDefault();audio.unlock();const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
+  for(const z of tapZones){if(x>=z.x&&x<z.x+z.w&&y>=z.y&&y<z.y+z.h){z.cb();return;}}
+  if(typeof G!=='undefined'&&(G.msg||G.scene==='intro'||G.scene==='ending'))pressed.a=1;});
 if(matchMedia('(pointer:coarse)').matches)document.body.classList.add('touch');
 // gamepad: standard mapping. Left stick or d-pad moves, A sword, B/Y spear, X roll, Start pauses.
 const gp={prev:{}};
@@ -1113,7 +1129,8 @@ function drawHUD(){ctx.fillStyle='#17111c';ctx.fillRect(0,H-HUD,W,HUD);ctx.fillS
   ctx.drawImage(COIN[0],W-44,3);text(String(G.coins),W-33,3,'#ffd23f');if(G.seals){ctx.drawImage(SEAL,W-70,0,12,12);text(G.seals+'/4',W-57,3,'#fffaf0');}
   if(G.opts.timer)text(fmtTime(G.playT),4,3,'#b9a5c6');}
 function drawChoice(){if(!G.choice)return;const c=G.choice;const tl=wrap(c.title,27);const h=12+tl.length*10+c.opts.length*11;const by=H-HUD-h-4;drawBox(8,by,W-16,h);
-  tl.forEach((l,i)=>text(l,16,by+6+i*10,'#ffb347'));c.opts.forEach((o,i)=>text((i===c.idx?'> ':'  ')+o,20,by+8+tl.length*10+i*11,i===c.idx?'#fffaf0':'#b9a5c6'));}
+  tl.forEach((l,i)=>text(l,16,by+6+i*10,'#ffb347'));c.opts.forEach((o,i)=>text((i===c.idx?'> ':'  ')+o,20,by+8+tl.length*10+i*11,i===c.idx?'#fffaf0':'#b9a5c6'));
+  tapZones=c.opts.map((o,i)=>({x:8,y:by+6+tl.length*10+i*11,w:W-16,h:11,cb:()=>{if(c.idx===i)pressed.a=1;else{c.idx=i;audio.sfx('menu');}}}));}
 function drawPause(){ctx.fillStyle='rgba(23,17,28,0.88)';ctx.fillRect(0,0,W,H-HUD);text('PAUSED',W/2,6,'#ffb347','center');
   // schematic map of Sugarfield
   const areas={village:{x:76,y:150,w:104,h:22,n:'Donut Village'},woods:{x:76,y:110,w:104,h:30,n:'Toasty Woods'},cave:{x:184,y:114,w:68,h:22,n:'Cinder Cave'},keep:{x:92,y:66,w:72,h:34,n:'Ember Keep'}};
@@ -1144,6 +1161,7 @@ function drawTitle(){nightSky();villageBack();
   drawLogo(W/2,22,G.t);drawLights();
   const items=menuItems();
   drawBox(36,80,184,18+items.length*11);
+  tapZones=items.map((s,i)=>({x:36,y:84+i*11,w:184,h:11,cb:()=>{if(G.menu===i)pressed.a=1;else{G.menu=i;audio.sfx('menu');}}}));
   items.forEach((s,i)=>{const sel=G.menu===i;text((sel?'> ':'')+s.label,W/2,86+i*11,sel?'#fffaf0':'#b9a5c6','center');});
   if(G.t>>5&1)text('A to choose',W/2,86+items.length*11,'#7a5a30','center');}
 function menuItems(){const it=[];if(G.hasSave)it.push({id:'cont',label:'CONTINUE'});it.push({id:'new',label:'NEW GAME'});if(G.savedCleared)it.push({id:'ngp',label:'NEW GAME+'});
@@ -1208,7 +1226,7 @@ function step(){G.t++;pollGamepad();
   if(G.hitstop>0){G.hitstop--;return;}
   if(P.melting){updateMelt();return;}
   updatePlayer();updateEnemies();updateMechanics();updateCam(false);if(G.shake>0)G.shake--;}
-function render(){ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,H);lights=[];
+function render(){ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,H);lights=[];tapZones=[];
   if(G.scene==='title'){drawTitle();return;}if(G.scene==='intro'){drawIntro();return;}if(G.scene==='ending'){drawEnding();return;}
   drawScene();
   if(G.trans){const k=G.trans.t/22,e=1-Math.pow(1-k,3);const d=G.trans.dir;const dx=d===2?1:d===3?-1:0,dy=d===1?1:d===0?-1:0;const sw=W,sh=H-HUD;
@@ -1219,7 +1237,10 @@ function render(){ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,H);lights=[]
   if(G.fade){ctx.fillStyle='rgba(23,17,28,'+Math.min(1,G.fade)+')';ctx.fillRect(0,0,W,H);}}
 let last=0,acc=0;
 function loop(ts){requestAnimationFrame(loop);const dt=Math.min(100,ts-last);last=ts;acc+=dt;while(acc>=1000/60){step();acc-=1000/60;}render();}
-function fit(){const wrapEl=document.getElementById('wrap');const touch=document.body.classList.contains('touch');let s=touch?Math.min(wrapEl.clientWidth/W,innerHeight*0.56/H):Math.min(wrapEl.clientWidth/W,wrapEl.clientHeight/H);s=s>=2?Math.floor(s):Math.max(0.9,s);cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';}
+function fit(){const wrapEl=document.getElementById('wrap');const touch=document.body.classList.contains('touch');const land=innerWidth>innerHeight;
+  let s=touch?(land?Math.min((innerWidth-40)/W,(innerHeight-20)/H):Math.min(wrapEl.clientWidth/W,innerHeight*0.56/H)):Math.min(wrapEl.clientWidth/W,wrapEl.clientHeight/H);
+  s=s>=2?Math.floor(s):Math.max(0.9,s);cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';}
+addEventListener('orientationchange',()=>setTimeout(fit,100));
 addEventListener('resize',fit);fit();checkSave();loadOpts();
 if(document.fonts)document.fonts.load('8px "Press Start 2P"').then(()=>{logoCache=null;}).catch(()=>{});
 requestAnimationFrame(loop);
