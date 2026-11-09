@@ -160,7 +160,7 @@ export const ENCOUNTERS: EncounterDef[] = [
     ],
   },
   {
-    id: 'camp_ticket', kind: 'employee', icon: '🎟️', line: true, timed: 3, onExpire: 'nothing', once: true,
+    id: 'camp_ticket', kind: 'employee', icon: '🎟️', line: true, timed: 4, onExpire: 'nothing', once: true,
     text: 'An employee comes out with numbered tickets. "One per person, right now." A ticket locks your place. GRAB ONE.',
     choices: [
       { label: '🎟️ Grab a ticket!', effect: 'grabTicket' },

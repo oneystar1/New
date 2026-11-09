@@ -109,13 +109,15 @@ three phases:
    (1), other reseller (2 to 3), grandpa (1), employee holding stock (2),
    sneaker bro (3 to 4). Show up at opening and 2 latecomers beat you to
    it; camp and the line phase plays out.
-2. **Camp.** 25 seconds. Your spot is a live number and what is left on
-   the shelf is recomputed from it. Every 4 to 6 seconds an event pauses
-   the clock. One-offs fire at most once per camp: you have to pee (ask
+2. **Camp.** 45 seconds, shown as a clock from 6:05am to 7:00am over an
+   animated parking-lot scene (night turns to dawn, the line stands and
+   fidgets, rain and snow fall, the door light comes on). Your spot is a
+   live number and what is left on the shelf is recomputed from it. Every
+   7 to 10 seconds an event pauses the clock. One-offs fire at most once per camp: you have to pee (ask
    your named neighbor to hold your spot 70/30, just go -2 spots, hold it
    -3s on the doors clock), a coffee run (buy a round: 30s of income, -5
    heat, moms take one fewer each; solo cup: 3s of income; prices are
-   shown on the buttons), an employee hands out numbered tickets (3-second
+   shown on the buttons), an employee hands out numbered tickets (4-second
    timed tap: +3 spots and your place is **locked**, nothing but selling it
    can move you back; miss it and lose one), the guy behind you offers
    cash for your spot (60s of income, +5 spots back, clears the ticket),

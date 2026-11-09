@@ -17,8 +17,11 @@ export const BAN_SECONDS = 10 * 60;
 export const DOORS_SECONDS = 12;
 export const TAPS_PER_UNIT = 3;
 export const ENCOUNTER_EVERY_SECONDS = 3;
-export const CAMP_SECONDS = 25;
-export const CAMP_EVENT_EVERY_SECONDS = 4;
+export const CAMP_SECONDS = 45;
+/** Seconds between camp events (plus up to 3 random). Events pause the clock, so the camp breathes. */
+export const CAMP_EVENT_EVERY_SECONDS = 7;
+/** First event lands this many seconds in. */
+export const CAMP_FIRST_EVENT_SECONDS = 4;
 /** Showing up at opening instead of camping: this many latecomers beat you to the line. */
 export const SKIP_CAMP_PENALTY = 2;
 
@@ -55,7 +58,7 @@ export function startRun(s: GameState, storeId: string, m: Modifiers, now: numbe
     phase: 'choice',
     position: rivals.length,
     campLeft: CAMP_SECONDS,
-    nextCampEventIn: 2.5,
+    nextCampEventIn: CAMP_FIRST_EVENT_SECONDS,
     eventExpiresIn: null,
     phoneUsed: [],
     seenEvents: [],
@@ -99,6 +102,13 @@ export function computeRemaining(run: RestockRun): number {
   return Math.max(1, run.stock - taken);
 }
 
+/** The camp clock as a time of day: 6:05am at the start, 7:00am when the doors open. */
+export function campClock(run: RestockRun): string {
+  const elapsed = run.phase === 'choice' ? 0 : CAMP_SECONDS - Math.max(0, Math.min(CAMP_SECONDS, run.campLeft));
+  const mins = Math.min(60, Math.floor(5 + (55 * elapsed) / CAMP_SECONDS));
+  return mins >= 60 ? '7:00am' : `6:${String(mins).padStart(2, '0')}am`;
+}
+
 export function chooseCamp(run: RestockRun): void {
   if (run.phase !== 'choice') return;
   run.phase = 'camp';
@@ -137,7 +147,7 @@ export function tickCamp(run: RestockRun, dt: number, rand: () => number): void 
     run.encounter = enc.id;
     run.seenEvents.push(enc.id);
     run.eventExpiresIn = enc.timed ?? null;
-    run.nextCampEventIn = CAMP_EVENT_EVERY_SECONDS + rand() * 2;
+    run.nextCampEventIn = CAMP_EVENT_EVERY_SECONDS + rand() * 3;
   }
 }
 

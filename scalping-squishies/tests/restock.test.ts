@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { initialState } from '../src/engine/state';
 import { computeModifiers, tick } from '../src/engine/sim';
-import { startRun, openDoors, grab, tickRun, choose, finishRun, restockReady, isBanned, TAPS_PER_UNIT, RESTOCK_COOLDOWN_SECONDS, BAN_SECONDS, chooseCamp, chooseSkip, tickCamp, campChoose, phoneAction, computeRemaining, SKIP_CAMP_PENALTY, campEventPool, hasChair } from '../src/engine/restock';
+import { startRun, openDoors, grab, tickRun, choose, finishRun, restockReady, isBanned, TAPS_PER_UNIT, RESTOCK_COOLDOWN_SECONDS, BAN_SECONDS, chooseCamp, chooseSkip, tickCamp, campChoose, phoneAction, computeRemaining, SKIP_CAMP_PENALTY, campEventPool, hasChair, campClock, CAMP_SECONDS } from '../src/engine/restock';
 import { makeOffer, PRICING } from '../src/engine/deals';
 import { RIVALS } from '../src/engine/data/restock';
 import { makeRng } from '../src/engine/math';
@@ -207,6 +207,8 @@ describe('camp phase', () => {
     expect(b.phase).toBe('camp');
     const rng = makeRng(4);
     tickCamp(b, 3, rng);
+    expect(b.encounter).toBeNull(); // the first event lands at 4s: the camp opens with a breath
+    tickCamp(b, 2, rng);
     expect(b.encounter).not.toBeNull();
     const left = b.campLeft;
     tickCamp(b, 2, rng);
@@ -214,6 +216,16 @@ describe('camp phase', () => {
     b.encounter = null; b.eventExpiresIn = null;
     tickCamp(b, 60, rng);
     expect(b.phase).toBe('doors');
+  });
+  it('the camp clock reads 6:05am at the start and 7:00am at the doors', () => {
+    const s = ready();
+    const run = startRun(s, 'bullseye', computeModifiers(s, T0), T0, makeRng(31))!;
+    expect(campClock(run)).toBe('6:05am');
+    chooseCamp(run);
+    run.campLeft = CAMP_SECONDS / 2;
+    expect(campClock(run)).toBe('6:32am');
+    run.campLeft = 0;
+    expect(campClock(run)).toBe('7:00am');
   });
   it('your spot sets what is left: tickets move you up, selling your spot moves you back', () => {
     const s = ready();

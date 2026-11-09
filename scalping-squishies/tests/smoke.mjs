@@ -51,8 +51,8 @@ try {
   await page.getByRole('button', { name: /Camp the line/ }).click();
   await page.waitForTimeout(400);
   await shot('03b-camp.png');
-  // Camp: answer events as they come, use the phone, until the doors open (~25s).
-  for (let i = 0; i < 80 && !(await page.locator('.grabbtn').count()) && !(await page.locator('.overlay.run').getByRole('button', { name: 'Check out' }).count()); i++) {
+  // Camp: answer events as they come, use the phone, until the doors open (45s of camp clock, paused during events).
+  for (let i = 0; i < 170 && !(await page.locator('.grabbtn').count()) && !(await page.locator('.overlay.run').getByRole('button', { name: 'Check out' }).count()); i++) {
     if (await page.locator('.encounter .btn').count()) { if (i < 6) await shot('03c-camp-event.png'); await page.locator('.encounter .btn').first().click(); }
     else if (await page.locator('.phone .btn:not([disabled])').count()) await page.locator('.phone .btn:not([disabled])').last().click();
     await page.waitForTimeout(400);

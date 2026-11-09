@@ -4,7 +4,8 @@ import { STORE_BY_ID } from '../engine/data/stores';
 import { PHONE_ACTIONS } from '../engine/data/restock';
 import { SEASON_BY_ID } from '../engine/data/seasons';
 import { ITEM_BY_ID, RARITY_LABEL, VARIANT_LABEL } from '../engine/data/items';
-import { encounterDef, DOORS_SECONDS, CAMP_SECONDS, SKIP_CAMP_PENALTY, neighborName, hasChair } from '../engine/restock';
+import { encounterDef, DOORS_SECONDS, CAMP_SECONDS, SKIP_CAMP_PENALTY, neighborName, hasChair, campClock } from '../engine/restock';
+import { CampScene } from './CampScene';
 import { computeModifiers, incomePerSecond } from '../engine/sim';
 import { formatCash } from '../engine/math';
 import { Sprite } from '../art/Sprite';
@@ -52,7 +53,6 @@ export function RestockOverlay() {
   const st = STORE_BY_ID[run.storeId];
   const enc = encounterDef(run.encounter);
   const ahead = run.rivals.slice(0, run.position);
-  const extra = Math.max(0, run.position - run.rivals.length);
   const firstOffer = s.offers[0];
   const ips = Math.max(1, incomePerSecond(s, computeModifiers(s, Date.now()), true));
   const fill = (t: string) => t
@@ -96,15 +96,16 @@ export function RestockOverlay() {
       <div className="modal">
         <div className="row between">
           <h2 className="row" style={{ gap: 8 }}><StoreSprite id={st.id} size={32} /> {st.name} restock</h2>
-          <span className="pill">{run.phase === 'choice' ? '6:00am' : run.phase === 'camp' ? `${Math.ceil(run.campLeft)}s to open` : run.phase === 'doors' ? `${Math.ceil(run.timeLeft)}s` : 'done'}</span>
+          <span className="pill">{run.phase === 'choice' || run.phase === 'camp' ? `${campClock(run)} · opens 7:00` : run.phase === 'doors' ? `${Math.ceil(run.timeLeft)}s` : 'done'}</span>
         </div>
 
         {run.phase === 'choice' && (
           <>
+            <CampScene run={run} seasonId={s.season.id} />
             <p>{run.log[0]}</p>
             <p className="small">Shelf has <b>{run.stock}</b>. {run.rivals.length} people are already here. Camp the line and things will happen to you; show up at opening and {SKIP_CAMP_PENALTY} more people beat you to it.</p>
             <button className="card city" onClick={restockCamp}>
-              <div className="row"><div className="ico-lg">⛺</div><div className="grow" style={{ textAlign: 'left' }}><h3>Camp the line</h3><div className="sub">{CAMP_SECONDS} seconds. Coffee runs, bathroom breaks, ticket hand-outs, rain, moms. Your spot can move up or down. Your phone works.</div></div></div>
+              <div className="row"><div className="ico-lg">⛺</div><div className="grow" style={{ textAlign: 'left' }}><h3>Camp the line</h3><div className="sub">Wait it out till 7:00. Coffee runs, bathroom breaks, ticket hand-outs, rain, moms. Your spot can move up or down. Your phone works.</div></div></div>
             </button>
             <button className="card city" onClick={restockSkip}>
               <div className="row"><div className="ico-lg">🚗</div><div className="grow" style={{ textAlign: 'left' }}><h3>Show up at opening</h3><div className="sub">Skip the wait. Start {SKIP_CAMP_PENALTY} spots further back.</div></div></div>
@@ -114,15 +115,11 @@ export function RestockOverlay() {
 
         {run.phase === 'camp' && (
           <>
-            <div className="progress"><i style={{ width: `${(run.campLeft / CAMP_SECONDS) * 100}%` }} /></div>
+            <CampScene run={run} seasonId={s.season.id} />
+            <div className="progress" style={{ height: 6 }}><i style={{ width: `${(run.campLeft / CAMP_SECONDS) * 100}%` }} /></div>
             <div className="row between small mt">
-              <span>You are <b>#{run.position + 1}</b> in line{run.ticketLocked ? ' 🎟️ locked' : ''}</span>
+              <span>You are <b>#{run.position + 1}</b> in line{run.ticketLocked ? ' 🎟️ locked' : ''}{run.position > 0 ? ` · ahead: ${ahead.map((r) => r.name.split(' (')[0]).slice(0, 3).join(', ')}${run.position > 3 ? '…' : ''}` : ' · you are first'}</span>
               <span>~<b>{run.remaining}</b> left for you</span>
-            </div>
-            <div className="lineviz">
-              {ahead.map((r, i) => <span key={i} title={`${r.name} takes ${r.takes}`}><Portrait kind={r.kind} size={26} seed={i} /></span>)}
-              {Array.from({ length: extra }, (_, i) => <span key={`x${i}`} className="dim"><Portrait kind="buyer" size={26} seed={i + 40} /></span>)}
-              <span className="you"><Portrait kind="you" size={30} /></span>
             </div>
             {enc ? choices(restockCampChoose) : phoneOpen ? (
               <div className="encounter mt">
