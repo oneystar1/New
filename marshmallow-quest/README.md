@@ -42,8 +42,18 @@ play the published page.
   honey glaze, Granny sells Frost Jars, the Elder sharpens your sword.
 - **Day and night.** Embers are faster at night, shops close, and the lamp
   lights dark caves and dark nights. Sleep at home to skip to morning.
+- **Glaze Grotto.** An optional dungeon under the pond, sealed by a flame
+  until you have the spear: a vent corridor, a block puzzle, a squeeze-crack
+  side room, a plate for Mallo, and a lava island you cross on frost crust for
+  the Sugar Boots (faster rolls). Five Frost Jars inside.
 - **Four Marshmallow Seals** are hidden behind the mechanics above. Each
   lengthens the toast meter.
+- **Cooling** is slow outdoors and stops entirely while any fire is on screen,
+  so jars, water and houses matter. Each spear hit on the Pyre Lord vents
+  steam that shields you from his heat for a moment.
+- **How to play** page on the title and pause screens, plus one-time tips the
+  first time each move becomes possible. Music adds percussion when a monster
+  winds up nearby and a low drone as your toast climbs.
 - **After the credits:** a boss-rematch gauntlet with a saved best time, and
   New Game+ with upgrades carried over and the village itself on fire. Title
   options: difficulty, speedrun timer, and jars-only cooling.
