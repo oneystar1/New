@@ -1,4 +1,6 @@
 import type { GameState, RestockRun, Rival, RivalKind, PullView } from './types';
+import { activeSeason, SEASON_TOKENS } from './data/seasons';
+import { earnTokens } from './season';
 import { STORE_BY_ID } from './data/stores';
 import { RIVALS, ENCOUNTERS, LINE_FLAVOR, INTEL_LINES, type EncounterDef } from './data/restock';
 import { computeModifiers, storeCycleProfit, storeCycleSeconds, pullItem, unpull, earn, bumpMission, isConWeekend, weekKey, incomePerSecond, type Modifiers } from './sim';
@@ -30,6 +32,13 @@ export function makeRival(kind: RivalKind, rand: () => number): Rival {
   const def = RIVALS[kind];
   const [lo, hi] = def.takes;
   return { kind, name: def.names[Math.floor(rand() * def.names.length)], icon: def.icon, takes: lo + Math.floor(rand() * (hi - lo + 1)) };
+}
+
+/** Opening line of the run log; seasons add their own lines half the time. */
+function lineFlavor(now: number, rand: () => number): string {
+  const season = activeSeason(now);
+  if (season && season.lineFlavor.length && rand() < 0.5) return season.lineFlavor[Math.floor(rand() * season.lineFlavor.length)];
+  return LINE_FLAVOR[Math.floor(rand() * LINE_FLAVOR.length)];
 }
 
 export function startRun(s: GameState, storeId: string, m: Modifiers, now: number, rand: () => number): RestockRun | null {
@@ -72,7 +81,7 @@ export function startRun(s: GameState, storeId: string, m: Modifiers, now: numbe
     kidsSnatched: 0,
     momsArgued: 0,
     brosRaced: 0,
-    log: [LINE_FLAVOR[Math.floor(rand() * LINE_FLAVOR.length)]],
+    log: [lineFlavor(now, rand)],
     carry: 4 + m.carry,
   };
   run.remaining = computeRemaining(run);
@@ -282,7 +291,7 @@ export function tickRun(run: RestockRun, dt: number, rand: () => number): void {
     return;
   }
   if (run.nextEncounterIn <= 0) {
-    const pool = ENCOUNTERS.filter((e) => !e.line);
+    const pool = ENCOUNTERS.filter((e) => !e.line && (!e.minGrabbed || run.grabbed >= e.minGrabbed));
     run.encounter = pool[Math.floor(rand() * pool.length)].id;
     run.nextEncounterIn = ENCOUNTER_EVERY_SECONDS + rand() * 2;
   }
@@ -389,11 +398,14 @@ export interface RunResult {
   cash: number;
   heat: number;
   banned: boolean;
+  /** Season tokens earned by this run (0 off-season). */
+  tokens: number;
 }
 
 /** Apply a finished run to the game state. */
 export function finishRun(s: GameState, run: RestockRun, now: number, rand: () => number): RunResult {
   const m = computeModifiers(s, now);
+  const tokensBefore = s.season.tokens;
   const items: PullView[] = [];
   let fakes = 0;
   for (let i = 0; i < run.grabbed; i++) {
@@ -427,7 +439,9 @@ export function finishRun(s: GameState, run: RestockRun, now: number, rand: () =
   if (run.banned) s.stats.bans += 1;
   if (run.grabbed > s.stats.bestRestock) s.stats.bestRestock = run.grabbed;
   bumpMission(s, 'restocks', 1);
-  return { items, fakes, cash, heat: run.heat, banned: run.banned };
+  earnTokens(s, run.grabbed * SEASON_TOKENS.restockUnit);
+  const tokens = s.season.tokens - tokensBefore; // restock units plus the pulls themselves
+  return { items, fakes, cash, heat: run.heat, banned: run.banned, tokens };
 }
 
 export function isBanned(s: GameState, storeId: string, now: number): boolean {

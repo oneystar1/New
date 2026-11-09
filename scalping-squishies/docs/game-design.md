@@ -296,3 +296,25 @@ Bottom tab bar, portrait, 520px max width centred on desktop:
 - Art pass v2: hand-tuned paths for the hero items, idle wobble animations
   on the shelf pile, and themed backgrounds per city. (v1, the procedural
   vector sprite system, shipped: see `src/art/`.)
+
+## Seasons (calendar live events)
+
+Three seasons recur every year by UTC date, with no server needed:
+Dohlidays (Nov 20 to Jan 5, 🍬 Candy Canes), Squishy Hearts (Feb 1 to 16,
+🍫 Chocolates), Dohlloween (Oct 10 to Nov 2, 🌽 Candy Corn). Each brings
+six exclusive items (2 common, 1 uncommon, 1 rare, 1 ultra, 1 limited run)
+with their own sprites and a seasonal set bonus (+12% / +8% / +10% profit,
+permanent). Seasonal items never count toward store pages or family sets,
+so a missed season cannot lock a permanent set.
+
+While a season is on: 15% of every pull comes from the season pool
+(weighted toward commons); tokens drop from restock units (2 each), pulls
+(1), accepted deals (1), the daily login (5) and three daily season
+missions (10 to 25 each); the event shop sells each seasonal item once at
+15 / 30 / 60 / 120 / 250 tokens, so a full set is about 490 tokens, roughly
+two weeks of normal play. Leftover tokens become Clout at 20:1 when the
+season ends. The camp line gets seasonal flavor lines half the time.
+
+Testing: `?season=dohlidays` in the URL or `VITE_FORCE_SEASON` forces a
+season on (`none` forces off). The tick keeps `s.season.id` in sync with
+the calendar, so everything else only checks that field.

@@ -28,8 +28,10 @@ export interface ItemDef {
   retail: number;
   /** Baseline resale multiplier over retail before hype/market modifiers. */
   resaleMult: number;
-  /** Which store line it drops from. */
+  /** Which store line it drops from (`season` for seasonal exclusives). */
   storeId: string;
+  /** Set for seasonal exclusives: the season id they drop in. */
+  season?: string;
 }
 
 export interface StoreDef {
@@ -236,6 +238,18 @@ export interface MissionDef {
   counter: 'taps' | 'cashEarned' | 'unitsBought' | 'pulls' | 'adsWatched' | 'sales' | 'deals' | 'restocks';
   rewardClout: number;
   rewardPassXp: number;
+  /** Season missions pay event tokens instead of Clout. */
+  rewardTokens?: number;
+}
+
+export interface SeasonState {
+  /** Live season id, kept in sync with the calendar by the tick; null off-season. */
+  id: string | null;
+  tokens: number;
+  /** Seasonal items bought from the event shop this season (one each). */
+  bought: string[];
+  missions: MissionState[];
+  missionsDate: string;
 }
 
 export interface MissionState {
@@ -370,6 +384,8 @@ export interface GameState {
   bannedUntil: Record<string, number>;
   /** Extra stock on the next run at a store, from group-chat intel. */
   restockIntel: Record<string, number>;
+  /** Seasonal live event: tokens, shop purchases, season missions. */
+  season: SeasonState;
   stats: Stats;
   settings: { sfx: boolean; haptics: boolean; notation: 'short' | 'scientific' };
 }

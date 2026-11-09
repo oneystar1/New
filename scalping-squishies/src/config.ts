@@ -19,6 +19,8 @@ export const CONFIG = {
   supportEmail: env.VITE_SUPPORT_EMAIL ?? '',
   /** Public web home (privacy and support pages live next to it). */
   siteUrl: (env.VITE_SITE_URL || 'https://oneystar1.github.io/New/').replace(/\/?$/, '/'),
+  /** Force a season on for testing: VITE_FORCE_SEASON or ?season=<id> (or 'none'). */
+  forceSeason: (typeof location !== 'undefined' && new URLSearchParams(location.search).get('season')) || env.VITE_FORCE_SEASON || '',
   /** Build label shown in settings. */
   version: env.VITE_APP_VERSION ?? '0.1.0',
 };

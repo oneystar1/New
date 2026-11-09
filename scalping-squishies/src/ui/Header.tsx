@@ -3,6 +3,7 @@ import { computeModifiers, incomePerSecond } from '../engine/sim';
 import { EVENTS } from '../engine/data/events';
 import { formatCash, formatNumber, formatDuration } from '../engine/math';
 import { CITY_BY_ID } from '../engine/data/cities';
+import { SEASON_BY_ID, seasonEndsAt } from '../engine/data/seasons';
 
 export function Header() {
   const s = useGame((g) => g.s);
@@ -13,6 +14,7 @@ export function Header() {
   const boosts = s.boosts.filter((b) => b.endsAt > now);
   const hypeS = s.hype.squish;
   const hypeD = s.hype.doh;
+  const season = s.season.id ? SEASON_BY_ID[s.season.id] : null;
 
   return (
     <header className="header">
@@ -31,6 +33,15 @@ export function Header() {
           <div className="t">
             <b>{ev.name} · {formatDuration((s.event!.endsAt - now) / 1000)} left</b>
             <span className="small">{ev.blurb}</span>
+          </div>
+        </div>
+      )}
+      {season && (
+        <div className="banner good" style={{ borderColor: 'var(--gold)' }}>
+          <span style={{ fontSize: 22 }}>{season.icon}</span>
+          <div className="t">
+            <b>{season.name} · {formatDuration((seasonEndsAt(season, now) - now) / 1000)} left · {season.tokenIcon} {s.season.tokens}</b>
+            <span className="small">Seasonal set is dropping. Spend {season.tokenName} on the Hunt tab.</span>
           </div>
         </div>
       )}

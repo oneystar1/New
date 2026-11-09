@@ -11,6 +11,7 @@ import { Sprite } from '../art/Sprite';
 import { StoreSprite } from '../art/Portrait';
 import { haptic } from '../platform/native';
 import { Leaderboard } from './Leaderboard';
+import { SeasonCard } from './SeasonCard';
 import { ITEMS } from '../engine/data/items';
 import { formatCash } from '../engine/math';
 import type { Reward } from '../engine/types';
@@ -124,6 +125,8 @@ export function HuntTab() {
         </div>
         <button className="btn mint sm" disabled={!daily} onClick={claimDailyReward}>{daily ? 'Claim' : '✓'}</button>
       </div>
+
+      <SeasonCard />
 
       <h2 className="sec">Daily missions</h2>
       <div className="card missions">

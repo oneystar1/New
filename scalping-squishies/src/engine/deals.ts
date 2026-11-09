@@ -1,4 +1,6 @@
 import type { GameState, Offer, OfferKind, ItemDef, Pricing, PullView } from './types';
+import { SEASON_TOKENS } from './data/seasons';
+import { earnTokens } from './season';
 import { ITEMS, ITEM_BY_ID, itemsForStore } from './data/items';
 import { STORES } from './data/stores';
 import { BUYER_NAMES, OFFER_TEMPLATES } from './data/offers';
@@ -139,7 +141,7 @@ export function acceptOffer(s: GameState, id: number, now: number, rand: () => n
     case 'fair':
     case 'lowball': {
       earn(s, o.amount);
-      s.stats.offersAccepted += 1;
+      s.stats.offersAccepted += 1; earnTokens(s, SEASON_TOKENS.deal);
       if (o.kind === 'lowball') s.stats.lowballsAccepted += 1;
       bumpMission(s, 'deals', 1);
       return { text: `${o.buyer} paid ${formatCash(o.amount)}. Met at the police station lot like adults.`, icon: '🤝', kind: 'good' };
@@ -150,7 +152,7 @@ export function acceptOffer(s: GameState, id: number, now: number, rand: () => n
         return { text: `${o.buyer} said "omw" and never showed. Listing bumped.`, icon: '👻', kind: 'bad' };
       }
       earn(s, o.amount);
-      s.stats.offersAccepted += 1;
+      s.stats.offersAccepted += 1; earnTokens(s, SEASON_TOKENS.deal);
       bumpMission(s, 'deals', 1);
       return { text: `${o.buyer} actually showed up! ${formatCash(o.amount)} in hand.`, icon: '🤝', kind: 'good' };
     }
@@ -167,7 +169,7 @@ export function acceptOffer(s: GameState, id: number, now: number, rand: () => n
     case 'trade': {
       const got = pullItem(s, highestUnlockedStore(s), m.pullLuck + 0.2, rand);
       s.stats.tradesDone += 1;
-      s.stats.offersAccepted += 1;
+      s.stats.offersAccepted += 1; earnTokens(s, SEASON_TOKENS.deal);
       bumpMission(s, 'deals', 1);
       return { text: `Traded for a ${got.variant !== 'standard' ? got.variant + ' ' : ''}${got.item.name}.`, icon: '🔄', kind: got.item.rarity === 'common' ? 'info' : 'rare', item: got };
     }
@@ -175,7 +177,7 @@ export function acceptOffer(s: GameState, id: number, now: number, rand: () => n
       // Pays hype prices, but backs out when the chart dips.
       if (rand() < 0.6) {
         earn(s, o.amount);
-        s.stats.offersAccepted += 1;
+        s.stats.offersAccepted += 1; earnTokens(s, SEASON_TOKENS.deal);
         s.stats.broDeals += 1;
         bumpMission(s, 'deals', 1);
         return { text: `${o.buyer} paid ${formatCash(o.amount)} in a Civic with the bass up. "W cop."`, icon: '👟', kind: 'good' };
@@ -203,7 +205,7 @@ export function counterOffer(s: GameState, id: number, now: number, rand: () => 
     if (rand() < 0.6) {
       const v = o.amount * 1.2;
       earn(s, v);
-      s.stats.offersAccepted += 1;
+      s.stats.offersAccepted += 1; earnTokens(s, SEASON_TOKENS.deal);
       s.stats.broDeals += 1;
       bumpMission(s, 'deals', 1);
       return { text: `${o.buyer}: "respect the hustle". Paid ${formatCash(v)}.`, icon: '👟', kind: 'good' };
@@ -218,7 +220,7 @@ export function counterOffer(s: GameState, id: number, now: number, rand: () => 
   const countered = o.amount * (o.kind === 'lowball' ? 2.2 : 1.35);
   if (rand() < 0.5) {
     earn(s, countered);
-    s.stats.offersAccepted += 1;
+    s.stats.offersAccepted += 1; earnTokens(s, SEASON_TOKENS.deal);
     bumpMission(s, 'deals', 1);
     return { text: `${o.buyer} took your counter: ${formatCash(countered)}.`, icon: '💰', kind: 'good' };
   }

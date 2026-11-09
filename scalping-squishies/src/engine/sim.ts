@@ -3,7 +3,7 @@ import { tickOffers, tickHeat } from './deals';
 import { STORES, STORE_BY_ID } from './data/stores';
 import { UPGRADE_BY_ID } from './data/upgrades';
 import { EVENTS, EVENT_WEIGHTS } from './data/events';
-import { ITEMS, ITEM_BY_ID, RARITY_ORDER, RARITY_SHELF_BONUS, itemsForStore, VARIANTS, VARIANT_WEIGHTS, VARIANT_BONUS_MULT, VARIANT_VALUE_MULT, SET_BONUS, FAMILY_SET_BONUS, shelfKey, parseShelfKey } from './data/items';
+import { ITEMS, ALL_ITEMS, ITEM_BY_ID, RARITY_ORDER, RARITY_SHELF_BONUS, itemsForStore, VARIANTS, VARIANT_WEIGHTS, VARIANT_BONUS_MULT, VARIANT_VALUE_MULT, SET_BONUS, FAMILY_SET_BONUS, shelfKey, parseShelfKey } from './data/items';
 import { ACHIEVEMENTS } from './data/achievements';
 import { MISSION_POOL } from './data/missions';
 import { PASS_TIERS } from './data/pass';
@@ -12,6 +12,8 @@ import { CITY_BY_ID, CITIES } from './data/cities';
 import { RANKED_RIVALS } from './data/rivals';
 import { TUTORIAL } from './data/tutorial';
 import { milestoneMult, todayKey, weightedPick, clamp } from './math';
+import { tickSeason, bumpSeasonMissions, earnTokens, rollSeasonItem, seasonSets } from './season';
+import { SEASON_PULL_CHANCE, SEASON_TOKENS } from './data/seasons';
 
 // ---------------------------------------------------------------------------
 // Modifiers: everything that multiplies income is computed once per tick so
@@ -117,7 +119,7 @@ export function computeModifiers(s: GameState, now: number): Modifiers {
   // Shelf (collection) bonus: each unique slot (item x variant) adds a small % to profit,
   // plus set bonuses for complete store pages and families.
   let shelfBonus = 0;
-  for (const it of ITEMS) for (const v of VARIANTS) if ((s.shelf[shelfKey(it.id, v)] ?? 0) > 0) shelfBonus += RARITY_SHELF_BONUS[it.rarity] * VARIANT_BONUS_MULT[v];
+  for (const it of ALL_ITEMS) for (const v of VARIANTS) if ((s.shelf[shelfKey(it.id, v)] ?? 0) > 0) shelfBonus += RARITY_SHELF_BONUS[it.rarity] * VARIANT_BONUS_MULT[v];
   for (const set of completedSets(s)) shelfBonus += set.bonus;
   m.shelfMult = 1 + shelfBonus;
   // Event
@@ -203,6 +205,7 @@ export function earn(s: GameState, amount: number): void {
 }
 
 export function bumpMission(s: GameState, counter: string, amount: number): void {
+  bumpSeasonMissions(s, counter, amount);
   for (const ms of s.missions) {
     const def = MISSION_POOL.find((d) => d.id === ms.id);
     if (def && def.counter === counter && !ms.claimed) ms.progress = Math.min(def.target, ms.progress + amount);
@@ -221,10 +224,12 @@ export interface TickResult {
   calledOut: boolean;
   tutorialDone: string[];
   overtook: string[];
+  seasonStarted: string | null;
+  seasonEnded: { id: string; clout: number } | null;
 }
 
 export function tick(s: GameState, dt: number, now: number, rand: () => number = Math.random): TickResult {
-  const res: TickResult = { completedCycles: 0, eventStarted: null, achievementsUnlocked: [], offerArrived: null, calledOut: false, tutorialDone: [], overtook: [] };
+  const res: TickResult = { completedCycles: 0, eventStarted: null, achievementsUnlocked: [], offerArrived: null, calledOut: false, tutorialDone: [], overtook: [], seasonStarted: null, seasonEnded: null };
   if (dt <= 0) return res;
   const m = computeModifiers(s, now);
   s.stats.playSeconds += dt;
@@ -278,6 +283,11 @@ export function tick(s: GameState, dt: number, now: number, rand: () => number =
 
   // Expire boosts
   s.boosts = s.boosts.filter((b) => b.endsAt > now);
+
+  // Seasonal live event by the calendar.
+  const season = tickSeason(s, now, rand);
+  if (season.started) res.seasonStarted = season.started.id;
+  if (season.ended) res.seasonEnded = { id: season.ended.season.id, clout: season.ended.clout };
 
   // Tutorial steps complete themselves from state.
   for (const t of TUTORIAL) {
@@ -375,7 +385,7 @@ export function highestUnlockedStore(s: GameState): string {
 export interface SetProgress {
   id: string;
   label: string;
-  variant: Variant | 'family';
+  variant: Variant | 'family' | 'season';
   have: number;
   total: number;
   bonus: number;
@@ -398,6 +408,7 @@ export function setProgress(s: GameState): SetProgress[] {
     const have = items.filter((i) => (s.shelf[i.id] ?? 0) > 0).length;
     out.push({ id: `family:${fam}`, label: fam === 'squish' ? 'Every Squishy' : 'Every Doh', variant: 'family', have, total: items.length, bonus: FAMILY_SET_BONUS, done: have === items.length });
   }
+  for (const r of seasonSets(s)) out.push({ id: `season:${r.season.id}`, label: `${r.season.icon} ${r.season.name} set`, variant: 'season', have: r.have, total: r.total, bonus: r.season.setBonus, done: r.done });
   return out;
 }
 
@@ -427,12 +438,15 @@ export function pullItem(s: GameState, storeId: string, luck: number, rand: () =
   let pool = itemsForStore(storeId).filter((i) => i.rarity === rarity);
   if (pool.length === 0) pool = ITEMS.filter((i) => i.rarity === rarity);
   if (pool.length === 0) pool = itemsForStore(storeId);
-  const item = pool[Math.floor(rand() * pool.length)];
+  let item = pool[Math.floor(rand() * pool.length)];
+  // While a season is on, a slice of every pull comes from the seasonal set.
+  if (s.season.id && rand() < SEASON_PULL_CHANCE) item = rollSeasonItem(s.season.id, rand);
   const variant = rollVariant(luck, rand);
   const key = shelfKey(item.id, variant);
   s.shelf[key] = (s.shelf[key] ?? 0) + 1;
   s.stats.pulls += 1;
   bumpMission(s, 'pulls', 1);
+  earnTokens(s, SEASON_TOKENS.pull);
   return { item, variant };
 }
 
@@ -585,6 +599,7 @@ export function claimDaily(s: GameState, now: number): { reward: Reward; day: nu
   const day = ((s.dailyStreak - 1) % DAILY_REWARDS.length) + 1;
   const reward = DAILY_REWARDS[day - 1];
   grantReward(s, reward, now);
+  earnTokens(s, SEASON_TOKENS.daily);
   return { reward, day };
 }
 

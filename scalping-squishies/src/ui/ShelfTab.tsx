@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useGame } from '../engine/store';
-import { ITEMS, RARITY_LABEL, RARITY_ORDER, RARITY_SHELF_BONUS, VARIANTS, VARIANT_LABEL, VARIANT_ICON, VARIANT_BONUS_MULT, shelfKey } from '../engine/data/items';
+import { ITEMS, ITEM_BY_ID, RARITY_LABEL, RARITY_ORDER, RARITY_SHELF_BONUS, VARIANTS, VARIANT_LABEL, VARIANT_ICON, VARIANT_BONUS_MULT, shelfKey } from '../engine/data/items';
 import { CLOUT_COSTS } from '../engine/data/shop';
 import { dupeSaleValue, computeModifiers, highestUnlockedStore, rollRarity, setProgress } from '../engine/sim';
 import { STORE_BY_ID, STORES } from '../engine/data/stores';
 import { formatCash } from '../engine/math';
 import type { ItemFamily, Variant } from '../engine/types';
 import { Sprite } from '../art/Sprite';
+import { SEASON_BY_ID } from '../engine/data/seasons';
+import { visibleSeasonItems } from '../engine/season';
 
 export function ShelfTab() {
   const s = useGame((g) => g.s);
@@ -14,14 +16,16 @@ export function ShelfTab() {
   const pull = useGame((g) => g.pull);
   const sellDupe = useGame((g) => g.sellDupe);
   const watchAd = useGame((g) => g.watchAd);
-  const [fam, setFam] = useState<ItemFamily | 'all' | 'sets'>('all');
+  const [fam, setFam] = useState<ItemFamily | 'all' | 'sets' | 'season'>('all');
   const [sel, setSel] = useState<string | null>(null);
   const m = computeModifiers(s, now);
   const slots = ITEMS.length * VARIANTS.length;
   const ownedSlots = ITEMS.reduce((a, i) => a + VARIANTS.filter((v) => (s.shelf[shelfKey(i.id, v)] ?? 0) > 0).length, 0);
-  const list = ITEMS.filter((i) => fam === 'all' || i.family === fam);
+  const seasonItems = visibleSeasonItems(s);
+  const liveSeason = s.season.id ? SEASON_BY_ID[s.season.id] : null;
+  const list = fam === 'season' ? seasonItems : ITEMS.filter((i) => fam === 'all' || i.family === fam);
   const hunting = STORE_BY_ID[highestUnlockedStore(s)];
-  const selected = sel ? ITEMS.find((i) => i.id === sel) : null;
+  const selected = sel ? ITEM_BY_ID[sel] ?? null : null;
   const adReady = (s.adCooldowns.free_pull ?? 0) <= now;
   const sets = setProgress(s);
   const setsDone = sets.filter((x) => x.done).length;
@@ -65,9 +69,9 @@ export function ShelfTab() {
       </div>
 
       <div className="seg">
-        {(['all', 'squish', 'doh', 'sets'] as const).map((f) => (
+        {(['all', 'squish', 'doh', 'sets', 'season'] as const).filter((f) => f !== 'season' || seasonItems.length > 0).map((f) => (
           <button key={f} className={fam === f ? 'active' : ''} onClick={() => setFam(f)}>
-            {f === 'all' ? 'All' : f === 'squish' ? '🍌 Squishies' : f === 'doh' ? '🧊 Dohs' : '📚 Sets'}
+            {f === 'all' ? 'All' : f === 'squish' ? '🍌 Squishies' : f === 'doh' ? '🧊 Dohs' : f === 'sets' ? '📚 Sets' : `${liveSeason?.icon ?? '🎁'} Seasonal`}
           </button>
         ))}
       </div>
@@ -89,7 +93,7 @@ export function ShelfTab() {
               </div>
             );
           })}
-          {sets.filter((x) => x.variant === 'family').map((x) => (
+          {sets.filter((x) => x.variant === 'family' || x.variant === 'season').map((x) => (
             <div className="card row between" key={x.id}>
               <h3>{x.label} · {x.have}/{x.total}</h3>
               <span className="small" style={{ color: x.done ? 'var(--mint)' : 'var(--muted)' }}>{x.done ? '✓ ' : ''}+{(x.bonus * 100).toFixed(0)}% profit</span>
@@ -120,7 +124,7 @@ export function ShelfTab() {
             <div className="center"><Sprite id={selected.id} size={110} /></div>
             <h2 className="center">{VARIANTS.some((v) => (s.shelf[shelfKey(selected.id, v)] ?? 0) > 0) ? selected.name : 'Unknown item'}</h2>
             <div className="center"><span className={`tag ${selected.rarity}`}>{RARITY_LABEL[selected.rarity]}</span></div>
-            <p>{VARIANTS.some((v) => (s.shelf[shelfKey(selected.id, v)] ?? 0) > 0) ? selected.blurb : `Drops from ${STORE_BY_ID[selected.storeId].name}.`}</p>
+            <p>{VARIANTS.some((v) => (s.shelf[shelfKey(selected.id, v)] ?? 0) > 0) ? selected.blurb : selected.season ? `${SEASON_BY_ID[selected.season]?.name} exclusive. Drops from pulls while the season is on, or buy it in the event shop.` : `Drops from ${STORE_BY_ID[selected.storeId].name}.`}</p>
             <p className="small">Retail ${selected.retail} · resale ~{selected.resaleMult}x</p>
             {VARIANTS.map((v) => {
               const key = shelfKey(selected.id, v);

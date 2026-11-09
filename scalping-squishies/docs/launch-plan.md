@@ -92,8 +92,9 @@ Start the Apple one today; approval can take several days.
 - [ ] I fix in priority order: anything that blocks progress, anything
       confusing in the first 10 minutes, then balance (the bot's 51/29/16
       income split is a guess until humans play).
-- [ ] Decide the first-week content: Season 1 pass is in; confirm the
-      first timed event (Dohlloween or Dohlidays) is ready before launch.
+- [x] First timed event: Dohlidays (Nov 20 to Jan 5) is built, with
+      Squishy Hearts and Dohlloween queued on the same calendar system.
+      Test it any day with `?season=dohlidays`.
 
 ## Phase 4: soft launch (2 to 4 weeks)
 

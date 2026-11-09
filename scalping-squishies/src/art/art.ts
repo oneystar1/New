@@ -20,6 +20,25 @@ const d = (shape: ShapeId, c1: string, c2: string, finish: Finish = 'jelly', fac
 // One art definition per item id. Colors are picked per real-world line
 // (the Nice Cube family is icy blue, Dream Drop pastel, bananas yellow).
 export const ART: Record<string, ArtDef> = {
+  // Seasonal exclusives (data/seasons.ts)
+  xm_candycane: d('cube', '#fff0f0', '#e63946', 'jelly', 'happy', '#ffffff'),
+  xm_gingernana: d('banana', '#c98a4b', '#8a5a2b', 'matte', 'happy'),
+  xm_snowkube: d('cube', '#f4fbff', '#9fd3ff', 'clear', 'sleepy'),
+  xm_elfmochi: d('mochi', '#bff5c8', '#2f9e5a', 'matte', 'wink', '#e63946'),
+  xm_reindeerglow: d('deer', '#c9a27a', '#8a5a3a', 'matte', 'happy', '#ff3b3b'),
+  xm_advent: d('calendar', '#ffe9a8', '#d4a017', 'matte', 'cool'),
+  vd_heartkube: d('heart', '#ffd0e0', '#ff4d7d', 'jelly', 'happy'),
+  vd_choconana: d('banana', '#f5e663', '#5a3a1e', 'matte', 'happy', '#5a3a1e'),
+  vd_cupid: d('blob', '#ffe3ee', '#ff7aa8', 'jelly', 'wink', '#ffffff'),
+  vd_rosemochi: d('mochi', '#ff9fb8', '#d6244f', 'matte', 'sleepy', '#2f9e5a'),
+  vd_lovekube: d('cube', '#fff4f8', '#ff5a8a', 'jelly', 'happy', '#ffd166'),
+  vd_goldheart: d('heart', '#ffe9a8', '#d4a017', 'clear', 'cool'),
+  hw_pumpkube: d('pumpkin', '#ffb347', '#e07b00', 'matte', 'happy', '#2f9e5a'),
+  hw_mummynana: d('banana', '#f3efe6', '#bdb5a3', 'matte', 'panic'),
+  hw_batglob: d('blob', '#6b5bd6', '#2b1f6e', 'matte', 'cool'),
+  hw_cauldron: d('mochi', '#a9f58a', '#2f4f2f', 'jelly', 'wink', '#111111'),
+  hw_ghostglow: d('ghost', '#e9ffe9', '#7dff9c', 'clear', 'sleepy'),
+  hw_witchnana: d('banana', '#f5e663', '#6b3fa0', 'matte', 'wink', '#6b3fa0'),
   // Dohs
   doh_generic: d('ball', '#b8f0a0', '#5fa84a', 'matte', 'sleepy'),
   doh_panic: d('ball', '#ffd9a8', '#e0914a', 'matte', 'panic'),

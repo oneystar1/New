@@ -62,6 +62,8 @@ export interface EncounterDef {
   once?: boolean;
   /** Only makes sense if you own this gear. */
   requires?: string;
+  /** Doors events that only make sense once your cart has this many. */
+  minGrabbed?: number;
 }
 
 export const ENCOUNTERS: EncounterDef[] = [
@@ -74,8 +76,8 @@ export const ENCOUNTERS: EncounterDef[] = [
     ],
   },
   {
-    id: 'kid_cry', kind: 'kid', icon: '😭',
-    text: 'A kid is crying at your feet because your cart has nine and the shelf has zero.',
+    id: 'kid_cry', kind: 'kid', icon: '😭', minGrabbed: 3,
+    text: 'A kid is crying at your feet because your cart has {cart} and the shelf has {shelf}.',
     choices: [
       { label: 'Give him one from the cart', effect: 'spareKid' },
       { label: 'Step over him (+10 heat)', effect: 'snatchKid' },

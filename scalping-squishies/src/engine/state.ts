@@ -49,6 +49,7 @@ export function initialState(now = Date.now()): GameState {
     restockReadyAt: {},
     bannedUntil: {},
     restockIntel: {},
+    season: { id: null, tokens: 0, bought: [], missions: [], missionsDate: '' },
     stats: {
       totalCashEarned: 0,
       lifetimeCashEarned: 0,
@@ -120,6 +121,7 @@ export function migrate(raw: unknown, now = Date.now()): GameState {
     handle: typeof s.handle === 'string' ? s.handle : '',
     bannedUntil: s.bannedUntil ?? {},
     restockIntel: s.restockIntel ?? {},
+    season: { ...fresh.season, ...(s.season ?? {}), bought: Array.isArray(s.season?.bought) ? s.season!.bought : [], missions: Array.isArray(s.season?.missions) ? s.season!.missions : [] },
     version: SAVE_VERSION,
   };
   for (const st of STORES) if (!merged.stores[st.id]) merged.stores[st.id] = { units: 0, progress: 0, manager: false };

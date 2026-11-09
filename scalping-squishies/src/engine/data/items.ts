@@ -1,4 +1,5 @@
 import type { ItemDef, Rarity, Variant } from '../types';
+import { SEASON_ITEMS } from './seasons';
 
 export const RARITY_ORDER: Rarity[] = ['common', 'uncommon', 'rare', 'ultra', 'select', 'grail', 'chase'];
 
@@ -165,7 +166,9 @@ export const ITEMS: ItemDef[] = [
   squish('sq_goldenticket', 'Golden Ticket Dumpling', 'chase', '🎫', 5, 800.0, 'wholesale', 'One steamer in every ten thousand cases. The lid is gold. You screamed in the aisle.'),
 ];
 
-export const ITEM_BY_ID: Record<string, ItemDef> = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
+/** Core catalog plus seasonal exclusives (which never count toward store or family sets). */
+export const ALL_ITEMS: ItemDef[] = [...ITEMS, ...SEASON_ITEMS];
+export const ITEM_BY_ID: Record<string, ItemDef> = Object.fromEntries(ALL_ITEMS.map((i) => [i.id, i]));
 
 export function itemsForStore(storeId: string): ItemDef[] {
   return ITEMS.filter((i) => i.storeId === storeId);

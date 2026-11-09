@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGame } from '../engine/store';
 import { STORE_BY_ID } from '../engine/data/stores';
 import { PHONE_ACTIONS } from '../engine/data/restock';
+import { SEASON_BY_ID } from '../engine/data/seasons';
 import { ITEM_BY_ID, RARITY_LABEL, VARIANT_LABEL } from '../engine/data/items';
 import { encounterDef, DOORS_SECONDS, CAMP_SECONDS, SKIP_CAMP_PENALTY, neighborName, hasChair } from '../engine/restock';
 import { computeModifiers, incomePerSecond } from '../engine/sim';
@@ -31,7 +32,7 @@ export function RestockOverlay() {
       <div className="overlay">
         <div className="modal center">
           <h2>{result.banned ? 'Escorted out' : result.grabbed >= 8 ? 'Cleared the shelf' : result.grabbed > 0 ? 'Haul secured' : 'Went home empty'}</h2>
-          <p>{result.grabbed} grabbed · +{formatCash(result.cash)} · heat {result.heat >= 0 ? '+' : ''}{result.heat}{result.fakes ? ` · ${result.fakes} counterfeit` : ''}</p>
+          <p>{result.grabbed} grabbed · +{formatCash(result.cash)} · heat {result.heat >= 0 ? '+' : ''}{result.heat}{result.fakes ? ` · ${result.fakes} counterfeit` : ''}{result.tokens > 0 && s.season.id ? ` · ${SEASON_BY_ID[s.season.id]?.tokenIcon ?? '🎟️'} +${result.tokens}` : ''}</p>
           {result.banned && <p style={{ color: 'var(--red)' }}>Banned from this store for 10 minutes. No runs, no restocks. Your photo is by the register.</p>}
           <div className="pulls">
             {result.items.map((p, i) => (
@@ -58,7 +59,9 @@ export function RestockOverlay() {
     .replace(/\{neighbor\}/g, neighborName(run))
     .replace(/\{coffee\}/g, formatCash(Math.max(10, ips * 30)))
     .replace(/\{solo\}/g, formatCash(Math.max(3, ips * 3)))
-    .replace(/\{spot\}/g, formatCash(ips * 60));
+    .replace(/\{spot\}/g, formatCash(ips * 60))
+    .replace(/\{cart\}/g, String(run.grabbed))
+    .replace(/\{shelf\}/g, String(run.remaining));
   // A ticket in hand changes what the choices actually do; say so on the buttons.
   const fillLabel = (t: string) => {
     let out = fill(t);

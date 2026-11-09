@@ -22,6 +22,9 @@ import { CLOUT_COSTS, PRODUCTS, VIP } from './data/shop';
 import { ACHIEVEMENTS } from './data/achievements';
 import { acceptOffer, counterOffer, declineOffer, apologize, tossFake, flipFake, fakeRoll } from './deals';
 import { unitCost, maxAffordable, todayKey } from './math';
+import { buySeasonItem, claimSeasonMission } from './season';
+import { setSeasonOverride, SEASON_BY_ID } from './data/seasons';
+import { CONFIG } from '../config';
 import { AD_RULES, type AdPlacement, type MonetizationProvider } from '../monetization/provider';
 
 export type TabId = 'hunt' | 'stores' | 'deals' | 'shelf' | 'boost' | 'shop';
@@ -44,7 +47,7 @@ interface GameStore {
   lastPulls: PullView[] | null;
   huntMeter: number; // 0..1, fills with taps, grants a free pull
   run: RestockRun | null;
-  runResult: { items: PullView[]; fakes: number; cash: number; heat: number; banned: boolean; grabbed: number } | null;
+  runResult: { items: PullView[]; fakes: number; cash: number; heat: number; banned: boolean; grabbed: number; tokens: number } | null;
   provider: MonetizationProvider | null;
   buyAmount: BuyAmount;
 
@@ -90,6 +93,8 @@ interface GameStore {
   watchAd: (placement: AdPlacement) => Promise<void>;
   claimMissionReward: (id: string) => void;
   claimDailyReward: () => void;
+  buySeasonItem: (itemId: string) => void;
+  claimSeasonMission: (id: string) => void;
   claimPass: (tier: number, premium: boolean) => void;
   buyProduct: (productId: string) => Promise<void>;
   restorePurchases: () => Promise<void>;
@@ -117,6 +122,8 @@ interface GameStore {
   dismissToast: (id: number) => void;
   setSetting: <K extends keyof GameState['settings']>(k: K, v: GameState['settings'][K]) => void;
 }
+
+setSeasonOverride(CONFIG.forceSeason || null);
 
 let toastSeq = 1;
 let rand = Math.random;
@@ -321,6 +328,8 @@ export const useGame = create<GameStore>((set, get) => {
         toast(`Market event: ${res.eventStarted.toUpperCase()}`, kinds[res.eventStarted], res.eventStarted === 'restock' || res.eventStarted === 'crackdown' ? 'bad' : 'good');
       }
       if (res.offerArrived) { toast(`${res.offerArrived.buyer} messaged you about your ${ITEM_BY_ID[res.offerArrived.itemId]?.name ?? 'listing'}. Tap to open Messages.`, '💬', 'info', 'deals'); sfx.message(); }
+      if (res.seasonStarted) { const sd = SEASON_BY_ID[res.seasonStarted]; toast(`${sd.name} has started! Seasonal items drop now.`, sd.icon, 'good', 'hunt'); }
+      if (res.seasonEnded) { const sd = SEASON_BY_ID[res.seasonEnded.id]; toast(`${sd.name} is over. Leftover ${sd.tokenName} became ${res.seasonEnded.clout} Clout.`, sd.icon, 'info'); }
       if (res.calledOut) { toast('CALLED OUT. The group posted your listings. Profit x0.4 for 3 min.', '📸', 'bad'); sfx.calledOut(); fx({ kind: 'shake' }); fx({ kind: 'flash', color: '#ff6b6b' }); }
       for (const id of res.tutorialDone) { const t = TUTORIAL.find((x) => x.id === id); toast(`Tutorial: ${t?.text} (+${t?.clout} Clout)`, '✅', 'good'); sfx.achievement(); }
       for (const id of res.overtook) { const r = RANKED_RIVALS.find((x) => x.id === id); toast(`You passed ${r?.name} in the local rankings! +${r?.clout} Clout`, r?.icon ?? '🏆', 'rare'); sfx.rare(); fx({ kind: 'confetti', intensity: 1 }); }
@@ -516,6 +525,13 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     claimMissionReward: (id) => mutate((s) => { if (claimMission(s, id)) toast('Mission complete!', '✅', 'good'); }),
+
+    buySeasonItem: (itemId) => mutate((s) => {
+      const it = buySeasonItem(s, itemId);
+      if (it) { toast(`${it.name} is on the shelf`, '🎁', 'good'); sfx.rare(); }
+      else toast('Not enough tokens yet', SEASON_BY_ID[s.season.id ?? '']?.tokenIcon ?? '🎟️', 'bad');
+    }),
+    claimSeasonMission: (id) => mutate((s) => { if (claimSeasonMission(s, id)) toast('Season mission complete!', '✅', 'good'); }),
 
     claimDailyReward: () => {
       const s = get().s;
