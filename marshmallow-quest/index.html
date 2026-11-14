@@ -607,13 +607,15 @@ function mkEnemy(e){const base={type:'enemy',kind:e.kind,x:e.x*T+3,y:e.y*T+3,w:1
     case 'boss':Object.assign(base,{hp:9+(hard()?3:0),maxhp:9+(hard()?3:0),speed:0.9,heat:1.6,radius:46,w:22,h:22,x:e.x*T-3,y:e.y*T+2,boss:true,flame:true,phase:0,spit:0});break;}
   base.baseSpeed=base.speed;return base;}
 function loadMap(name,tx,ty,dir){const m=MAPS[name];G.map=m;G.mapName=name;G.visited[name]=true;
-  G.ents=[];G.shots=[];G.fx=[];G.amb=[];G.patches=[];G.steam=[];G.goo=[];G.frozen={};G.ash=[];P.spearOut=null;P.carried=null;P.vault=0;P.hop=null;P.squeeze=null;P.dotUsed=false;
+  m.objs=m.objs.filter(o=>!o.drop);G.ents=[];G.shots=[];G.fx=[];G.amb=[];G.patches=[];G.steam=[];G.goo=[];G.frozen={};G.ash=[];P.spearOut=null;P.carried=null;P.vault=0;P.hop=null;P.squeeze=null;P.dotUsed=false;
   if(G.gauntlet&&name!=='castle')G.gauntlet=null;
   if(G.ngplus&&m.ngplus){for(const e of m.ngplus)m.enemies.includes(e)||0;}
   if(G.ngplus&&m.ngPatches)for(const[x,y]of m.ngPatches)G.patches.push({x,y,ttl:1e9});
   for(const o of m.objs){if(o.type==='block'){o.x=o.ox!=null?o.ox:(o.ox=o.x);o.y=o.oy!=null?o.oy:(o.oy=o.y);o.ax=o.ay=0;}}
   const list=m.enemies.concat(hard()&&m.hard?m.hard:[]).concat(G.ngplus&&m.ngplus?m.ngplus:[]);
-  for(const e of list){if(e.kind==='boss'&&(G.flags.bossDead||!G.flags.taunt))continue;if(e.kind==='toad'&&G.flags.toadDead)continue;G.ents.push(mkEnemy(e));}
+  for(const e of list){if(e.kind==='boss')continue;if(e.kind==='toad'&&G.flags.toadDead)continue;G.ents.push(mkEnemy(e));}
+  if(name==='castle'&&!G.flags.bossDead)G.flags.trig_taunt=false; // the Pyre Lord waits in the throne room until you walk in
+  if((name==='cave'||name==='castle'||name==='grotto')&&tx===m.spawn.x&&ty===m.spawn.y)G.checkpoint={map:name,x:tx,y:ty};
   if(name==='castle'&&G.flags.eastDoor){const b=m.objs.find(o=>o.type==='block');b.x=34;b.y=26;}if(name==='grotto'&&G.flags.grottoEastDoor){const b=m.objs.find(o=>o.type==='block');b.x=22;b.y=15;}
   G.flags.bossFight=G.ents.some(e=>e.boss);
   P.x=tx*T+3;P.y=ty*T+3;P.dir=dir==null?P.dir:dir;P.kb.x=P.kb.y=0;P.atk=0;P.roll=0;P.wasToasted=P.toast/P.cap>=0.5;refreshSolids();
@@ -643,10 +645,10 @@ function slideMove(e,dx,dy){if(dx){if(!moveEnt(e,dx,0)&&!dy){for(const n of[1,-1
   if(dy){if(!moveEnt(e,0,dy)&&!dx){for(const n of[1,-1,2,-2,3,-3]){if(!hitsWall(e.x+n,e.y+dy,e.w,e.h)){e.x+=Math.sign(n);break;}}}}}
 function overlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
 function dist(a,b){const dx=(a.x+a.w/2)-(b.x+b.w/2),dy=(a.y+a.h/2)-(b.y+b.h/2);return Math.hypot(dx,dy);}
-function updateCam(snapNow){const m=G.map;let cx=P.x+P.w/2-W/2,cy=P.y+P.h/2-(H-HUD)/2;
+function updateCam(snapNow){const m=G.map;const ld=dirVec(P.dir);let cx=P.x+P.w/2-W/2+ld[0]*24,cy=P.y+P.h/2-(H-HUD)/2+ld[1]*20;
   cx=Math.max(0,Math.min(m.w*T-W,cx));cy=Math.max(0,Math.min(m.h*T-(H-HUD),cy));
   if(m.w*T<W)cx=(m.w*T-W)/2;if(m.h*T<H-HUD)cy=(m.h*T-(H-HUD))/2;
-  if(snapNow){G.cam.x=cx;G.cam.y=cy;}else{G.cam.x+=(cx-G.cam.x)*0.2;G.cam.y+=(cy-G.cam.y)*0.2;}}
+  if(snapNow){G.cam.x=cx;G.cam.y=cy;}else{G.cam.x+=(cx-G.cam.x)*0.12;G.cam.y+=(cy-G.cam.y)*0.12;}}
 function say(text,cb,who){const parts=Array.isArray(text)?text:[text];G.msgQ=parts.map(p=>({t:p,who}));G.msgCb=cb||null;nextMsg();}
 function puff(x,y,col,n=6){for(let i=0;i<n;i++)G.fx.push({x,y,vx:(Math.random()-0.5)*1.6,vy:(Math.random()-0.9)*1.6,life:20+Math.random()*15,col});}
 function startFade(cb,dir){if(dir!=null){sctx.drawImage(cv,0,0);G.trans={t:0,dir};cb();return;}G.fade=1;G.fadeTo=cb;}
@@ -738,7 +740,9 @@ function updatePlayer(){
     for(const e of G.ents){if(e.kind==='bat'&&!e.dead&&overlap(e,P)){P.carried=e;P.carryT=0;P.roll=0;audio.sfx('hop');G.banner={title:'HANG ON',text:'Puff grabbed the bat! Any button lets go.',t:150};return;}}
     return;}
   if(G.flags.spear&&!P.spearOut&&G.t-P.bTap<14&&pressed.b){pressed.b=0;P.atk=0;P.atkType=null;P.charge=0;P.bTap=-99;spearThrow();return;}
-  if(P.atk>0){P.atk--;if(P.atkType==='spear'&&P.atk>10){const d=dirVec(P.dir);moveEnt(P,d[0]*1.2,d[1]*1.2);}if(P.atk===0)P.atkType=null;if(keys.b&&G.flags.spear)P.charge++;return;}
+  if(P.atk>0){P.atk--;const d=dirVec(P.dir);if(P.atkType==='spear'&&P.atk>10)moveEnt(P,d[0]*1.2,d[1]*1.2);if(P.atkType==='sword'&&P.atk>10)moveEnt(P,d[0]*0.9,d[1]*0.9);
+    if(P.atk<8&&P.atkType==='sword'&&justPressed('c')&&P.rollCd===0){P.atk=0;P.atkType=null;startRoll(keys.left?-1:keys.right?1:joy.on?joy.x:0,keys.up?-1:keys.down?1:joy.on?joy.y:0);return;}
+    if(P.atk===0)P.atkType=null;if(keys.b&&G.flags.spear)P.charge++;return;}
   // spear: tap B to thrust, tap twice to throw, hold B then release for a frost sweep
   if(G.flags.spear&&!P.spearOut&&keys.b){P.charge++;if(P.charge===20)tip('sweep','Keep holding B, then let go: a FROST SWEEP douses everything around you.');if(P.charge===40){audio.sfx('charge');}if(P.charge>40&&G.t%6===0)G.fx.push({x:P.x+Math.random()*10,y:P.y+10,vx:0,vy:-0.6,life:14,col:'#8fc0ff'});}
   if(justReleased('b')&&G.flags.spear){const c=P.charge;P.charge=0;if(c>=40&&!P.spearOut){frostSweep();return;}}
@@ -754,7 +758,7 @@ function updatePlayer(){
     if(P.x===ox&&P.y===oy){const d=dirVec(P.dir);if(!tryPush(d[0],d[1])){P.pushT=0;if(trySqueeze())return;}}else P.pushT=0;
     if(toastRatio()>0.8&&++P.gooT%10===0)G.goo.push({x:P.x+2,y:P.y+8,ttl:240});}
   else{P.anim=0;P.idle++;P.pushT=0;}
-  if(justPressed('c')&&P.rollCd===0){let rx=dx,ry=dy;if(!rx&&!ry){const d=dirVec(P.dir);rx=d[0];ry=d[1];}const l=Math.hypot(rx,ry);P.rollDir={x:rx/l,y:ry/l};P.roll=16;P.rollCd=Math.round((hasFollower('squish')?15:30)*(G.items.boots?0.5:1));audio.sfx('roll');return;}
+  if(justPressed('c')&&P.rollCd===0){startRoll(dx,dy);return;}
   if(justPressed('a')){if(!interact()&&G.flags.sword){P.atk=P.soggy?22:14;P.atkType='sword';audio.sfx('sword');hitThings();}}
   if(justPressed('item'))useItem();
   const ci=Math.floor((P.x+P.w/2)/T),cj=Math.floor((P.y+P.h/2)/T);
@@ -764,16 +768,18 @@ function updatePlayer(){
   for(const o of G.map.objs){if(o.type!=='warp')continue;if(o.needs&&!G.flags[o.needs])continue;
     if(ci>=o.x&&ci<o.x+(o.w||1)&&cj>=o.y&&cj<o.y+(o.h||1)){if(!o.silent)audio.sfx('door');const warp=o;startFade(()=>{loadMap(warp.to,warp.tx,warp.ty,warp.dir);saveGame();},warp.dir);return;}}
   for(const o of G.map.objs){if(o.type==='trigger'&&!G.flags['trig_'+o.id]&&ci>=o.x&&ci<o.x+o.w&&cj>=o.y&&cj<o.y+o.h){G.flags['trig_'+o.id]=true;fireTrigger(o.id);}}
-  for(const o of G.map.objs){if((o.type==='jar'||o.type==='sprinkle'||o.type==='seal'||o.type==='coin')&&!G.taken[takenKey(o)]&&ci===o.x&&cj===o.y){
-      if(o.type==='coin'){G.taken[takenKey(o)]=true;G.coins++;audio.sfx('coin');puff(P.x+5,P.y+5,'#ffd23f',4);continue;}
+  for(const o of G.map.objs){if((o.type==='jar'||o.type==='sprinkle'||o.type==='seal'||o.type==='coin')&&!o.got&&(o.drop||!G.taken[takenKey(o)])&&ci===o.x&&cj===o.y){
+      const take=()=>{if(o.drop){o.got=true;G.pruneDrops=true;}else G.taken[takenKey(o)]=true;};
+      if(o.type==='coin'){take();G.coins++;audio.sfx('coin');puff(P.x+5,P.y+5,'#ffd23f',4);continue;}
       if(o.type==='seal'&&G.flags[o.id])continue;
-      G.taken[takenKey(o)]=true;
+      take();
       if(o.type==='jar'){P.toast=Math.max(0,P.toast-0.6);audio.sfx('glaze');puff(P.x+5,P.y+5,'#ffb6d9',8);}
       else if(o.type==='seal'){G.flags[o.id]=true;giveSeal();}
       else{G.q.sprinkle=2;audio.sfx('item');puff(P.x+5,P.y+5,'#ffd23f',10);say(["Puff found the GOLDEN SPRINKLE! Nibs will be thrilled. He's by the village path."],null,'ITEM');saveGame();}}}
   for(const a of G.ash){if(!a.gone&&Math.floor((a.x+5)/T)===ci&&Math.floor((a.y+5)/T)===cj){a.gone=true;puff(a.x+5,a.y+5,'#888',6);}}
 }
 function tip(id,text){if(G.flags['tip_'+id])return;G.flags['tip_'+id]=true;G.banner={title:'TIP',text,t:300};}
+function startRoll(rx,ry){if(!rx&&!ry){const d=dirVec(P.dir);rx=d[0];ry=d[1];}const l=Math.hypot(rx,ry);P.rollDir={x:rx/l,y:ry/l};P.roll=16;P.rollCd=Math.round((hasFollower('squish')?15:30)*(G.items.boots?0.5:1));audio.sfx('roll');}
 function giveSeal(){G.seals++;giveCap(0.25);audio.sfx('seal');
   const lines=[`Puff found a MARSHMALLOW SEAL! (${G.seals} of 4) The TOAST meter grows.`];if(G.seals===4){giveCap(0.5);lines.push("All four Seals! Puff feels positively fluffy. A big bonus to the TOAST meter.");}
   say(lines,null,'SEAL');saveGame();}
@@ -789,8 +795,9 @@ function checkPlates(){const m=G.map;if(!(G.F&&G.F.parked&&m.t[G.F.ty]?.[G.F.tx]
   const id=G.mapName==='castle'&&G.F.tx===31&&G.F.ty===17?'closetDoor':G.mapName==='grotto'&&G.F.tx===24&&G.F.ty===7?'grottoNorthDoor':null;
   if(id&&!G.flags[id]){G.flags[id]=true;audio.sfx('switch');G.shake=4;say(["Mallo plants himself on the plate. A hidden door slides open!"]);refreshSolids();saveGame();}}
 function fireTrigger(id){
-  if(id==='taunt'){G.flags.taunt=true;const e=G.map.enemies.find(x=>x.kind==='boss');
-    say(["So. The little white one who douses my fires.","Your friends made FINE kindling, Puff. Come closer. Let me see how you toast!"],()=>{G.flags.bossFight=true;G.ents.push(mkEnemy(e));audio.play('boss');audio.sfx('boss');G.shake=10;saveGame();},'Pyre Lord');}
+  if(id==='taunt'){const e=G.map.enemies.find(x=>x.kind==='boss');if(G.flags.bossDead||G.ents.some(x=>x.boss))return;
+    if(G.flags.taunt){G.flags.bossFight=true;G.ents.push(mkEnemy(e));audio.play('boss');audio.sfx('boss');G.shake=10;G.banner={title:'PYRE LORD',text:'"Back for seconds, soft one?"',t:150};return;}
+    G.flags.taunt=true;say(["So. The little white one who douses my fires.","Your friends made FINE kindling, Puff. Come closer. Let me see how you toast!"],()=>{G.flags.bossFight=true;G.ents.push(mkEnemy(e));audio.play('boss');audio.sfx('boss');G.shake=10;saveGame();},'Pyre Lord');}
   if(id==='toad'){say(["A great wet croak echoes off the stone. The MAGMA TOAD guards the spear!"]);}}
 function douseAt(x,y){if(P.soggy){G.steam.push({x,y,r:34,ttl:180});audio.sfx('steam');}}
 function damageEnemy(e,dmg,spear){
@@ -905,6 +912,7 @@ function updateEnemies(){
     if(G.F&&!G.F.parked&&overlap(e,G.F)&&G.t%20===0)G.F.toast+=0.2;
   }
   G.ents=G.ents.filter(e=>!e.gone);
+  if(G.pruneDrops){G.pruneDrops=false;G.map.objs=G.map.objs.filter(o=>!o.got);}
   // ash left near lava reignites unless stepped on
   for(const a of G.ash){a.t++;if(!a.gone&&a.t>240){a.gone=true;G.ents.push(mkEnemy({kind:a.kind,x:Math.floor((a.x+5)/T),y:Math.floor((a.y+5)/T)}));puff(a.x+5,a.y+5,'#ff8c1a',10);}}
   G.ash=G.ash.filter(a=>!a.gone);
@@ -947,7 +955,8 @@ function updateAmbience(){const m=G.map;const cx=G.cam.x,cy=G.cam.y;
   for(const a of G.amb){a.life--;a.ph+=0.05;a.x+=a.vx+(a.kind==='leaf'?Math.sin(a.ph)*0.4:a.kind==='heat'?Math.sin(a.ph*3)*0.3:0);a.y+=a.vy;}
   G.amb=G.amb.filter(a=>a.life>0&&a.y<cy+H&&a.y>cy-20);if(G.amb.length>80)G.amb.splice(0,G.amb.length-80);}
 function updateMelt(){P.melting--;if(P.melting<=0){P.melting=0;P.toast=0;G.deaths++;G.flags.bossFight=false;G.gauntlet=null;
-  startFade(()=>{P.hurt=60;loadMap(G.lastHome.map,G.lastHome.x,G.lastHome.y,0);say(["Puff melted into a puddle... but a fresh coat of glaze put you back together. Try again!"]);saveGame();});}}
+  const inDungeon=G.checkpoint&&G.checkpoint.map===G.mapName;const cp=inDungeon?G.checkpoint:G.lastHome;
+  startFade(()=>{P.hurt=60;loadMap(cp.map,cp.x,cp.y,inDungeon?1:0);say([inDungeon?"Puff melted into a puddle... and oozed back to the entrance, where a cool breeze firmed him up. Try again!":"Puff melted into a puddle... but a fresh coat of glaze put you back together. Try again!"]);saveGame();});}}
 
 // ---------- mechanics: choices, shops, followers, items, world clock, gauntlet ----------
 function ask(title,opts,cb){G.choice={title,opts,idx:0,cb};pressed.up=0;pressed.down=0;pressed.a=0;pressed.b=0;}
@@ -993,7 +1002,8 @@ function updateMechanics(){
   if(G.scene==='play'&&!G.paused){G.dayT=(G.dayT+1)%14400;G.playT++;}
   for(const s of G.steam)s.ttl--;G.steam=G.steam.filter(s=>s.ttl>0);
   for(const g of G.goo)g.ttl--;G.goo=G.goo.filter(g=>g.ttl>0);
-  let thaw=false;for(const k in G.frozen){G.frozen[k]--;if(G.frozen[k]<=0){delete G.frozen[k];thaw=true;}}if(thaw)refreshSolids();
+  let thaw=false;for(const k in G.frozen){G.frozen[k]--;if(G.frozen[k]<=0){delete G.frozen[k];thaw=true;}}
+  if(thaw){refreshSolids();if(hitsWall(P.x,P.y,P.w,P.h)&&!P.hop){const t=nearestFree(Math.floor((P.x+5)/T),Math.floor((P.y+5)/T));hopTo(t.i,t.j,12,true);audio.sfx('hop');}}
   if(P.spearOut){const s=P.spearOut;s.t++;
     if(!s.ret){s.x+=s.vx;s.y+=s.vy;if(s.t>40||solidAt(s.x+5,s.y+5)&&!G.map.solidObj[Math.floor((s.x+5)/T)+','+Math.floor((s.y+5)/T)])s.ret=true;
       const sb={x:s.x,y:s.y,w:10,h:10};
@@ -1031,7 +1041,7 @@ function drawMap(){const m=G.map,cx=Math.round(G.cam.x),cy=Math.round(G.cam.y);c
       case 'campfire':ctx.drawImage(CAMPFIRE,ox,oy);drawFlame(ox+3,oy-6,10,f);break;
       case 'curtain':for(let i=0;i<o.w;i++){drawFlame(ox+i*T+1,oy-6,14,(f+i)&1,toastRatio()>=0.5?0.55:1);}break;
       case 'seal':if(!G.flags[o.id]){drawShadow(ox+8,oy+14,8);ctx.drawImage(SEAL,ox,oy-2+Math.sin(G.t/9)*1.5);lights.push({x:ox+8,y:oy+6,r:14});}break;
-      case 'coin':if(!G.taken[takenKey(o)]){ctx.drawImage(COIN[(G.t>>3)&1],ox+4,oy+4-(G.t>>3&1));}break;
+      case 'coin':if(!o.got&&(o.drop||!G.taken[takenKey(o)])){ctx.drawImage(COIN[(G.t>>3)&1],ox+4,oy+4-(G.t>>3&1));}break;
       case 'shelf':ctx.drawImage(SHELF,ox,oy-6);if(!G.flags[o.id]){ctx.drawImage(SEAL,ox,oy-20,16,16);lights.push({x:ox+8,y:oy-12,r:12});}break;
       case 'pedestal':ctx.drawImage(PEDESTAL,ox,oy);if(G.cleared){ctx.fillStyle='rgba(143,192,255,'+(0.4+Math.sin(G.t/8)*0.2)+')';ctx.fillRect(ox+5,oy+3,6,2);lights.push({x:ox+8,y:oy+4,r:16});}break;
       case 'bed':ctx.drawImage(BED,ox,oy);break;
@@ -1042,7 +1052,7 @@ function drawMap(){const m=G.map,cx=Math.round(G.cam.x),cy=Math.round(G.cam.y);c
       case 'shroom':ctx.drawImage(MUSHROOM,ox+4,oy+7);break;
       case 'sign':ctx.drawImage(SIGN,ox,oy);break;
       case 'chest':if(o.needs&&!G.flags[o.needs]){ctx.drawImage(CHEST,ox,oy);ctx.fillStyle='rgba(255,90,20,0.35)';ctx.fillRect(ox+1,oy+1,14,10);lights.push({x:ox+8,y:oy+6,r:14});}else ctx.drawImage(G.opened[o.id]?CHEST_OPEN:CHEST,ox,oy);break;
-      case 'jar':if(!G.taken[takenKey(o)]){drawShadow(ox+8,oy+13,8);ctx.drawImage(JAR,ox,oy-(G.t>>3&1));}break;
+      case 'jar':if(!o.got&&(o.drop||!G.taken[takenKey(o)])){drawShadow(ox+8,oy+13,8);ctx.drawImage(JAR,ox,oy-(G.t>>3&1));}break;
       case 'sprinkle':if(!G.taken[takenKey(o)]&&G.q.sprinkle<2){drawShadow(ox+8,oy+13,6);ctx.drawImage(SPRINKLE,ox+4,oy+4-(G.t>>3&1));lights.push({x:ox+8,y:oy+8,r:10});}break;
       case 'torch':if(o.big){ctx.drawImage(BRAZIER,ox,oy);if(!o.out)drawFlame(ox+2,oy-10,12,f);else{ctx.fillStyle='#555';ctx.fillRect(ox+5,oy+3,6,3);}}
         else{ctx.fillStyle='#1e1a26';ctx.fillRect(ox+3,oy+5,10,11);ctx.fillStyle='#6a6a88';ctx.fillRect(ox+4,oy+6,8,9);ctx.fillStyle='#a8a8c4';ctx.fillRect(ox+5,oy+6,2,8);ctx.fillStyle='#3c3c52';ctx.fillRect(ox+4,oy+14,8,1);
@@ -1157,7 +1167,8 @@ function goalText(){if(!G.flags.sword)return'Talk to the ELDER in the pink donut
   if(!G.flags.gate)return'Douse the burning gate of EMBER KEEP (far north) with B.';
   if(freedCount()<5)return'Free the caged buddies in Ember Keep. '+(5-freedCount())+' to go.';
   if(!G.flags.bossDead)return'Defeat the PYRE LORD in the throne room. Only the spear hurts him.';
-  return'Douse King Mallow\'s cage with the spear.';}
+  if(!G.freed.king)return'Douse King Mallow\'s cage with the spear.';
+  return G.ngplus?'NEW GAME+ cleared! Ember Keep is cool twice over. The GAUNTLET pedestal awaits a faster time.':'Ember Keep is cool. Try the GAUNTLET at the trophy room pedestal, or NEW GAME+ from the title.';}
 function goalArea(){if(!G.flags.sword)return'village';if(!G.freed.fluff&&!G.flags.spear)return'woods';if(!G.flags.spear)return'cave';return'keep';}
 function drawBanner(){if(!G.banner)return;G.banner.t--;if(G.banner.t<=0){G.banner=null;return;}const lines=wrap(G.banner.text,27);const h=14+lines.length*11;const y=4-(G.banner.t>190?(G.banner.t-190)*2:0);
   drawBox(8,y,W-16,h);text(G.banner.title||'NEW GOAL',16,y+4,'#ffb347');lines.forEach((l,i)=>text(l,16,y+14+i*11));}
