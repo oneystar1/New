@@ -58,4 +58,10 @@ play the published page.
   New Game+ with upgrades carried over and the village itself on fire. Title
   options: difficulty, speedrun timer, and jars-only cooling.
 
+- **Feedback and comfort.** Enemies show health pips once hit and hits get
+  heavier as they weaken. Sounds are panned and quieter with distance. The
+  pause screen's Melt Report (V / ITEM) lists melts by area and top causes.
+  On touch devices the title menu offers button size, a left-handed layout and
+  swipe-to-roll on the stick.
+
 Progress saves to the browser automatically.

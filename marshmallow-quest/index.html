@@ -22,6 +22,12 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;background:#000;max
 #pad{display:none;width:100%;max-width:440px;justify-content:space-between;align-items:center;gap:12px;
   margin:auto 0;padding-bottom:env(safe-area-inset-bottom,0px);flex:0 0 auto}
 body.touch #pad{display:flex}
+:root{--btnscale:1}
+.stick,.btns{transform:scale(var(--btnscale))}.stick{transform-origin:bottom left}.btns{transform-origin:bottom right}
+body.lefty .stick{transform-origin:bottom right}body.lefty .btns{transform-origin:bottom left}
+.mid{position:relative;z-index:2}
+body.lefty #pad{flex-direction:row-reverse}
+body.lefty .btns .b{left:96px}body.lefty .btns .a{left:8px}body.lefty .btns .c{left:52px}body.lefty .btns .i{left:74px}
 body.touch #top{display:none}
 body.touch #wrap{align-items:flex-start;flex:0 0 auto}
 .mid{display:flex;flex-direction:column;align-items:center;gap:10px}
@@ -73,13 +79,16 @@ const keys={up:0,down:0,left:0,right:0,a:0,b:0,c:0,item:0,start:0,mute:0};const 
 const pressed={};
 const KEYMAP={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',
   KeyZ:'a',KeyJ:'a',Space:'a',KeyX:'b',KeyK:'b',KeyC:'c',KeyL:'c',ShiftLeft:'c',ShiftRight:'c',KeyV:'item',KeyI:'item',Enter:'start',Escape:'start',KeyM:'mute'};
-addEventListener('keydown',e=>{const k=KEYMAP[e.code];if(!k)return;e.preventDefault();if(!keys[k])pressed[k]=1;keys[k]=1;audio.unlock();});
+const pressedT={};
+addEventListener('keydown',e=>{const k=KEYMAP[e.code];if(!k)return;e.preventDefault();if(!keys[k]){pressed[k]=1;pressedT[k]=performance.now();}keys[k]=1;audio.unlock();});
 addEventListener('keyup',e=>{const k=KEYMAP[e.code];if(!k)return;e.preventDefault();keys[k]=0;released[k]=1;});
 function justReleased(k){const v=released[k];released[k]=0;return !!v;}
-function justPressed(k){const v=pressed[k];pressed[k]=0;return !!v;}
+// a press is remembered for about 8 frames so an attack queued at the end of a roll still fires, but stale presses do not
+function justPressed(k){const v=pressed[k];if(v&&pressedT[k]!=null&&performance.now()-pressedT[k]>140){pressed[k]=0;return false;}pressed[k]=0;return !!v;}
+function clearActions(){pressed.a=0;pressed.b=0;pressed.c=0;pressed.item=0;}
 const pad=document.getElementById('pad');
 function bindBtn(btn){const k=btn.dataset.k;
-  const on=e=>{e.preventDefault();btn.classList.add('on');if(!keys[k])pressed[k]=1;keys[k]=1;audio.unlock();};
+  const on=e=>{e.preventDefault();btn.classList.add('on');if(!keys[k]){pressed[k]=1;pressedT[k]=performance.now();}keys[k]=1;audio.unlock();};
   const off=e=>{e.preventDefault();btn.classList.remove('on');if(keys[k])released[k]=1;keys[k]=0;};
   btn.addEventListener('pointerdown',on);btn.addEventListener('pointerup',off);btn.addEventListener('pointercancel',off);btn.addEventListener('pointerleave',off);
   btn.addEventListener('contextmenu',e=>e.preventDefault());}
@@ -90,8 +99,10 @@ const joy={x:0,y:0,on:false};
     if(d>max){dx=dx/d*max;dy=dy/d*max;}kn.style.transform=`translate(${dx}px,${dy}px)`;const m=Math.min(1,d/max);
     if(m<0.18){joy.x=joy.y=0;}else{const a=Math.atan2(dy,dx);const k=(m-0.18)/0.82;joy.x=Math.cos(a)*k;joy.y=Math.sin(a)*k;}
     let dir=null;if(m>0.5)dir=Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'up':'down');else if(m<0.3)dir=null;else dir=joy.lastDir;
-    if(dir&&dir!==joy.lastDir)pressed[dir]=1;joy.lastDir=dir;};
-  st.addEventListener('pointerdown',e=>{e.preventDefault();pid=e.pointerId;try{st.setPointerCapture(pid);}catch(err){}st.classList.add('on');joy.on=true;audio.unlock();upd(e);});
+    if(dir&&dir!==joy.lastDir){pressed[dir]=1;pressedT[dir]=performance.now();}joy.lastDir=dir;
+    // swipe to roll: a fast flick from the centre
+    if(G.opts.touch&&G.opts.touch.swipe&&!joy.swiped&&m>0.9&&performance.now()-joy.downT<130){joy.swiped=true;pressed.c=1;pressedT.c=performance.now();}};
+  st.addEventListener('pointerdown',e=>{e.preventDefault();pid=e.pointerId;try{st.setPointerCapture(pid);}catch(err){}st.classList.add('on');joy.on=true;joy.downT=performance.now();joy.swiped=false;audio.unlock();upd(e);});
   st.addEventListener('pointermove',e=>{if(e.pointerId===pid)upd(e);});
   const end=e=>{if(e.pointerId!==pid)return;pid=null;joy.on=false;joy.x=joy.y=0;joy.lastDir=null;st.classList.remove('on');kn.style.transform='';};
   st.addEventListener('pointerup',end);st.addEventListener('pointercancel',end);st.addEventListener('contextmenu',e=>e.preventDefault());}
@@ -107,7 +118,7 @@ function pollGamepad(){if(!navigator.getGamepads)return;const pads=navigator.get
   const b=i=>!!(g.buttons[i]&&g.buttons[i].pressed);const ax=g.axes[0]||0,ay=g.axes[1]||0;
   if(Math.hypot(ax,ay)>0.25){joy.on=true;joy.x=ax;joy.y=ay;gp.joy=true;}else if(gp.joy){joy.on=false;joy.x=joy.y=0;gp.joy=false;}
   const map={a:b(0),b:b(1),item:b(3),c:b(2)||b(4)||b(5),start:b(9),up:b(12),down:b(13),left:b(14),right:b(15)};
-  for(const k in map){if(map[k]&&!gp.prev[k]){pressed[k]=1;keys[k]=1;audio.unlock();}else if(!map[k]&&gp.prev[k]){keys[k]=0;released[k]=1;}gp.prev[k]=map[k];}}
+  for(const k in map){if(map[k]&&!gp.prev[k]){pressed[k]=1;pressedT[k]=performance.now();keys[k]=1;audio.unlock();}else if(!map[k]&&gp.prev[k]){keys[k]=0;released[k]=1;}gp.prev[k]=map[k];}}
 
 // ---------- audio: chiptune synth, sound effects, music sequencer ----------
 const NOTE={};{const names=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];for(let o=1;o<=7;o++)names.forEach((n,i)=>{NOTE[n+o]=440*Math.pow(2,(o-4)+(i-9)/12);});}
@@ -115,30 +126,35 @@ const audio={ctx:null,muted:false,music:{track:null,next:0,step:0,timer:null},si
   unlock(){if(!this.ctx){try{this.ctx=new (window.AudioContext||window.webkitAudioContext)();this.master=this.ctx.createGain();this.master.gain.value=1;this.master.connect(this.ctx.destination);}catch(e){}}
     if(this.ctx&&this.ctx.state==='suspended')this.ctx.resume();if(this.ctx&&!this.music.timer)this.music.timer=setInterval(()=>this.tick(),90);},
   setMute(m){this.muted=m;if(this.master)this.master.gain.value=m?0:1;},
-  tone(f,d,type='square',vol=0.08,slide=0,when=0){if(!this.ctx)return;const t=this.ctx.currentTime+when;const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+  // sounds with a world position are panned by screen position and quieter with distance
+  spatial(src){if(!src||typeof G==='undefined'||!G.cam)return null;const sx=src.x+(src.w||10)/2-G.cam.x,sy=src.y+(src.h||10)/2-G.cam.y;const dx=sx-W/2,dy=sy-(H-HUD)/2;const dist=Math.hypot(dx,dy);
+    return{pan:Math.max(-0.8,Math.min(0.8,dx/(W/2)*0.8)),gain:Math.max(0.2,Math.min(1,1-dist/340))};},
+  out(node,sp){if(sp&&this.ctx.createStereoPanner){const p=this.ctx.createStereoPanner();p.pan.value=sp.pan;node.connect(p);p.connect(this.master);}else node.connect(this.master);},
+  tone(f,d,type='square',vol=0.08,slide=0,when=0,src=null){if(!this.ctx)return;const sp=this.spatial(src);if(sp)vol*=sp.gain;const t=this.ctx.currentTime+when;const o=this.ctx.createOscillator(),g=this.ctx.createGain();
     o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(20,f+slide),t+d);
-    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+d);o.connect(g);g.connect(this.master);o.start(t);o.stop(t+d);},
-  noise(d,vol=0.05,hp=800){if(!this.ctx)return;const n=this.ctx.sampleRate*d|0;const b=this.ctx.createBuffer(1,n,this.ctx.sampleRate);const data=b.getChannelData(0);for(let i=0;i<n;i++)data[i]=(Math.random()*2-1)*(1-i/n);
-    const s=this.ctx.createBufferSource();s.buffer=b;const f=this.ctx.createBiquadFilter();f.type='highpass';f.frequency.value=hp;const g=this.ctx.createGain();g.gain.value=vol;s.connect(f);f.connect(g);g.connect(this.master);s.start();},
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+d);o.connect(g);this.out(g,sp);o.start(t);o.stop(t+d);},
+  noise(d,vol=0.05,hp=800,src=null){if(!this.ctx)return;const sp=this.spatial(src);if(sp)vol*=sp.gain;const n=this.ctx.sampleRate*d|0;const b=this.ctx.createBuffer(1,n,this.ctx.sampleRate);const data=b.getChannelData(0);for(let i=0;i<n;i++)data[i]=(Math.random()*2-1)*(1-i/n);
+    const s=this.ctx.createBufferSource();s.buffer=b;const f=this.ctx.createBiquadFilter();f.type='highpass';f.frequency.value=hp;const g=this.ctx.createGain();g.gain.value=vol;s.connect(f);f.connect(g);this.out(g,sp);s.start();},
   step(surface){if(surface==='stone')this.noise(0.04,0.05,2500);else if(surface==='wood')this.tone(180,0.05,'triangle',0.05,-60);else if(surface==='path')this.noise(0.05,0.035,1200);else this.noise(0.06,0.025,600);},
   drone(level){if(!this.ctx)return;if(!this.dro){const o=this.ctx.createOscillator();o.type='triangle';o.frequency.value=55;const o2=this.ctx.createOscillator();o2.type='sawtooth';o2.frequency.value=55.7;const g=this.ctx.createGain();g.gain.value=0;const f=this.ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=220;o.connect(f);o2.connect(f);f.connect(g);g.connect(this.master);o.start();o2.start();this.dro=g;}
     this.dro.gain.setTargetAtTime(Math.min(0.09,level*0.09),this.ctx.currentTime,0.3);},
   sizzle(level){if(!this.ctx)return;if(!this.sizz){const n=this.ctx.sampleRate*2|0;const b=this.ctx.createBuffer(1,n,this.ctx.sampleRate);const d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;
       const s=this.ctx.createBufferSource();s.buffer=b;s.loop=true;const f=this.ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=3000;f.Q.value=0.8;const g=this.ctx.createGain();g.gain.value=0;s.connect(f);f.connect(g);g.connect(this.master);s.start();this.sizz=g;}
     this.sizz.gain.setTargetAtTime(Math.min(0.12,level*0.12),this.ctx.currentTime,0.08);},
-  sfx(n){switch(n){
-    case 'sword':this.tone(900,0.08,'square',0.05,-500);this.noise(0.05,0.03,3000);break;
+  sfx(n,src){switch(n){
+    case 'kill':this.tone(260,0.16,'square',0.09,-180,0,src);this.noise(0.12,0.08,1200,src);this.tone(90,0.2,'triangle',0.08,-40,0.03,src);break;
+    case 'sword':this.tone(900,0.08,'square',0.05,-500,0,src);this.noise(0.05,0.03,3000,src);break;
     case 'spear':this.tone(300,0.18,'sawtooth',0.05,900);break;
-    case 'hit':this.tone(200,0.1,'square',0.07,-120);this.noise(0.04,0.05,1500);break;
+    case 'hit':this.tone(200,0.1,'square',0.07,-120,0,src);this.noise(0.04,0.05,1500,src);break;
     case 'hurt':this.tone(140,0.25,'sawtooth',0.08,-90);break;
-    case 'douse':this.tone(1200,0.3,'triangle',0.07,-900);this.noise(0.25,0.05,4000);break;
+    case 'douse':this.tone(1200,0.3,'triangle',0.07,-900,0,src);this.noise(0.25,0.05,4000,src);break;
     case 'item':[523,659,784,1046].forEach((f,i)=>this.tone(f,0.15,'square',0.06,0,i*0.09));break;
     case 'free':[784,988,1175,1568,1175,1568].forEach((f,i)=>this.tone(f,0.14,'triangle',0.07,0,i*0.08));break;
     case 'glaze':this.tone(660,0.12,'sine',0.06,400);break;
     case 'door':this.tone(220,0.15,'triangle',0.06,-100);break;
     case 'text':this.tone(1500,0.02,'square',0.02);break;
     case 'melt':[400,330,260,180,120].forEach((f,i)=>this.tone(f,0.3,'sawtooth',0.06,-40,i*0.16));break;
-    case 'boss':this.tone(90,0.4,'sawtooth',0.1,-40);break;
+    case 'boss':this.tone(90,0.4,'sawtooth',0.1,-40,0,src);break;
     case 'roll':this.noise(0.12,0.04,900);this.tone(300,0.1,'triangle',0.03,200);break;
     case 'cut':this.noise(0.08,0.05,1800);this.tone(500,0.06,'square',0.03,-200);break;
     case 'push':this.noise(0.2,0.05,300);break;
@@ -146,7 +162,7 @@ const audio={ctx:null,muted:false,music:{track:null,next:0,step:0,timer:null},si
     case 'menu':this.tone(800,0.05,'square',0.04);break;
     case 'coin':this.tone(1300,0.06,'square',0.04);this.tone(1800,0.1,'square',0.04,0,0.06);break;
     case 'freeze':this.tone(1600,0.4,'sine',0.06,-1200);this.noise(0.3,0.04,5000);break;
-    case 'steam':this.noise(0.5,0.06,2000);break;
+    case 'steam':this.noise(0.5,0.06,2000,src);break;
     case 'charge':this.tone(200,0.08,'square',0.03,100);break;
     case 'throw':this.noise(0.1,0.04,1500);this.tone(500,0.15,'triangle',0.04,300);break;
     case 'seal':[659,784,988,1319,1568].forEach((f,i)=>this.tone(f,0.25,'triangle',0.06,0,i*0.1));break;
@@ -605,7 +621,7 @@ function mkEnemy(e){const base={type:'enemy',kind:e.kind,x:e.x*T+3,y:e.y*T+3,w:1
     case 'snail':Object.assign(base,{hp:5,speed:0.25,heat:1.1,radius:26,flame:true,w:14,h:9,x:e.x*T+1,y:e.y*T+5});break;
     case 'toad':Object.assign(base,{hp:8+(hard()?3:0),speed:1.3,heat:1.2,radius:36,flame:false,mini:true,w:20,h:16,x:e.x*T-2,y:e.y*T+4});break;
     case 'boss':Object.assign(base,{hp:9+(hard()?3:0),maxhp:9+(hard()?3:0),speed:0.9,heat:1.6,radius:46,w:22,h:22,x:e.x*T-3,y:e.y*T+2,boss:true,flame:true,phase:0,spit:0});break;}
-  base.baseSpeed=base.speed;return base;}
+  base.baseSpeed=base.speed;base.maxhp=base.maxhp||base.hp;return base;}
 function loadMap(name,tx,ty,dir){const m=MAPS[name];G.map=m;G.mapName=name;G.visited[name]=true;
   m.objs=m.objs.filter(o=>!o.drop);G.ents=[];G.shots=[];G.fx=[];G.amb=[];G.patches=[];G.steam=[];G.goo=[];G.frozen={};G.ash=[];P.spearOut=null;P.carried=null;P.vault=0;P.hop=null;P.squeeze=null;P.dotUsed=false;
   if(G.gauntlet&&name!=='castle')G.gauntlet=null;
@@ -649,19 +665,19 @@ function updateCam(snapNow){const m=G.map;const ld=dirVec(P.dir);let cx=P.x+P.w/
   cx=Math.max(0,Math.min(m.w*T-W,cx));cy=Math.max(0,Math.min(m.h*T-(H-HUD),cy));
   if(m.w*T<W)cx=(m.w*T-W)/2;if(m.h*T<H-HUD)cy=(m.h*T-(H-HUD))/2;
   if(snapNow){G.cam.x=cx;G.cam.y=cy;}else{G.cam.x+=(cx-G.cam.x)*0.12;G.cam.y+=(cy-G.cam.y)*0.12;}}
-function say(text,cb,who){const parts=Array.isArray(text)?text:[text];G.msgQ=parts.map(p=>({t:p,who}));G.msgCb=cb||null;nextMsg();}
+function say(text,cb,who){clearActions();const parts=Array.isArray(text)?text:[text];G.msgQ=parts.map(p=>({t:p,who}));G.msgCb=cb||null;nextMsg();}
 function puff(x,y,col,n=6){for(let i=0;i<n;i++)G.fx.push({x,y,vx:(Math.random()-0.5)*1.6,vy:(Math.random()-0.9)*1.6,life:20+Math.random()*15,col});}
 function startFade(cb,dir){if(dir!=null){sctx.drawImage(cv,0,0);G.trans={t:0,dir};cb();return;}G.fade=1;G.fadeTo=cb;}
 
 // ---------- save / load (browser storage, best effort) ----------
 const SAVE_KEY='marshmallow-quest-save-3';
 function saveGame(){try{const d={flags:G.flags,freed:G.freed,opened:G.opened,q:G.q,taken:G.taken,deaths:G.deaths,lastHome:G.lastHome,cap:P.cap,diff:G.diff,visited:G.visited,
-    coins:G.coins,items:G.items,seals:G.seals,follower:G.follower,dayT:G.dayT,opts:G.opts,playT:G.playT,cleared:G.cleared,ngplus:G.ngplus,
+    coins:G.coins,items:G.items,seals:G.seals,follower:G.follower,dayT:G.dayT,opts:G.opts,playT:G.playT,cleared:G.cleared,ngplus:G.ngplus,stats:G.stats,
     map:G.map.interior?G.mapName:G.lastHome.map,tx:G.map.interior?Math.floor((P.x+5)/T):G.lastHome.x,ty:G.map.interior?Math.floor((P.y+5)/T):G.lastHome.y};
   localStorage.setItem(SAVE_KEY,JSON.stringify(d));G.hasSave=true;}catch(e){}}
 function loadSave(){try{const d=JSON.parse(localStorage.getItem(SAVE_KEY));if(!d||!d.flags)return false;
     Object.assign(G,{flags:d.flags,freed:d.freed,opened:d.opened,q:d.q||{},taken:d.taken||{},deaths:d.deaths||0,lastHome:d.lastHome,diff:d.diff||'normal',visited:d.visited||{},
-      coins:d.coins||0,items:d.items||{frost:0,lamp:false,swordLv:1},seals:d.seals||0,follower:d.follower||null,dayT:d.dayT||2600,opts:d.opts||{timer:false,cooling:'normal'},playT:d.playT||0,cleared:!!d.cleared,ngplus:!!d.ngplus});P.cap=d.cap||1;
+      coins:d.coins||0,items:d.items||{frost:0,lamp:false,swordLv:1},seals:d.seals||0,follower:d.follower||null,dayT:d.dayT||2600,opts:d.opts||{timer:false,cooling:'normal'},playT:d.playT||0,cleared:!!d.cleared,ngplus:!!d.ngplus,stats:d.stats||{melts:{},causes:{},time:{}}});P.cap=d.cap||1;
     G.saved={map:d.map,tx:d.tx,ty:d.ty};return true;}catch(e){return false;}}
 function checkSave(){try{G.hasSave=!!localStorage.getItem(SAVE_KEY);}catch(e){G.hasSave=false;}}
 function takenKey(o){return G.mapName+':'+o.x+','+o.y;}
@@ -722,7 +738,7 @@ function tryPush(dx,dy){const f=facingTile();const b=objAt(f.i,f.j,'block');if(!
   if(m.t[ny][nx]==='o'){const id=G.mapName==='grotto'?'grottoEastDoor':'eastDoor';if(!G.flags[id]){G.flags[id]=true;audio.sfx('switch');refreshSolids();G.shake=4;say(["The plate sinks with a clunk. Somewhere, a door grinds open."]);saveGame();}}
   return true;}
 function trySqueeze(){const f=facingTile();if(G.map.t[f.j]?.[f.i]!=='q')return false;const f2=facingTile(2);if(!tileFree(f2.i,f2.j))return false;
-  P.squeeze={t:0,dur:hasFollower('squish')?16:40,fx:P.x,fy:P.y,tx:f2.i*T+3,ty:f2.j*T+3};audio.sfx('squeeze');tip('squeeze','Narrow gaps: Puff squeezes through on his own. Squish makes it quick.');return true;}
+  P.squeeze={t:0,dur:hasFollower('squish')?16:40,fx:P.x,fy:P.y,tx:f2.i*T+3,ty:f2.j*T+3};clearActions();audio.sfx('squeeze');tip('squeeze','Narrow gaps: Puff squeezes through on his own. Squish makes it quick.');return true;}
 function updatePlayer(){
   if(P.hurt>0)P.hurt--;if(P.rollCd>0)P.rollCd--;if(P.soggy>0)P.soggy--;if(P.bossCool>0)P.bossCool--;
   const tt=toastRatio()>=0.5;if(tt!==P.wasToasted){P.wasToasted=tt;refreshSolids();}
@@ -737,7 +753,7 @@ function updatePlayer(){
     if(justPressed('b')&&G.flags.spear&&!P.spearOut){const d=P.rollDir;const ti=Math.floor((P.x+5)/T)+Math.round(d.x)*2,tj=Math.floor((P.y+5)/T)+Math.round(d.y)*2;if(tileFree(ti,tj)||G.map.t[tj]?.[ti]==='L'){hopTo(ti,tj,14,true);audio.sfx('hop');return;}}
     if(P.x===ox&&P.y===oy){const di=Math.round(P.rollDir.x),dj=Math.round(P.rollDir.y);if(di||dj){const ci=Math.floor((P.x+5)/T),cj=Math.floor((P.y+5)/T);const ch=G.map.t[cj+dj]?.[ci+di];
       if((ch==='r'||ch==='R')&&tileFree(ci+di*2,cj+dj*2)){hopTo(ci+di*2,cj+dj*2,16,false);audio.sfx('hop');return;}}}
-    for(const e of G.ents){if(e.kind==='bat'&&!e.dead&&overlap(e,P)){P.carried=e;P.carryT=0;P.roll=0;audio.sfx('hop');G.banner={title:'HANG ON',text:'Puff grabbed the bat! Any button lets go.',t:150};return;}}
+    for(const e of G.ents){if(e.kind==='bat'&&!e.dead&&overlap(e,P)){P.carried=e;P.carryT=0;P.roll=0;clearActions();audio.sfx('hop');G.banner={title:'HANG ON',text:'Puff grabbed the bat! Any button lets go.',t:150};return;}}
     return;}
   if(G.flags.spear&&!P.spearOut&&G.t-P.bTap<14&&pressed.b){pressed.b=0;P.atk=0;P.atkType=null;P.charge=0;P.bTap=-99;spearThrow();return;}
   if(P.atk>0){P.atk--;const d=dirVec(P.dir);if(P.atkType==='spear'&&P.atk>10)moveEnt(P,d[0]*1.2,d[1]*1.2);if(P.atkType==='sword'&&P.atk>10)moveEnt(P,d[0]*0.9,d[1]*0.9);
@@ -803,11 +819,11 @@ function douseAt(x,y){if(P.soggy){G.steam.push({x,y,r:34,ttl:180});audio.sfx('st
 function damageEnemy(e,dmg,spear){
   if(e.boss){if(!spear){audio.sfx('hit');puff(e.x+11,e.y+11,'#ff8c1a',4);return;}e.hp-=1;e.hurt=30;e.flash=6;G.hitstop=5;audio.sfx('douse');puff(e.x+11,e.y+11,'#9cc8ff',10);G.shake=8;P.bossCool=90;G.steam.push({x:e.x+11,y:e.y+11,r:30,ttl:90});audio.sfx('steam');
     if(e.hp<=0){e.dead=70;if(G.gauntlet){G.gauntlet.stage=3;}else{G.flags.bossDead=true;G.flags.bossFight=false;audio.sfx('win');audio.play('keep');}}return;}
-  if(e.mini){e.hp-=dmg;e.hurt=18;e.flash=5;G.hitstop=4;audio.sfx('hit');puff(e.x+10,e.y+8,'#ffd23f',6);G.shake=4;const a=Math.atan2(e.y-P.y,e.x-P.x);e.vx=Math.cos(a)*1.5;e.vy=Math.sin(a)*1.5;
+  if(e.mini){e.hp-=dmg;e.hurt=18;e.flash=5+Math.round(4*(1-e.hp/e.maxhp));G.hitstop=4;audio.sfx(e.hp<=0?'kill':'hit',e);puff(e.x+10,e.y+8,'#ffd23f',e.hp<=0?16:6);G.shake=e.hp<=0?8:4;const a=Math.atan2(e.y-P.y,e.x-P.x);e.vx=Math.cos(a)*1.5;e.vy=Math.sin(a)*1.5;
     if(e.hp<=0){e.dead=50;if(G.gauntlet){G.gauntlet.stage=2;G.gauntlet.spawnT=G.t+90;}else{G.flags.toadDead=true;say(["The Magma Toad deflates with a long, sad hiss. The chest in the corner cools and clicks open."]);saveGame();}}return;}
-  if(spear&&e.flame){e.hp=0;e.dead=20;audio.sfx('douse');puff(e.x+5,e.y+5,'#9cc8ff',10);douseAt(e.x+5,e.y+5);return;}
+  if(spear&&e.flame){e.hp=0;e.dead=20;audio.sfx('douse',e);puff(e.x+5,e.y+5,'#9cc8ff',10);douseAt(e.x+5,e.y+5);return;}
   if(spear&&e.blue){audio.sfx('hit');puff(e.x+5,e.y+5,'#3e8cff',3);return;}
-  e.hp-=dmg;e.hurt=20;e.flash=5;G.hitstop=3;audio.sfx('hit');puff(e.x+5,e.y+5,'#ffd23f',5);const a=Math.atan2(e.y-P.y,e.x-P.x);e.vx=Math.cos(a)*3;e.vy=Math.sin(a)*3;if(e.hp<=0)e.dead=20;}
+  e.hp-=dmg;e.hurt=20;e.flash=5+Math.round(4*(1-e.hp/e.maxhp));G.hitstop=e.hp<=0?5:3;audio.sfx(e.hp<=0?'kill':'hit',e);puff(e.x+5,e.y+5,'#ffd23f',e.hp<=0?14:5);const a=Math.atan2(e.y-P.y,e.x-P.x);e.vx=Math.cos(a)*3;e.vy=Math.sin(a)*3;if(e.hp<=0){e.dead=20;G.shake=Math.max(G.shake,3);}}
 function hitThings(){const box=attackBox();const spear=P.atkType==='spear';const dmg=spear?1:G.items.swordLv;
   for(const e of G.ents){if(e.type!=='enemy'||e.dead||e.hurt)continue;if(!overlap(box,e))continue;damageEnemy(e,dmg,spear);}
   for(const o of G.map.objs){
@@ -824,7 +840,7 @@ function hitThings(){const box=attackBox();const spear=P.atkType==='spear';const
       else if(o.hides==='sprinkle'&&G.q.sprinkle<2&&!G.taken[G.mapName+':'+o.x+','+o.y]){G.map.objs.push({type:'sprinkle',x:o.x,y:o.y});}
       else if(!o.hides&&Math.random()<0.4&&!G.taken[G.mapName+':'+o.x+','+o.y]){G.map.objs.push({type:'coin',x:o.x,y:o.y,fromBush:true});}}
   }}
-function douseTorch(o){o.out=true;audio.sfx('douse');puff(o.x*T+8,o.y*T+4,'#9cc8ff',8);douseAt(o.x*T+8,o.y*T+4);
+function douseTorch(o){o.out=true;audio.sfx('douse',{x:o.x*T,y:o.y*T,w:16,h:16});puff(o.x*T+8,o.y*T+4,'#9cc8ff',8);douseAt(o.x*T+8,o.y*T+4);
   if(o.id==='brazier'&&!G.flags.westDoor){G.flags.westDoor=true;refreshSolids();G.shake=4;say(["The brazier dies with a gasp. Stone grinds: the west door is open."]);saveGame();}}
 function freeBuddy(o){G.freed[o.id]=true;audio.sfx('free');refreshSolids();
   puff(o.x*T+8*(o.w||1),o.y*T+8,'#fff',14);o.freedAt=G.t;const n=freedCount();
@@ -836,7 +852,9 @@ function freeBuddy(o){G.freed[o.id]=true;audio.sfx('free');refreshSolids();
   say(lines,null,o.name);saveGame();}
 
 // ---------- update: enemies, hazards, heat ----------
-function hurtPlayer(amt,from,kb=3.5){if(P.hurt||P.roll||P.carried||P.hop||P.vault)return;
+const CAUSE_NAMES={ember:'Ember lunge',blue:'blue flame',knight:'Torch Knight',candle:'Candle Knight',slime:'fire slime',bat:'fire bat',snail:'lava snail',toad:'Magma Toad',boss:'Pyre Lord'};
+function hurtPlayer(amt,from,kb=3.5,cause){if(P.hurt||P.roll||P.carried||P.hop||P.vault)return;
+  P.lastHurt={cause:cause||(from&&from.kind?CAUSE_NAMES[from.kind]:'fireball'),t:G.t};
   if(P.soggy)amt*=0.3;if(toastRatio()>0.5)amt*=0.6;
   P.hurt=40;P.toast=Math.min(P.cap,P.toast+amt);audio.sfx('hurt');G.shake=5;
   if(from){const a=Math.atan2(P.y+P.h/2-(from.y+from.h/2),P.x+P.w/2-(from.x+from.w/2));P.kb.x=Math.cos(a)*kb;P.kb.y=Math.sin(a)*kb;}}
@@ -859,8 +877,8 @@ function updateEnemy(e){const tg=target(e);const d=dist(e,tg);e.st++;const calm=
       if(calm){wander(e);e.state='wander';break;}
       if(e.state==='wander'){wander(e);if(d<90){e.state='chase';e.st=0;}}
       else if(e.state==='chase'){chase(e,e.speed,tg);if(d<26){e.state='windup';e.st=0;e.sw=tg.x+tg.w/2>e.x+e.w/2?1:-1;}else if(d>120){e.state='wander';}}
-      else if(e.state==='windup'){if(e.st>22){e.state='swing';e.st=0;audio.sfx('sword');}}
-      else if(e.state==='swing'){const sb=swingBox(e);if(e.st<10){if(overlap(sb,P))hurtPlayer(0.14,e,4);if(G.F&&overlap(sb,G.F))G.F.toast+=0.15;}if(e.st>18){e.state='chase';e.st=0;}}break;
+      else if(e.state==='windup'){if(e.st>22){e.state='swing';e.st=0;audio.sfx('sword',e);}}
+      else if(e.state==='swing'){const sb=swingBox(e);if(e.st<10){if(overlap(sb,P))hurtPlayer(0.14,e,4,e.kind==='candle'?'Candle Knight sword':'knight sword');if(G.F&&overlap(sb,G.F))G.F.toast+=0.15;}if(e.st>18){e.state='chase';e.st=0;}}break;
     case 'candle':{ // patrols the gallery, relighting doused torches
       const outT=G.map.objs.filter(o=>o.type==='torch'&&o.out&&!o.big);let best=null,bd=1e9;for(const o of outT){const dd=Math.hypot(o.x*T-e.x,o.y*T-e.y);if(dd<bd){bd=dd;best=o;}}
       if(best&&!calm){const a=Math.atan2(best.y*T+4-e.y,best.x*T+3-e.x);if(bd>14)chase(e,e.speed,{x:best.x*T+3,y:best.y*T+3,w:10,h:10});else{best.out=false;puff(best.x*T+8,best.y*T,'#ffd23f',8);audio.sfx('sword');}}
@@ -879,12 +897,12 @@ function updateEnemy(e){const tg=target(e);const d=dist(e,tg);e.st++;const calm=
       if(e.st%34===0){G.patches.push({x:Math.floor((e.x+e.w/2)/T),y:Math.floor((e.y+e.h/2)/T),ttl:320});}break;
     case 'toad':
       if(e.state==='wander'){if(e.st>45){e.state='hop';e.st=0;const a=Math.atan2(tg.y-e.y,tg.x-e.x);e.vx=Math.cos(a)*e.speed;e.vy=Math.sin(a)*e.speed;}
-        if(e.st===20&&d<150&&!calm){for(let k=-1;k<=1;k++){const a=Math.atan2(tg.y-e.y,tg.x-e.x)+k*0.3;G.shots.push({x:e.x+8,y:e.y+4,vx:Math.cos(a)*1.5,vy:Math.sin(a)*1.5,life:110});}audio.sfx('boss');}}
+        if(e.st===20&&d<150&&!calm){for(let k=-1;k<=1;k++){const a=Math.atan2(tg.y-e.y,tg.x-e.x)+k*0.3;G.shots.push({x:e.x+8,y:e.y+4,vx:Math.cos(a)*1.5,vy:Math.sin(a)*1.5,life:110});}audio.sfx('boss',e);}}
       else if(e.state==='hop'){e.z=Math.sin(e.st/24*Math.PI)*10;if(!moveEnt(e,e.vx,e.vy)){e.vx=0;e.vy=0;}if(e.st>24){e.state='wander';e.st=0;e.z=0;G.shake=3;}}break;
     case 'boss':{e.phase++;const a=Math.atan2(tg.y-e.y,tg.x-e.x);const p2=e.hp<=Math.ceil(e.maxhp/2);G.bossPhase=p2?2:1;const sp=e.speed*(p2?1.35:1);
       if(e.phase%180<100){chase(e,sp,tg);}
       else{moveEnt(e,Math.cos(a+Math.PI/2)*sp,Math.sin(a+Math.PI/2)*sp);
-        if(e.phase%30===0&&!calm){for(let k=-1;k<=1;k++){const b=a+k*0.35;G.shots.push({x:e.x+8,y:e.y+8,vx:Math.cos(b)*1.6,vy:Math.sin(b)*1.6,life:120});}audio.sfx('boss');}}
+        if(e.phase%30===0&&!calm){for(let k=-1;k<=1;k++){const b=a+k*0.35;G.shots.push({x:e.x+8,y:e.y+8,vx:Math.cos(b)*1.6,vy:Math.sin(b)*1.6,life:120});}audio.sfx('boss',e);}}
       if(p2){if(e.phase%120===0){for(let k=0;k<8;k++){const b=k*Math.PI/4+e.phase/50;G.shots.push({x:e.x+8,y:e.y+8,vx:Math.cos(b)*1.3,vy:Math.sin(b)*1.3,life:140});}audio.sfx('boss');G.shake=6;}
         if(e.phase%240===0&&G.ents.filter(x=>x.kind==='ember'&&!x.dead).length<3){G.ents.push(mkEnemy({kind:'ember',x:Math.floor(e.x/T),y:Math.floor(e.y/T)+1}));}}
       break;}
@@ -918,9 +936,9 @@ function updateEnemies(){
   G.ash=G.ash.filter(a=>!a.gone);
   for(const o of G.map.objs){if(o.type==='torch'&&!o.out&&o.shoot){
       if(G.t%(o.shoot===1?90:130)===0&&dist({x:o.x*T,y:o.y*T,w:16,h:16},P)<140){const a=Math.atan2(P.y-o.y*T,P.x-o.x*T);G.shots.push({x:o.x*T+5,y:o.y*T+2,vx:Math.cos(a)*1.3,vy:Math.sin(a)*1.3,life:150});}}
-    if(o.type==='vent'){o.on=((G.t+o.phase)%120)<50;o.warn=!o.on&&((G.t+o.phase)%120)>=100;if(o.on&&overlap({x:o.x*T+2,y:o.y*T+2,w:12,h:12},P))hurtPlayer(0.16,null);}
-    if(o.type==='curtain'&&toastRatio()<0.5&&overlap({x:o.x*T,y:o.y*T-4,w:o.w*T,h:20},P))hurtPlayer(0.12,{x:o.x*T+o.w*8-5,y:o.y*T-5,w:10,h:10},3);}
-  for(const p of G.patches){p.ttl--;if(p.ttl>0&&overlap({x:p.x*T+3,y:p.y*T+3,w:10,h:10},P))hurtPlayer(hasFollower('fluff')?0.05:0.1,null,1.5);}
+    if(o.type==='vent'){o.on=((G.t+o.phase)%120)<50;o.warn=!o.on&&((G.t+o.phase)%120)>=100;if(o.on&&overlap({x:o.x*T+2,y:o.y*T+2,w:12,h:12},P))hurtPlayer(0.16,null,3.5,'fire vent');}
+    if(o.type==='curtain'&&toastRatio()<0.5&&overlap({x:o.x*T,y:o.y*T-4,w:o.w*T,h:20},P))hurtPlayer(0.12,{x:o.x*T+o.w*8-5,y:o.y*T-5,w:10,h:10},3,'flame curtain');}
+  for(const p of G.patches){p.ttl--;if(p.ttl>0&&overlap({x:p.x*T+3,y:p.y*T+3,w:10,h:10},P))hurtPlayer(hasFollower('fluff')?0.05:0.1,null,1.5,'burning trail');}
   G.patches=G.patches.filter(p=>p.ttl>0);
   for(const s of G.shots){s.x+=s.vx;s.y+=s.vy;s.life--;if(solidAt(s.x+3,s.y+3)&&!G.map.solidObj[Math.floor((s.x+3)/T)+','+Math.floor((s.y+3)/T)])s.life=0;
     const sb={x:s.x,y:s.y,w:6,h:6};
@@ -930,12 +948,14 @@ function updateEnemies(){
   G.shots=G.shots.filter(s=>s.life>0);
   // radiant heat
   let heat=0;const lavaMul=hasFollower('fluff')?0.5:1;
-  for(const e of G.ents){if(e.type!=='enemy'||e.dead)continue;if(e.boss&&P.bossCool>0)continue;const d=dist(e,P);if(d<e.radius)heat+=e.heat*(1-d/e.radius);}
+  let topSrc=null,topH=0;const addH=(h,name)=>{heat+=h;if(h>topH){topH=h;topSrc=name;}};
+  for(const e of G.ents){if(e.type!=='enemy'||e.dead)continue;if(e.boss&&P.bossCool>0)continue;const d=dist(e,P);if(d<e.radius)addH(e.heat*(1-d/e.radius),CAUSE_NAMES[e.kind]+' heat');}
   for(const o of G.map.objs){if((o.type==='torch'&&!o.out)||(o.type==='firegate'&&!G.flags[o.id])||(o.type==='buddy'&&o.cage==='fire'&&!G.freed[o.id])||(o.type==='vent'&&o.on)||o.type==='campfire'||(o.type==='curtain'&&toastRatio()>=0.5)){
-    const d=dist({x:o.x*T,y:o.y*T,w:(o.w||1)*T,h:T},P);if(d<28)heat+=0.6*(1-d/28);}}
-  for(const p of G.patches){const d=dist({x:p.x*T,y:p.y*T,w:T,h:T},P);if(d<22)heat+=0.5*(1-d/22)*lavaMul;}
+    const d=dist({x:o.x*T,y:o.y*T,w:(o.w||1)*T,h:T},P);if(d<28)addH(0.6*(1-d/28),o.type==='torch'?'torch heat':o.type==='vent'?'fire vent':o.type==='campfire'?'campfire':o.type==='curtain'?'flame curtain':'flame cage');}}
+  for(const p of G.patches){const d=dist({x:p.x*T,y:p.y*T,w:T,h:T},P);if(d<22)addH(0.5*(1-d/22)*lavaMul,'burning trail');}
   const ci=Math.floor((P.x+P.w/2)/T),cj=Math.floor((P.y+P.h/2)/T);
-  for(let j=cj-1;j<=cj+1;j++)for(let i=ci-1;i<=ci+1;i++){if(j>=0&&i>=0&&j<G.map.h&&i<G.map.w&&G.map.t[j][i]==='L'&&!(G.frozen[i+','+j]>0))heat+=0.5*lavaMul;}
+  for(let j=cj-1;j<=cj+1;j++)for(let i=ci-1;i<=ci+1;i++){if(j>=0&&i>=0&&j<G.map.h&&i<G.map.w&&G.map.t[j][i]==='L'&&!(G.frozen[i+','+j]>0))addH(0.5*lavaMul,'lava');}
+  if(heat>0)P.heatSrc=topSrc;
   heat*=G.map.heat*(hard()?1.4:1);
   if(P.soggy||P.carried||P.hop)heat=0;
   if(heat>0){P.toast=Math.min(P.cap,P.toast+heat*0.0022);P.heating=true;}
@@ -945,7 +965,7 @@ function updateEnemies(){
   G.alert=G.ents.some(e=>e.type==='enemy'&&!e.dead&&dist(e,P)<110&&(e.boss||e.mini||e.state==='windup'||e.state==='lunge'||e.state==='dive'||e.state==='swing'));
   if(P.toast>=P.cap&&!P.melting){
     if(hasFollower('dot')&&!P.dotUsed){P.dotUsed=true;P.toast=P.cap*0.3;P.hurt=60;audio.sfx('glaze');puff(P.x+5,P.y+5,'#ffb6d9',14);say(["Dot smashes her spare jar over Puff just in time! 'That was my only one, so be careful!'"],null,'Dot');}
-    else{P.melting=90;audio.sfx('melt');audio.sizzle(0);}}
+    else{P.melting=90;audio.sfx('melt');audio.sizzle(0);recordMelt();}}
   updateFollower();updateAmbience();
 }
 function updateAmbience(){const m=G.map;const cx=G.cam.x,cy=G.cam.y;
@@ -954,9 +974,12 @@ function updateAmbience(){const m=G.map;const cx=G.cam.x,cy=G.cam.y;
   if(G.t%6===0){const i0=Math.floor(cx/T),j0=Math.floor(cy/T);for(let j=j0;j<j0+13;j++)for(let i=i0;i<i0+17;i++){if(m.t[j]?.[i]==='L'&&!(G.frozen[i+','+j]>0)&&Math.random()<0.08)G.amb.push({kind:'heat',x:i*T+Math.random()*16,y:j*T+8,vx:0,vy:-0.4,life:40,ph:Math.random()*6});}}
   for(const a of G.amb){a.life--;a.ph+=0.05;a.x+=a.vx+(a.kind==='leaf'?Math.sin(a.ph)*0.4:a.kind==='heat'?Math.sin(a.ph*3)*0.3:0);a.y+=a.vy;}
   G.amb=G.amb.filter(a=>a.life>0&&a.y<cy+H&&a.y>cy-20);if(G.amb.length>80)G.amb.splice(0,G.amb.length-80);}
+function areaName(){return G.map.interior?'Village':G.mapName==='overworld'?(P.y>40*T?'Village':'Woods'):G.map.name;}
+function recordMelt(){const cause=(P.lastHurt&&G.t-P.lastHurt.t<90)?P.lastHurt.cause:(P.heatSrc||'heat');const area=areaName();G.stats=G.stats||{melts:{},causes:{},time:{}};
+  G.stats.melts[area]=(G.stats.melts[area]||0)+1;G.stats.causes[cause]=(G.stats.causes[cause]||0)+1;G.lastMelt={cause,area};}
 function updateMelt(){P.melting--;if(P.melting<=0){P.melting=0;P.toast=0;G.deaths++;G.flags.bossFight=false;G.gauntlet=null;
   const inDungeon=G.checkpoint&&G.checkpoint.map===G.mapName;const cp=inDungeon?G.checkpoint:G.lastHome;
-  startFade(()=>{P.hurt=60;loadMap(cp.map,cp.x,cp.y,inDungeon?1:0);say([inDungeon?"Puff melted into a puddle... and oozed back to the entrance, where a cool breeze firmed him up. Try again!":"Puff melted into a puddle... but a fresh coat of glaze put you back together. Try again!"]);saveGame();});}}
+  startFade(()=>{P.hurt=60;loadMap(cp.map,cp.x,cp.y,inDungeon?1:0);const lm=G.lastMelt||{};say([`Melted by ${lm.cause||'heat'} in ${lm.area||'the wild'}. `+(inDungeon?"Puff oozed back to the entrance, where a cool breeze firmed him up. Try again!":"A fresh coat of glaze put Puff back together. Try again!")]);saveGame();});}}
 
 // ---------- mechanics: choices, shops, followers, items, world clock, gauntlet ----------
 function ask(title,opts,cb){G.choice={title,opts,idx:0,cb};pressed.up=0;pressed.down=0;pressed.a=0;pressed.b=0;}
@@ -966,7 +989,7 @@ function fmtTime(f){const s=Math.floor(f/60);return Math.floor(s/60)+':'+String(
 function inSteam(e){const cx=e.x+e.w/2,cy=e.y+e.h/2;return G.steam.some(s=>Math.hypot(s.x-cx,s.y-cy)<s.r);}
 function inGoo(e){return G.goo.some(g=>overlap({x:g.x,y:g.y,w:12,h:8},e));}
 function nearestFree(i,j){if(tileFree(i,j))return{i,j};for(let r=1;r<6;r++)for(let a=-r;a<=r;a++)for(let b=-r;b<=r;b++){if(Math.max(Math.abs(a),Math.abs(b))!==r)continue;if(tileFree(i+a,j+b))return{i:i+a,j:j+b};}return{i,j};}
-function hopTo(ti,tj,dur,noHeat){P.hop={t:0,dur,fx:P.x,fy:P.y,tx:ti*T+3,ty:tj*T+3};P.roll=0;}
+function hopTo(ti,tj,dur,noHeat){P.hop={t:0,dur,fx:P.x,fy:P.y,tx:ti*T+3,ty:tj*T+3};P.roll=0;clearActions();}
 function shopMenu(o){if(nightAmount()>0.5){say(["We're closed for the night, dearie. Come back in the morning, or sleep it off at home."],null,o.name);return;}
   const items=o.shop.filter(it=>!(it.once&&G.items[it.id])&&!(it.id==='glaze'&&(G.items.glazeBought||0)>=3));if(!items.length){say(["Nothing left to sell you today!"],null,o.name);return;}
   ask(`Buy something? You have ${G.coins} sprinkles.`,items.map(it=>`${it.name} (${it.price})`).concat(['Nothing']),i=>{if(i<0||i>=items.length)return;const it=items[i];
@@ -999,7 +1022,7 @@ function frostSweep(){const cx=P.x+5,cy=P.y+5;P.atk=12;P.atkType='sweep';P.toast
   for(let k=0;k<20;k++)G.fx.push({x:cx,y:cy,vx:Math.cos(k/20*6.28)*2.2,vy:Math.sin(k/20*6.28)*2.2,life:20,col:'#bfefff'});audio.sfx('freeze');G.shake=4;}
 function spearThrow(){const d=dirVec(P.dir);P.spearOut={x:P.x+3,y:P.y+2,vx:d[0]*3.5,vy:d[1]*3.5,t:0,ret:false,dir:P.dir};audio.sfx('throw');}
 function updateMechanics(){
-  if(G.scene==='play'&&!G.paused){G.dayT=(G.dayT+1)%14400;G.playT++;}
+  if(G.scene==='play'&&!G.paused){G.dayT=(G.dayT+1)%14400;G.playT++;if(G.playT%60===0){G.stats=G.stats||{melts:{},causes:{},time:{}};const a=areaName();G.stats.time[a]=(G.stats.time[a]||0)+1;}}
   for(const s of G.steam)s.ttl--;G.steam=G.steam.filter(s=>s.ttl>0);
   for(const g of G.goo)g.ttl--;G.goo=G.goo.filter(g=>g.ttl>0);
   let thaw=false;for(const k in G.frozen){G.frozen[k]--;if(G.frozen[k]<=0){delete G.frozen[k];thaw=true;}}
@@ -1079,7 +1102,7 @@ function drawAmbience(){const cx=Math.round(G.cam.x),cy=Math.round(G.cam.y);
     if(a.kind==='leaf')ctx.drawImage(LEAF[a.s],x,y);
     else if(a.kind==='dust'){ctx.fillStyle='rgba(255,230,200,'+(0.25+Math.sin(a.ph)*0.15)+')';ctx.fillRect(x,y,1,1);}
     else{ctx.fillStyle='rgba(255,255,255,'+(a.life/40*0.35)+')';ctx.fillRect(x,y,1,2);}}}
-function drawEnemy(e,x,y,f){const fl=e.flash>0;if(fl){ctx.save();ctx.filter='brightness(3)';}
+function drawEnemy(e,x,y,f){const fl=e.flash>0;if(fl){ctx.save();ctx.filter='brightness('+(2+2*(1-e.hp/e.maxhp)).toFixed(1)+')';}
   const shakeX=e.state==='windup'?((G.t&1)?1:-1):0;
   switch(e.kind){
     case 'boss':drawShadow(x+11,y+22,28);ctx.drawImage(BOSS[f],x-5+shakeX,y-10);lights.push({x:x+11,y:y+2,r:G.bossPhase===2?52:40});break;
@@ -1094,6 +1117,7 @@ function drawEnemy(e,x,y,f){const fl=e.flash>0;if(fl){ctx.save();ctx.filter='bri
     default:drawShadow(x+5,y+12,10);ctx.drawImage(EMBER[f],x-3+shakeX,y-4+(f?1:0)+(e.state==='windup'?-1:0));lights.push({x:x+5,y:y+3,r:e.state==='windup'?30:22});
       if(G.t%6===0)G.fx.push({x:e.x+3+Math.random()*4,y:e.y-2,vx:(Math.random()-0.5)*0.3,vy:-0.4-Math.random()*0.3,life:18,col:'#ffd23f'});}
   if(fl)ctx.restore();
+  if(!e.boss&&e.maxhp>1&&e.hp<e.maxhp&&e.hp>0){const w=e.mini?20:10;const n=e.maxhp;const pw=Math.max(2,Math.floor((w-(n-1))/n));for(let i=0;i<n;i++){ctx.fillStyle=i<e.hp?(e.hp<=n/2?'#ff5a2b':'#ffd23f'):'#2a1a2c';ctx.fillRect(x+i*(pw+1),y+e.h+3,pw,2);}}
   if(e.pinned>0){ctx.fillStyle='#bfefff';ctx.fillRect(x+1,y-6,2,6);ctx.fillRect(x+7,y-8,2,8);ctx.fillRect(x+4,y+4,2,5);ctx.fillStyle='#3e6fd8';ctx.fillRect(x+1,y-7,2,1);ctx.fillRect(x+7,y-9,2,1);}}
 function drawEnts(){const cx=Math.round(G.cam.x),cy=Math.round(G.cam.y);const f=(G.t>>3)&1;
   const list=[...G.ents.map(e=>({z:e.y+e.h+(e.fly?40:0),e})),{z:P.y+P.h,e:P}].sort((a,b)=>a.z-b.z);
@@ -1187,6 +1211,14 @@ function drawHUD(){ctx.fillStyle='#17111c';ctx.fillRect(0,H-HUD,W,HUD);ctx.fillS
 function drawChoice(){if(!G.choice)return;const c=G.choice;const tl=wrap(c.title,27);const h=12+tl.length*10+c.opts.length*11;const by=H-HUD-h-4;drawBox(8,by,W-16,h);
   tl.forEach((l,i)=>text(l,16,by+6+i*10,'#ffb347'));c.opts.forEach((o,i)=>text((i===c.idx?'> ':'  ')+o,20,by+8+tl.length*10+i*11,i===c.idx?'#fffaf0':'#b9a5c6'));
   tapZones=c.opts.map((o,i)=>({x:8,y:by+6+tl.length*10+i*11,w:W-16,h:11,cb:()=>{if(c.idx===i)pressed.a=1;else{c.idx=i;audio.sfx('menu');}}}));}
+function drawStats(){ctx.fillStyle='rgba(23,17,28,0.96)';ctx.fillRect(0,0,W,H);text('MELT REPORT',W/2,6,'#ffb347','center');const st=G.stats||{melts:{},causes:{},time:{}};
+  const top=(o,n)=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,n);let y=22;
+  text('BY AREA',14,y,'#b9a5c6');text('TIME',150,y,'#b9a5c6');text('MELTS',206,y,'#b9a5c6');y+=12;
+  const areas=Object.keys(Object.assign({},st.time,st.melts));if(!areas.length)text('No melts yet. Stay white!',14,y,'#e9d6c4');
+  for(const a of areas.slice(0,6)){text(a.slice(0,15),14,y,'#fffaf0');text(fmtTime((st.time[a]||0)*60),150,y,'#e9d6c4');text(String(st.melts[a]||0),206,y,'#e9d6c4');y+=11;}
+  y+=6;text('TOP CAUSES',14,y,'#b9a5c6');y+=12;const tc=top(st.causes,5);if(!tc.length)text('-',14,y,'#e9d6c4');for(const[c,n]of tc){text(c.slice(0,22),14,y,'#fffaf0');text(String(n),206,y,'#e9d6c4');y+=11;}
+  text('Total melts '+G.deaths+'  Play time '+fmtTime(G.playT),W/2,H-HUD-14,'#b9a5c6','center');
+  if(G.t>>4&1)text(document.body.classList.contains('touch')?'ITEM OR A TO CLOSE':'V OR A TO CLOSE',W/2,H-16,'#ffb347','center');tapZones=[{x:0,y:0,w:W,h:H,cb:()=>{pressed.a=1;pressedT.a=performance.now();}}];}
 function drawPause(){ctx.fillStyle='rgba(23,17,28,0.88)';ctx.fillRect(0,0,W,H-HUD);text('PAUSED',W/2,6,'#ffb347','center');
   // schematic map of Sugarfield
   const areas={village:{x:76,y:150,w:104,h:22,n:'Donut Village'},woods:{x:76,y:110,w:104,h:30,n:'Toasty Woods'},cave:{x:184,y:114,w:68,h:22,n:'Cinder Cave'},keep:{x:92,y:66,w:72,h:34,n:'Ember Keep'},grotto:{x:2,y:114,w:72,h:22,n:'Glaze Grotto'}};
@@ -1202,7 +1234,7 @@ function drawPause(){ctx.fillStyle='rgba(23,17,28,0.88)';ctx.fillRect(0,0,W,H-HU
   text('Buddies '+freedCount()+'/6  Melted '+G.deaths+'x  '+(hard()?'HARD':'NORMAL'),W/2,176,'#b9a5c6','center');
   text('Seals '+G.seals+'/4  Sprinkles '+G.coins+'  '+(G.follower?'With '+BUDDY_NAMES[G.follower]:'Alone'),W/2,186,'#b9a5c6','center');
   text((nightAmount()>0.5?'Night':'Day')+'  Time '+fmtTime(G.playT)+(G.ngplus?'  NG+':''),W/2,196,'#b9a5c6','center');
-  text(document.body.classList.contains('touch')?'B: HELP':'X: HELP',W-8,6,'#ffb347','right');}
+  text(document.body.classList.contains('touch')?'B: HELP':'X: HELP',W-8,6,'#ffb347','right');text(document.body.classList.contains('touch')?'ITEM: REPORT':'V: REPORT',8,6,'#ffb347','left');}
 
 // ---------- title, intro, ending ----------
 function nightSky(){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0d0a2a');g.addColorStop(1,'#2a1a48');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
@@ -1229,9 +1261,12 @@ function drawHelp(){const touch=document.body.classList.contains('touch');ctx.fi
   ['Fire TOASTS you. Full = melt.','Jars, water, houses cool you.','Soggy Puff cannot be toasted.','Half toasted: slow but tough.'].forEach((l,i)=>text(l,14,138+i*11,'#e9d6c4'));
   if(G.t>>4&1)text(touch?'TAP OR A TO CLOSE':'A OR ENTER TO CLOSE',W/2,H-16,'#ffb347','center');tapZones=[{x:0,y:0,w:W,h:H,cb:()=>{pressed.a=1;}}];}
 function menuItems(){const it=[];if(G.hasSave)it.push({id:'cont',label:'CONTINUE'});it.push({id:'new',label:'NEW GAME'});if(G.savedCleared)it.push({id:'ngp',label:'NEW GAME+'});it.push({id:'help',label:'HOW TO PLAY'});
-  it.push({id:'diff',label:'DIFFICULTY: '+(hard()?'HARD':'NORMAL')});it.push({id:'timer',label:'TIMER: '+(G.opts.timer?'ON':'OFF')});it.push({id:'cool',label:'COOLING: '+(G.opts.cooling==='jars'?'JARS ONLY':'NORMAL')});return it;}
+  it.push({id:'diff',label:'DIFFICULTY: '+(hard()?'HARD':'NORMAL')});it.push({id:'timer',label:'TIMER: '+(G.opts.timer?'ON':'OFF')});it.push({id:'cool',label:'COOLING: '+(G.opts.cooling==='jars'?'JARS ONLY':'NORMAL')});
+  if(document.body.classList.contains('touch')){const t=touchOpts();it.push({id:'bsize',label:'BUTTONS: '+['SMALL','NORMAL','LARGE'][t.size]});it.push({id:'hand',label:'LAYOUT: '+(t.left?'LEFT-HANDED':'RIGHT-HANDED')});it.push({id:'swipe',label:'SWIPE ROLL: '+(t.swipe?'ON':'OFF')});}return it;}
+function touchOpts(){if(!G.opts.touch)G.opts.touch={size:1,left:false,swipe:true};return G.opts.touch;}
+function applyTouchOpts(){const t=touchOpts();document.documentElement.style.setProperty('--btnscale',[0.85,1,1.2][t.size]);document.body.classList.toggle('lefty',!!t.left);if(typeof fit==='function')fit();}
 function saveOpts(){try{localStorage.setItem('marshmallow-quest-opts',JSON.stringify({diff:G.diff,opts:G.opts}));}catch(e){}}
-function loadOpts(){try{const d=JSON.parse(localStorage.getItem('marshmallow-quest-opts'));if(d){G.diff=d.diff||'normal';G.opts=d.opts||G.opts;}const b=localStorage.getItem('marshmallow-quest-best');if(b)G.best=+b;const sv=JSON.parse(localStorage.getItem(SAVE_KEY));G.savedCleared=!!(sv&&sv.cleared);}catch(e){}}
+function loadOpts(){try{const d=JSON.parse(localStorage.getItem('marshmallow-quest-opts'));if(d){G.diff=d.diff||'normal';G.opts=d.opts||G.opts;}const b=localStorage.getItem('marshmallow-quest-best');if(b)G.best=+b;const sv=JSON.parse(localStorage.getItem(SAVE_KEY));G.savedCleared=!!(sv&&sv.cleared);}catch(e){}applyTouchOpts();}
 const INTRO=[{len:260,txt:'Donut Village, one warm summer night. Puff and the buddies are out watching the stars.'},
   {len:300,txt:'Fire monsters from EMBER KEEP! They grab every marshmallow they can reach...'},
   {len:260,txt:'...except Puff. Fluff, Mallo, Squish, Dot and Bibi are carried off to the castle in the north.'},
@@ -1263,7 +1298,7 @@ function drawEnding(){const t=G.endT;const k=Math.min(1,t/900);dawnSky(k);
 function resetWorld(){for(const k in MAPS)for(const o of MAPS[k].objs){delete o.talked;delete o.hits;delete o.out;delete o.cut;}
   for(const k in MAPS)MAPS[k].objs=MAPS[k].objs.filter(o=>!o.fromBush&&!o.drop&&o.type!=='sprinkle');G.msg=null;G.msgQ=[];G.choice=null;G.goal='';G.banner=null;G.bossPhase=0;G.gauntlet=null;}
 function newGame(plus){const keep=plus?{cap:P.cap,coins:G.coins,items:G.items,seals:G.seals}:null;
-  G.flags={};G.freed={};G.opened={};G.q={};G.taken={};G.deaths=0;G.win=false;G.visited={};G.coins=0;G.items={frost:0,lamp:false,swordLv:1};G.seals=0;G.follower=null;G.F=null;G.dayT=2600;G.playT=0;G.cleared=false;G.ngplus=!!plus;
+  G.flags={};G.freed={};G.opened={};G.q={};G.taken={};G.deaths=0;G.win=false;G.visited={};G.stats={melts:{},causes:{},time:{}};G.coins=0;G.items={frost:0,lamp:false,swordLv:1};G.seals=0;G.follower=null;G.F=null;G.dayT=2600;G.playT=0;G.cleared=false;G.ngplus=!!plus;
   resetWorld();Object.assign(P,mkPlayer(0,0));G.lastHome={map:'home',x:5,y:7};
   if(plus){P.cap=keep.cap;G.coins=keep.coins;G.items=keep.items;G.seals=keep.seals;G.flags.sword=true;G.flags.spear=true;G.diff='hard';for(let k=1;k<=4;k++)if(k<=keep.seals)G.flags['seal'+k]=true;}
   loadMap('overworld',24,52,1);G.scene='play';
@@ -1273,17 +1308,19 @@ function continueGame(){resetWorld();Object.assign(P,mkPlayer(0,0));if(!loadSave
 function step(){G.t++;pollGamepad();
   if(justPressed('mute')){audio.setMute(!audio.muted);}
   if(G.help){if(justPressed('a')||justPressed('b')||justPressed('start'))G.help=false;pressed.c=0;pressed.item=0;return;}
+  if(G.showStats){if(justPressed('a')||justPressed('item')||justPressed('start')||justPressed('b'))G.showStats=false;pressed.c=0;return;}
   if(G.scene==='title'){const items=menuItems();const n=items.length;if(justPressed('up')){G.menu=(G.menu+n-1)%n;audio.sfx('menu');}if(justPressed('down')){G.menu=(G.menu+1)%n;audio.sfx('menu');}G.menu=Math.min(G.menu,n-1);
     if(justPressed('start')||justPressed('a')){audio.unlock();const id=items[G.menu].id;
       if(id==='help'){G.help=true;audio.sfx('menu');}else if(id==='cont')continueGame();else if(id==='new'){G.scene='intro';G.introPhase=0;G.introT=0;audio.play('village');}else if(id==='ngp')newGame(true);
-      else if(id==='diff'){G.diff=hard()?'normal':'hard';audio.sfx('menu');saveOpts();}else if(id==='timer'){G.opts.timer=!G.opts.timer;audio.sfx('menu');saveOpts();}else if(id==='cool'){G.opts.cooling=G.opts.cooling==='jars'?'normal':'jars';audio.sfx('menu');saveOpts();}}
+      else if(id==='diff'){G.diff=hard()?'normal':'hard';audio.sfx('menu');saveOpts();}else if(id==='timer'){G.opts.timer=!G.opts.timer;audio.sfx('menu');saveOpts();}else if(id==='cool'){G.opts.cooling=G.opts.cooling==='jars'?'normal':'jars';audio.sfx('menu');saveOpts();}
+      else if(id==='bsize'){const t=touchOpts();t.size=(t.size+1)%3;applyTouchOpts();audio.sfx('menu');saveOpts();}else if(id==='hand'){const t=touchOpts();t.left=!t.left;applyTouchOpts();audio.sfx('menu');saveOpts();}else if(id==='swipe'){const t=touchOpts();t.swipe=!t.swipe;audio.sfx('menu');saveOpts();}}
     pressed.b=0;pressed.c=0;pressed.item=0;return;}
   if(G.scene==='intro'){G.introT++;if(justPressed('start')){newGame();return;}
     if(justPressed('a')||G.introT>INTRO[G.introPhase].len){if(G.introPhase===3){newGame();return;}G.introPhase++;G.introT=0;}pressed.b=0;return;}
   if(G.scene==='ending'){G.endT++;if(G.endT>1100&&(justPressed('start')||justPressed('a'))){G.scene='title';G.menu=0;checkSave();loadOpts();audio.play('village');}return;}
   if(G.trans){G.trans.t++;if(G.trans.t>=22)G.trans=null;return;}
   if(G.fade){G.fade+=G.fadeTo?0.08:-0.08;if(G.fade>=1&&G.fadeTo){const cb=G.fadeTo;G.fadeTo=null;cb();}if(G.fade<=0)G.fade=0;return;}
-  if(justPressed('start')){G.paused=!G.paused;audio.sfx('menu');}if(G.paused){if(justPressed('b')){G.help=true;audio.sfx('menu');}return;}
+  if(justPressed('start')){G.paused=!G.paused;audio.sfx('menu');}if(G.paused){if(justPressed('b')){G.help=true;audio.sfx('menu');}if(justPressed('item')){G.showStats=true;audio.sfx('menu');}return;}
   const goal=goalText();if(goal!==G.goal){G.goal=goal;G.banner={text:goal,t:240};}
   if(G.choice){const c=G.choice;if(justPressed('up')){c.idx=(c.idx+c.opts.length-1)%c.opts.length;audio.sfx('menu');}if(justPressed('down')){c.idx=(c.idx+1)%c.opts.length;audio.sfx('menu');}
     if(justPressed('a')){G.choice=null;audio.sfx('menu');c.cb(c.idx);}else if(justPressed('b')){G.choice=null;c.cb(-1);}pressed.c=0;pressed.item=0;released.b=0;return;}
@@ -1298,7 +1335,7 @@ function render(){ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,H);lights=[]
     bctx.clearRect(0,0,W,H);bctx.drawImage(cv,0,0);ctx.clearRect(0,0,W,H-HUD);
     ctx.drawImage(snap,0,0,W,sh,Math.round(dx*e*sw),Math.round(dy*e*sh),W,sh);ctx.drawImage(buf,0,0,W,sh,Math.round(dx*(e-1)*sw),Math.round(dy*(e-1)*sh),W,sh);}
   drawHUD();drawMsg();drawChoice();if(!G.msg&&!G.choice)drawBanner();
-  if(G.paused)drawPause();if(G.help)drawHelp();
+  if(G.paused)drawPause();if(G.help)drawHelp();if(G.showStats)drawStats();
   if(G.fade){ctx.fillStyle='rgba(23,17,28,'+Math.min(1,G.fade)+')';ctx.fillRect(0,0,W,H);}}
 let last=0,acc=0;
 function loop(ts){requestAnimationFrame(loop);const dt=Math.min(100,ts-last);last=ts;acc+=dt;while(acc>=1000/60){step();acc-=1000/60;}render();}
