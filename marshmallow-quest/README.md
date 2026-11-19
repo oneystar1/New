@@ -19,7 +19,8 @@ play the published page.
 | Vault a gap            | X while rolling       | B while rolling       |
 | Roll                   | C, L or Shift         | ROLL / X              |
 | Item (frost jar, Mallo)| V or I                | ITEM / Y              |
-| Pause, map             | Enter or Esc          | START                 |
+| Pause, map, quit       | Enter or Esc          | START                 |
+| Skip a speech          | hold X                | hold B                |
 | Mute                   | M                     |                       |
 
 ## Mechanics
@@ -63,5 +64,12 @@ play the published page.
   pause screen's Melt Report (V / ITEM) lists melts by area and top causes.
   On touch devices the title menu offers button size, a left-handed layout and
   swipe-to-roll on the stick.
+
+- **Nights** bring Will-o'-Wisps over the pond and woods: harmless drifting
+  lights that flare when touched and drop sprinkles. Enemies drop more
+  sprinkles after dark.
+- **Dungeons** lock the camera to the current room and scroll at doorways.
+  Meter upgrades play a fanfare and stretch the bar. Signs read from any side.
+  Quit to the title from the pause screen (A).
 
 Progress saves to the browser automatically.
