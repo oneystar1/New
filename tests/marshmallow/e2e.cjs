@@ -4,7 +4,7 @@ fs.writeFileSync(TMP,html);const b=await chromium.launch();const pg=await b.newP
 pg.on('pageerror',e=>errs.push('PAGE '+e.message));pg.on('console',m=>{if(m.type()==='error')errs.push('CON '+m.text());});
 await pg.goto('file://'+TMP);await pg.waitForTimeout(500);
 const box=await pg.evaluate(()=>{const r=document.getElementById('c').getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};});
-const shot=n=>pg.screenshot({path:'v3_'+n+'.png',clip:box});const ev=f=>pg.evaluate(f);const wait=ms=>pg.waitForTimeout(ms);const key=async(k,ms=120)=>{await pg.keyboard.press(k);await wait(ms);};
+const shot=n=>pg.screenshot({path:os.tmpdir()+'/mq_v3_'+n+'.png',clip:box});const ev=f=>pg.evaluate(f);const wait=ms=>pg.waitForTimeout(ms);const key=async(k,ms=120)=>{await pg.keyboard.press(k);await wait(ms);};
 const log={};
 await shot('title');await key('Enter',300);await wait(600);await shot('intro');for(let i=0;i<4;i++)await key('KeyZ',200);
 log.scene=await ev(()=>G.scene);

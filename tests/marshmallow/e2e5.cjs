@@ -4,7 +4,7 @@ fs.writeFileSync(TMP,html);const b=await chromium.launch();const pg=await b.newP
 pg.on('pageerror',e=>errs.push('PAGE '+e.message));pg.on('console',m=>{if(m.type()==='error')errs.push('CON '+m.text());});
 await pg.goto('file://'+TMP);await pg.waitForTimeout(500);
 const box=await pg.evaluate(()=>{const r=document.getElementById('c').getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};});
-const shot=n=>pg.screenshot({path:'v5_'+n+'.png',clip:box});const ev=f=>pg.evaluate(f);const wait=ms=>pg.waitForTimeout(ms);const key=async(k,ms=120)=>{await pg.keyboard.press(k);await wait(ms);};
+const shot=n=>pg.screenshot({path:os.tmpdir()+'/mq_v5_'+n+'.png',clip:box});const ev=f=>pg.evaluate(f);const wait=ms=>pg.waitForTimeout(ms);const key=async(k,ms=120)=>{await pg.keyboard.press(k);await wait(ms);};
 const clear=()=>ev(()=>{G.msg=null;G.msgQ=[];G.choice=null;P.toast=0;P.melting=0;});const log={};const sec=async(n,f)=>{try{log[n]=await f();}catch(e){log[n]='ERR '+e.message.split('\n')[0];}};
 // help from title
 await sec('help',async()=>{await ev(()=>{G.menu=menuItems().findIndex(i=>i.id==='help');});await key('KeyZ',200);await shot('help');const h=await ev(()=>G.help);await key('KeyZ',200);return h+' '+await ev(()=>G.help);});
