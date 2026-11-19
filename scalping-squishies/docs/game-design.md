@@ -330,3 +330,15 @@ three restocks behind them. Local notifications (iOS) are scheduled on
 backgrounding: offline cap reached, next restock ready, the next
 season's start (within 45 days, at 9am UTC on the day), and a 48-hour
 warning when a live season's set is unfinished.
+
+**Season splash.** The first time a season is live for a save (after the
+launch splash and the tutorial choice, never over another overlay) a
+one-time card shows the six exclusives as silhouettes with their token
+prices, how tokens are earned, the set bonus and the end date. Dismissing
+it lands on the Hunt tab. Tracked per season in `seasonSplashSeen`.
+
+**Camp ambience.** The camp phase plays a synthesized wind bed (filtered
+brown noise with a slow LFO) that softens and brightens as the sky does,
+a car door every so often, sparrows once the sky lightens, and a two-note
+door chime when the doors open. It follows the sound-effects setting and
+stops with the phase. No audio assets.

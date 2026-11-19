@@ -236,3 +236,9 @@ input.handle { flex: 1; background: var(--bg); color: var(--text); border: 1px s
 @keyframes snowFall { 0% { transform: translate(0, 0); } 50% { transform: translate(var(--sway, 8px), 110px); } 100% { transform: translate(0, 220px); } }
 @keyframes arrive { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .scene * { animation: none !important; transition: none !important; } }
+
+/* Season "what's new" card */
+.season-splash .modal { border-color: var(--gold); box-shadow: 0 0 40px rgba(255, 224, 102, 0.25); animation: pop 0.3s ease-out; }
+.season-hero { font-size: 56px; line-height: 1; animation: bob 2.4s ease-in-out infinite; }
+.season-items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
+.season-items .item .n { min-height: 0; }

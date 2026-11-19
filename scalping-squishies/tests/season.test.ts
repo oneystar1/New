@@ -155,5 +155,7 @@ describe('season play', () => {
   it('old saves get an empty season block', () => {
     const s = migrate({ cash: 5, stats: { taps: 3 } });
     expect(s.season).toEqual({ id: null, tokens: 0, bought: [], missions: [], missionsDate: '' });
+    expect(s.seasonSplashSeen).toEqual([]);
+    expect(migrate({ seasonSplashSeen: ['dohlidays'] }).seasonSplashSeen).toEqual(['dohlidays']);
   });
 });

@@ -17,7 +17,8 @@
     "cap:add:ios": "npx cap add ios",
     "cap:sync": "npm run build && npx cap sync",
     "dashboard": "node tools/dashboard.mjs",
-    "icons": "node tools/icons.mjs"
+    "icons": "node tools/icons.mjs",
+    "shots:store": "node tools/store-shots.mjs"
   },
   "license": "MIT",
   "dependencies": {

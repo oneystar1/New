@@ -40,6 +40,9 @@ The next step. Everything after this needs a public link.
 - [x] **me** `tools/dashboard.mjs`: read the `events` table and print D1 /
       D7 retention, ad views per DAU, starter pack conversion. The
       soft-launch gates below need these numbers.
+- [x] **me** Store listing pack: name, subtitle, promo text, description,
+      keywords, age rating and privacy label answers, review notes, six
+      framed 6.7-inch screenshots (`docs/store-listing.md`, `npm run shots:store`).
 - [ ] **you** Buy a domain (or use a subdomain you own) for the backend
       and the privacy page. Not required for Pages, required for App
       Store trust.

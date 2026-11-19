@@ -6,6 +6,7 @@ import { PRODUCTS } from '../engine/data/shop';
 import { isAdFree } from '../engine/sim';
 import { Sprite } from '../art/Sprite';
 import type { AdPlacement } from '../monetization';
+import { SEASON_BY_ID, SEASON_SHOP_PRICE, SEASON_TOKENS, seasonEndsAt, itemsForSeason } from '../engine/data/seasons';
 
 /** Offline earnings, pull results, and toasts. */
 export function Overlays() {
@@ -17,7 +18,12 @@ export function Overlays() {
   const dismissPulls = useGame((g) => g.dismissPulls);
   const requestTab = useGame((g) => g.requestTab);
   const dismissToast = useGame((g) => g.dismissToast);
+  const dismissSeasonSplash = useGame((g) => g.dismissSeasonSplash);
+  const splashDone = useGame((g) => g.splashDone);
   const noAds = isAdFree(s, Date.now());
+  // The season "what's new" card: once per season, after the launch splash and the tutorial choice, never over another overlay.
+  const season = s.season.id ? SEASON_BY_ID[s.season.id] : null;
+  const showSeason = Boolean(season && splashDone && !s.seasonSplashSeen.includes(season.id) && (s.tutorialChoice === 'off' || s.tutorialChoice === 'done') && !s.pendingOffline && !lastPulls);
 
   return (
     <>
@@ -51,6 +57,26 @@ export function Overlays() {
             </div>
             {lastPulls.length === 1 && <p>{lastPulls[0].item.blurb}</p>}
             <button className="btn primary block" onClick={dismissPulls}>Nice</button>
+          </div>
+        </div>
+      )}
+      {showSeason && season && (
+        <div className="overlay season-splash">
+          <div className="modal center">
+            <div className="season-hero">{season.icon}</div>
+            <h2>{season.name} is on</h2>
+            <p className="sub">{season.blurb}</p>
+            <div className="season-items">
+              {itemsForSeason(season.id).map((it) => (
+                <div className={`item r-${it.rarity} ${(s.shelf[it.id] ?? 0) > 0 ? '' : 'unknown'}`} key={it.id}>
+                  <div className="i"><Sprite id={it.id} size={40} /></div>
+                  <div className="n">{(s.shelf[it.id] ?? 0) > 0 ? it.name : `${season.tokenIcon}${SEASON_SHOP_PRICE[it.rarity]}`}</div>
+                </div>
+              ))}
+            </div>
+            <p className="small">Six exclusives, {(season.setBonus * 100).toFixed(0)}% profit forever for the set. They drop from 15% of pulls, or buy them with {season.tokenName}: {SEASON_TOKENS.restockUnit} per restock unit, {SEASON_TOKENS.pull} per pull, {SEASON_TOKENS.deal} per deal, {SEASON_TOKENS.daily} per daily login, plus three season missions a day.</p>
+            <p className="small" style={{ color: 'var(--gold)' }}>Ends {new Date(seasonEndsAt(season, Date.now())).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}. Leftover {season.tokenName} become Clout.</p>
+            <button className="btn primary block" onClick={() => { dismissSeasonSplash(); requestTab('hunt'); }}>Let's go</button>
           </div>
         </div>
       )}

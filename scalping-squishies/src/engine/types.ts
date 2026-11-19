@@ -386,6 +386,8 @@ export interface GameState {
   restockIntel: Record<string, number>;
   /** Seasonal live event: tokens, shop purchases, season missions. */
   season: SeasonState;
+  /** Season ids whose "what's new" card has been shown. */
+  seasonSplashSeen: string[];
   stats: Stats;
   settings: { sfx: boolean; haptics: boolean; notation: 'short' | 'scientific' };
 }

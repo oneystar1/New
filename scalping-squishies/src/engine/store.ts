@@ -101,6 +101,8 @@ interface GameStore {
   spendClout: (what: keyof typeof CLOUT_COSTS) => void;
   breakPiggy: () => void;
   dismissPulls: () => void;
+  /** Close the season "what's new" card; it never shows again for that season. */
+  dismissSeasonSplash: () => void;
   restockStart: (storeId: string) => void;
   restockOpen: () => void;
   restockCamp: () => void;
@@ -659,6 +661,7 @@ export const useGame = create<GameStore>((set, get) => {
       set({ s: { ...s }, run: null, runResult: { ...res, grabbed: st.run.grabbed } });
       get().save();
     },
+    dismissSeasonSplash: () => { mutate((s) => { if (s.season.id && !s.seasonSplashSeen.includes(s.season.id)) s.seasonSplashSeen.push(s.season.id); }); get().save(); },
     restockDismiss: () => {
       const st = get();
       set({ runResult: null });

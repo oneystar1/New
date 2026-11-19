@@ -26,7 +26,8 @@ page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + 
 const shot = (n) => page.screenshot({ path: path.join(OUT, n) });
 const tab = async (label) => { await page.locator('.nav button', { hasText: label === 'Deals' ? 'Messages' : label }).click(); await page.waitForTimeout(250); };
 try {
-  await page.goto(`http://localhost:${PORT}/`);
+  // Seasons are forced off so the run is the same in December as in June; season UI has its own screenshot script.
+  await page.goto(`http://localhost:${PORT}/?season=none`);
   await page.waitForSelector('.splash', { timeout: 15000 });
   await shot('00-splash.png');
   await page.waitForSelector('.splash', { state: 'detached', timeout: 10000 });

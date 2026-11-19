@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGame } from '../engine/store';
 import { STORE_BY_ID } from '../engine/data/stores';
 import { PHONE_ACTIONS } from '../engine/data/restock';
@@ -6,6 +6,7 @@ import { SEASON_BY_ID } from '../engine/data/seasons';
 import { ITEM_BY_ID, RARITY_LABEL, VARIANT_LABEL } from '../engine/data/items';
 import { encounterDef, DOORS_SECONDS, CAMP_SECONDS, SKIP_CAMP_PENALTY, neighborName, hasChair, campClock } from '../engine/restock';
 import { CampScene } from './CampScene';
+import { ambience } from './sfx';
 import { computeModifiers, incomePerSecond } from '../engine/sim';
 import { formatCash } from '../engine/math';
 import { Sprite } from '../art/Sprite';
@@ -27,6 +28,16 @@ export function RestockOverlay() {
   const dealAccept = useGame((g) => g.dealAccept);
   const dealDecline = useGame((g) => g.dealDecline);
   const [phoneOpen, setPhoneOpen] = useState(false);
+  // Camp ambience follows the phase: wind from the first second of the camp, a door chime when the doors open, silence after.
+  const phase = run?.phase ?? null;
+  useEffect(() => {
+    if (phase === 'camp') ambience.start();
+    else if (phase === 'doors') { ambience.chime(); ambience.stop(); }
+    else ambience.stop();
+    return () => { if (phase === 'camp') ambience.stop(); };
+  }, [phase]);
+  const campLeft = run?.phase === 'camp' ? run.campLeft : null;
+  useEffect(() => { if (campLeft !== null) ambience.dawn(1 - campLeft / CAMP_SECONDS); }, [campLeft]);
 
   if (result) {
     return (
