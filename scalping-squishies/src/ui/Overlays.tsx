@@ -75,7 +75,7 @@ export function Overlays() {
               ))}
             </div>
             <p className="small">Six exclusives, {(season.setBonus * 100).toFixed(0)}% profit forever for the set. They drop from 15% of pulls, or buy them with {season.tokenName}: {SEASON_TOKENS.restockUnit} per restock unit, {SEASON_TOKENS.pull} per pull, {SEASON_TOKENS.deal} per deal, {SEASON_TOKENS.daily} per daily login, plus three season missions a day.</p>
-            <p className="small" style={{ color: 'var(--gold)' }}>Ends {new Date(seasonEndsAt(season, Date.now())).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}. Leftover {season.tokenName} become Clout.</p>
+            <p className="small" style={{ color: 'var(--gold)' }}>Last day {new Date(seasonEndsAt(season, Date.now()) - 1).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}. Leftover {season.tokenName} become Clout.</p>
             <button className="btn primary block" onClick={() => { dismissSeasonSplash(); requestTab('hunt'); }}>Let's go</button>
           </div>
         </div>
