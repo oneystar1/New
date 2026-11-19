@@ -72,4 +72,15 @@ play the published page.
   Meter upgrades play a fanfare and stretch the bar. Signs read from any side.
   Quit to the title from the pause screen (A).
 
+- **Polish.** A bobbing A bubble marks anything Puff can talk to, read, open
+  or push. Knights, Candle Knights, snails and the toad face the way they move.
+  The title offers Erase Save, and New Game warns before replacing a save.
+  Phones scale to a whole number of device pixels per game pixel.
+
 Progress saves to the browser automatically.
+
+## Tests
+
+`npm run test:mq` runs the headless Playwright suites in `tests/marshmallow/`
+(main quest, every mechanic, the grotto, checkpoints, feedback and menus).
+Each suite prints its checks as JSON; the runner fails on any reported error.
