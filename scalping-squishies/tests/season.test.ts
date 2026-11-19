@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { initialState, migrate } from '../src/engine/state';
 import { tick, pullItem, computeModifiers, setProgress, claimDaily, bumpMission } from '../src/engine/sim';
-import { SEASONS, SEASON_ITEMS, SEASON_MISSION_BY_ID, activeSeason, seasonEndsAt, setSeasonOverride, itemsForSeason, SEASON_TOKENS, SEASON_SHOP_PRICE, SEASON_TOKENS_PER_CLOUT } from '../src/engine/data/seasons';
+import { SEASONS, SEASON_ITEMS, SEASON_MISSION_BY_ID, activeSeason, seasonEndsAt, nextSeasonStart, setSeasonOverride, itemsForSeason, SEASON_TOKENS, SEASON_SHOP_PRICE, SEASON_TOKENS_PER_CLOUT } from '../src/engine/data/seasons';
 import { ITEMS, ALL_ITEMS, ITEM_BY_ID } from '../src/engine/data/items';
 import { ART } from '../src/art/art';
 import { tickSeason, earnTokens, buySeasonItem, seasonShop, claimSeasonMission, rollSeasonItem, seasonSets } from '../src/engine/season';
@@ -44,6 +44,13 @@ describe('season calendar', () => {
     setSeasonOverride('dohlidays');
     expect(seasonEndsAt(s, at(2026, 11, 9))).toBe(Date.UTC(2027, 0, 6)); // forced on early: still counts down to the real end
     expect(seasonEndsAt(activeSeason(at(2026, 2, 10))!, at(2026, 2, 10))).toBe(Date.UTC(2027, 0, 6));
+  });
+  it('next season start: the nearest upcoming start, null while one is on, wraps the year', () => {
+    expect(nextSeasonStart(at(2026, 11, 9))).toMatchObject({ season: { id: 'dohlidays' }, at: Date.UTC(2026, 10, 20) });
+    expect(nextSeasonStart(at(2026, 12, 25))).toBeNull();
+    expect(nextSeasonStart(at(2027, 1, 10))).toMatchObject({ season: { id: 'squishyhearts' }, at: Date.UTC(2027, 1, 1) });
+    expect(nextSeasonStart(at(2027, 11, 10))).toMatchObject({ season: { id: 'dohlidays' }, at: Date.UTC(2027, 10, 20) });
+    expect(nextSeasonStart(at(2028, 1, 10))).toMatchObject({ season: { id: 'squishyhearts' }, at: Date.UTC(2028, 1, 1) }); // off-season gap in January
   });
   it('override forces a season on or off', () => {
     setSeasonOverride('dohlloween');

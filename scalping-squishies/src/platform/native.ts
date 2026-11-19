@@ -32,10 +32,19 @@ export const storage = {
   },
 };
 
-const NOTIF_IDS = { offlineCap: 1, restock: 2, piggy: 3 };
+const NOTIF_IDS = { offlineCap: 1, restock: 2, piggy: 3, seasonStart: 4, seasonEnding: 5 };
 
 /** Schedule the "come back" notifications when the app goes to the background. */
-export async function scheduleReturnNotifications(opts: { offlineCapHours: number; nextRestockSeconds: number | null }): Promise<void> {
+export interface ReturnNotificationOpts {
+  offlineCapHours: number;
+  nextRestockSeconds: number | null;
+  /** Next season start (epoch ms) and its name, when no season is on. */
+  seasonStart?: { at: number; name: string; icon: string } | null;
+  /** Live season end (epoch ms), name, and how many set pieces are still missing. */
+  seasonEnd?: { at: number; name: string; icon: string; missing: number } | null;
+}
+
+export async function scheduleReturnNotifications(opts: ReturnNotificationOpts): Promise<void> {
   if (!isNative()) return;
   try {
     const perm = await LocalNotifications.checkPermissions();
@@ -50,6 +59,14 @@ export async function scheduleReturnNotifications(opts: { offlineCapHours: numbe
     ];
     if (opts.nextRestockSeconds !== null) {
       list.push({ id: NOTIF_IDS.restock, title: 'Restock truck spotted', body: 'The line is forming. Two per family. Allegedly.', schedule: { at: new Date(now + Math.max(60, opts.nextRestockSeconds) * 1000) } });
+    }
+    // Seasons: the start of the next one (within 45 days), and a 48-hour warning when the set is unfinished.
+    if (opts.seasonStart && opts.seasonStart.at > now && opts.seasonStart.at - now < 45 * 86_400_000) {
+      list.push({ id: NOTIF_IDS.seasonStart, title: `${opts.seasonStart.icon} ${opts.seasonStart.name} has started`, body: 'Six seasonal exclusives are dropping. Camp a line, earn tokens, finish the set.', schedule: { at: new Date(opts.seasonStart.at + 9 * 3600_000) } });
+    }
+    if (opts.seasonEnd && opts.seasonEnd.missing > 0) {
+      const warnAt = opts.seasonEnd.at - 48 * 3600_000;
+      if (warnAt > now) list.push({ id: NOTIF_IDS.seasonEnding, title: `${opts.seasonEnd.icon} ${opts.seasonEnd.name} ends in two days`, body: `${opts.seasonEnd.missing} piece${opts.seasonEnd.missing === 1 ? '' : 's'} of the set still missing. Spend your tokens before they turn into Clout.`, schedule: { at: new Date(warnAt) } });
     }
     await LocalNotifications.schedule({ notifications: list });
   } catch {

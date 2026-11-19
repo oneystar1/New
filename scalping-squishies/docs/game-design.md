@@ -320,3 +320,13 @@ season ends. The camp line gets seasonal flavor lines half the time.
 Testing: `?season=dohlidays` in the URL or `VITE_FORCE_SEASON` forces a
 season on (`none` forces off). The tick keeps `s.season.id` in sync with
 the calendar, so everything else only checks that field.
+
+## Forced ads and notifications
+
+Two interstitial placements, both skipped for Remove Ads, VIP and the
+starter pack's ad-free week, and never closer than 20 minutes apart:
+after a Relocate, and after a restock haul screen once the player has
+three restocks behind them. Local notifications (iOS) are scheduled on
+backgrounding: offline cap reached, next restock ready, the next
+season's start (within 45 days, at 9am UTC on the day), and a 48-hour
+warning when a live season's set is unfinished.

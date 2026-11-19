@@ -7,6 +7,8 @@ import { authAnon, getToken, cloudEnabled } from '../net/api';
 import { isNative, platform, onAppStateChange, scheduleReturnNotifications } from '../platform/native';
 import { computeModifiers } from '../engine/sim';
 import { STORES } from '../engine/data/stores';
+import { SEASON_BY_ID, nextSeasonStart, seasonEndsAt } from '../engine/data/seasons';
+import { seasonSets } from '../engine/season';
 import type { AdPlacement } from '../monetization';
 import { Header } from './Header';
 import { HuntTab } from './HuntTab';
@@ -92,7 +94,16 @@ export function App() {
       const st = useGame.getState();
       const m = computeModifiers(st.s, Date.now());
       const next = STORES.filter((x) => (st.s.stores[x.id]?.units ?? 0) > 0).map((x) => ((st.s.restockReadyAt[x.id] ?? 0) - Date.now()) / 1000).filter((t) => t > 0);
-      void scheduleReturnNotifications({ offlineCapHours: m.offlineCapHours, nextRestockSeconds: next.length ? Math.min(...next) : null });
+      const now = Date.now();
+      const live = st.s.season.id ? SEASON_BY_ID[st.s.season.id] : null;
+      const upcoming = live ? null : nextSeasonStart(now);
+      const set = live ? seasonSets(st.s).find((r) => r.season.id === live.id) : null;
+      void scheduleReturnNotifications({
+        offlineCapHours: m.offlineCapHours,
+        nextRestockSeconds: next.length ? Math.min(...next) : null,
+        seasonStart: upcoming ? { at: upcoming.at, name: upcoming.season.name, icon: upcoming.season.icon } : null,
+        seasonEnd: live && set ? { at: seasonEndsAt(live, now), name: live.name, icon: live.icon, missing: set.total - set.have } : null,
+      });
     };
     const offState = onAppStateChange((active) => { if (!active) goBackground(); else frame(Date.now()); });
     const loop = setInterval(() => frame(Date.now()), 100);

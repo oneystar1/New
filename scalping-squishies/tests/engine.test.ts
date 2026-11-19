@@ -1,3 +1,4 @@
+import { interstitialDue } from '../src/engine/sim';
 import { describe, it, expect } from 'vitest';
 import { initialState, migrate, serialize, deserialize } from '../src/engine/state';
 import {
@@ -251,5 +252,21 @@ describe('save', () => {
     expect(partial.stores.factory.units).toBe(0);
     expect(partial.pass.season).toBe(1);
     expect(deserialize('not json', T0).cash).toBe(10);
+  });
+});
+
+describe('forced ads', () => {
+  it('post-restock interstitial waits for a few restocks, honors ad-free and the minimum gap', () => {
+    const s = initialState(T0);
+    expect(interstitialDue(s, T0, 'prestige')).toBe(true);
+    expect(interstitialDue(s, T0, 'restock')).toBe(false);
+    s.stats.restocks = 3;
+    expect(interstitialDue(s, T0, 'restock')).toBe(true);
+    s.interstitialSeenAt = T0 - 5 * 60_000;
+    expect(interstitialDue(s, T0, 'restock')).toBe(false);
+    expect(interstitialDue(s, T0 + 21 * 60_000, 'restock')).toBe(true);
+    s.iap.noAds = true;
+    expect(interstitialDue(s, T0 + 21 * 60_000, 'restock')).toBe(false);
+    expect(interstitialDue(s, T0 + 21 * 60_000, 'prestige')).toBe(false);
   });
 });

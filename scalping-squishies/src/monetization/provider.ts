@@ -10,7 +10,8 @@ export type AdPlacement =
   | 'free_pull'
   | 'speed_up'
   | 'piggy_bonus'
-  | 'interstitial_prestige';
+  | 'interstitial_prestige'
+  | 'interstitial_restock';
 
 export interface AdResult {
   /** True when the user watched to completion and should be rewarded. */
@@ -65,9 +66,12 @@ export const AD_RULES = {
     speed_up: 30 * 60,
     piggy_bonus: 12 * 3600,
     interstitial_prestige: 0,
+    interstitial_restock: 0,
   } as Record<AdPlacement, number>,
   /** Minimum seconds between interstitials. */
   interstitialMinGap: 20 * 60,
+  /** No interstitial after a restock until the player has done this many (the first ones are the tutorial's). */
+  interstitialAfterRestocks: 3,
   /** Reward amounts. */
   rewards: {
     boost_2x: { mult: 2, seconds: 4 * 3600 },

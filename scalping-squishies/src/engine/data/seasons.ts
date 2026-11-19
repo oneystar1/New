@@ -162,3 +162,17 @@ export function seasonEndsAt(season: SeasonDef, now: number): number {
   // A wrapped season seen from its first half (or forced on early) ends next year.
   return end > now ? end : Date.UTC(year + 1, season.end[0] - 1, season.end[1] + 1);
 }
+
+/** The next season to start after `now` (UTC midnight of its start day), or null if one is already on. */
+export function nextSeasonStart(now: number): { season: SeasonDef; at: number } | null {
+  if (activeSeason(now)) return null;
+  const year = new Date(now).getUTCFullYear();
+  let best: { season: SeasonDef; at: number } | null = null;
+  for (const season of SEASONS) {
+    for (const y of [year, year + 1]) {
+      const at = Date.UTC(y, season.start[0] - 1, season.start[1]);
+      if (at > now && (!best || at < best.at)) best = { season, at };
+    }
+  }
+  return best;
+}

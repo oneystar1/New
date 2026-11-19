@@ -87,8 +87,8 @@ Start the Apple one today; approval can take several days.
 - [ ] 10 to 20 testers: collectors from your store's customers plus a few
       people who have never played an idle game. Web link for Android
       and desktop, TestFlight for iPhone.
-- [ ] Ask three questions at day 3: where did you stop, what confused
-      you, what did you want to buy. Read the feedback link inbox daily.
+- [x] Tester notes and the three day-3 questions are written
+      (`docs/testflight.md`); the daily cycle reads the feedback inbox.
 - [ ] I fix in priority order: anything that blocks progress, anything
       confusing in the first 10 minutes, then balance (the bot's 51/29/16
       income split is a guess until humans play).

@@ -8,6 +8,7 @@ import { ACHIEVEMENTS } from './data/achievements';
 import { MISSION_POOL } from './data/missions';
 import { PASS_TIERS } from './data/pass';
 import { VIP } from './data/shop';
+import { AD_RULES } from '../monetization/provider';
 import { CITY_BY_ID, CITIES } from './data/cities';
 import { RANKED_RIVALS } from './data/rivals';
 import { TUTORIAL } from './data/tutorial';
@@ -56,6 +57,18 @@ export function isVip(s: GameState, now: number): boolean {
 }
 
 /** True when no ads should be shown: Remove Ads, VIP, or a starter-pack window. */
+/**
+ * Whether a forced ad may run right now: never for Remove Ads / VIP / starter
+ * pack ad-free windows, never within the minimum gap of the last one, and the
+ * post-restock placement waits until the player has a few restocks behind them.
+ */
+export function interstitialDue(s: GameState, now: number, placement: 'prestige' | 'restock'): boolean {
+  if (isAdFree(s, now)) return false;
+  if (now - s.interstitialSeenAt < AD_RULES.interstitialMinGap * 1000) return false;
+  if (placement === 'restock' && s.stats.restocks < AD_RULES.interstitialAfterRestocks) return false;
+  return true;
+}
+
 export function isAdFree(s: GameState, now: number): boolean {
   return s.iap.noAds || s.iap.vipUntil > now || s.iap.adFreeUntil > now;
 }

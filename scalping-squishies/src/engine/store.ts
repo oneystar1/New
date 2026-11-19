@@ -13,7 +13,7 @@ import { initialState, deserialize, serialize, SAVE_KEY } from './state';
 import {
   tick, computeModifiers, applyOfflineOnLoad, claimOffline, storeUnlocked, startCycle, earn, tapValue,
   pullItem, highestUnlockedStore, sellDuplicate, prestige, credForRun, rollMissions, claimMission,
-  claimDaily, claimPassTier, addBoost, timeSkip, grantReward, bumpMission, isVip, isAdFree, rollCityOffer, unpull,
+  claimDaily, claimPassTier, addBoost, timeSkip, grantReward, bumpMission, isVip, isAdFree, interstitialDue, rollCityOffer, unpull,
 } from './sim';
 import { STORE_BY_ID } from './data/stores';
 import { MANAGER_BY_STORE } from './data/managers';
@@ -460,7 +460,7 @@ export const useGame = create<GameStore>((set, get) => {
       // Interstitial on prestige is the one forced ad placement, gated by
       // Remove Ads / VIP and a minimum gap.
       const p = st.provider;
-      if (p && !isAdFree(s, now) && now - s.interstitialSeenAt > AD_RULES.interstitialMinGap * 1000) {
+      if (p && interstitialDue(s, now, 'prestige')) {
         s.interstitialSeenAt = now;
         await p.ads.showInterstitial('interstitial_prestige');
       }
@@ -659,7 +659,17 @@ export const useGame = create<GameStore>((set, get) => {
       set({ s: { ...s }, run: null, runResult: { ...res, grabbed: st.run.grabbed } });
       get().save();
     },
-    restockDismiss: () => set({ runResult: null }),
+    restockDismiss: () => {
+      const st = get();
+      set({ runResult: null });
+      // The second forced ad placement: after the haul screen, gated like the prestige one.
+      const now = Date.now();
+      if (st.provider && interstitialDue(st.s, now, 'restock')) {
+        st.s.interstitialSeenAt = now;
+        set({ s: { ...st.s } });
+        void st.provider.ads.showInterstitial('interstitial_restock');
+      }
+    },
     setPricing: (p) => mutate((s) => { s.pricing = p; }),
     dealAccept: (id) => {
       const st = get();
