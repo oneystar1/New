@@ -19,34 +19,36 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;background:#000;max
   border:4px solid var(--line);box-shadow:0 0 0 2px #000,0 12px 40px #000c;touch-action:none}
 #top{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.6}
 #top b{color:var(--accent);font-weight:normal}
-#pad{display:none;width:100%;max-width:440px;justify-content:space-between;align-items:center;gap:12px;
-  margin:auto 0;padding-bottom:env(safe-area-inset-bottom,0px);flex:0 0 auto}
+#pad{display:none;width:100%;max-width:440px;justify-content:space-between;align-items:flex-end;gap:12px;position:relative;
+  margin:auto 0;padding:54px 0 env(safe-area-inset-bottom,0px);box-sizing:border-box;flex:0 0 auto}
 body.touch #pad{display:flex}
 :root{--btnscale:1}
 .stick,.btns{transform:scale(var(--btnscale))}.stick{transform-origin:bottom left}.btns{transform-origin:bottom right}
 body.lefty .stick{transform-origin:bottom right}body.lefty .btns{transform-origin:bottom left}
 .mid{position:relative;z-index:2}
 body.lefty #pad{flex-direction:row-reverse}
-body.lefty .btns .b{left:96px}body.lefty .btns .a{left:8px}body.lefty .btns .c{left:52px}body.lefty .btns .i{left:74px}
+body.lefty .btns .b{left:124px}body.lefty .btns .a{left:0}
 body.touch #top{display:none}
 body.touch #wrap{align-items:flex-start;flex:0 0 auto}
-.mid{display:flex;flex-direction:column;align-items:center;gap:10px}
+.mid{display:flex;flex-direction:column;align-items:center;gap:10px;position:absolute;left:50%;top:0;transform:translateX(-50%)}
 .mid button{background:var(--panel);border:3px solid var(--line);color:var(--fg);font-family:var(--font-pixel);width:72px;height:30px;border-radius:15px;font-size:8px;touch-action:none;user-select:none;-webkit-user-select:none}
 .mid button.on{background:var(--line)}
 .stick{position:relative;width:136px;height:136px;border-radius:50%;background:var(--panel);border:3px solid var(--line);box-shadow:inset 0 0 0 18px #1c1422;touch-action:none;user-select:none;-webkit-user-select:none}
 .stick .knob{position:absolute;left:43px;top:43px;width:50px;height:50px;border-radius:50%;background:var(--line);border:3px solid var(--muted);box-sizing:border-box;box-shadow:0 3px 0 #000a;pointer-events:none;transition:transform .05s}
 .stick.on .knob{background:var(--accent);border-color:#fff}
 .stick::before{content:"";position:absolute;left:62px;top:14px;width:12px;height:12px;border-left:3px solid var(--line);border-top:3px solid var(--line);transform:rotate(45deg);opacity:.6}
-.btns{position:relative;width:148px;height:136px}
+.btns{position:relative;width:176px;height:166px}
 .btns button{position:absolute;background:var(--panel);border:3px solid var(--line);color:var(--fg);
   font-family:var(--font-pixel);font-size:11px;border-radius:50%;width:52px;height:52px;touch-action:none;user-select:none;-webkit-user-select:none}
 .btns button:active,.btns button.on{background:var(--line)}
-.btns .b{left:0;top:72px;border-color:#5a7fc6}.btns .a{left:88px;top:20px;border-color:var(--fire)}.btns .c{left:52px;top:88px;width:44px;height:44px;border-color:#7cc47a;font-size:8px}.btns .i{left:30px;top:14px;width:44px;height:44px;border-color:#c9a0ff;font-size:8px}
+/* diamond: ITEM top, B left, A right, ROLL bottom, 14px+ between any two */
+.btns .i{left:66px;top:0;width:44px;height:44px;border-color:#c9a0ff;font-size:8px}.btns .b{left:0;top:60px;border-color:#5a7fc6}.btns .a{left:124px;top:54px;border-color:var(--fire)}.btns .c{left:66px;top:118px;width:44px;height:44px;border-color:#7cc47a;font-size:8px}
 button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (orientation:landscape){
   body.touch{padding-block:4px}
   body.touch #wrap{flex:1 1 auto;align-items:center}
   body.touch #pad{position:fixed;inset:0;margin:0;max-width:none;padding:0 max(10px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));box-sizing:border-box;align-items:flex-end;pointer-events:none;opacity:.85}
+  body.touch .mid{left:auto;transform:none}
   body.touch #pad>*{pointer-events:auto}
   body.touch .mid{position:fixed;top:max(8px,env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px))}
   body.touch .stick{width:120px;height:120px}
