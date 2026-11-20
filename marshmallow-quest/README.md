@@ -43,11 +43,18 @@ play the published page.
   honey glaze, Granny sells Frost Jars, the Elder sharpens your sword.
 - **Day and night.** Embers are faster at night, shops close, and the lamp
   lights dark caves and dark nights. Sleep at home to skip to morning.
+- **Frosted Peaks.** West past the pond: snow, pines, frozen lakes you slide
+  across, and a COLD meter that replaces toast. Away from fire Puff stiffens;
+  frozen stiff he moves at half speed and cannot roll. Campfires thaw him.
+  Snow Slimes and Icicle Bats chill instead of toast. The Sugar Glacier
+  dungeon has an ice-slide plate puzzle, Seal 5 in a nook, and the Frost
+  Marshal: a charging ice knight who rains icicles. The sword hurts him; the
+  spear barely does. Reward: the Mitten Charm.
 - **Glaze Grotto.** An optional dungeon under the pond, sealed by a flame
   until you have the spear: a vent corridor, a block puzzle, a squeeze-crack
   side room, a plate for Mallo, and a lava island you cross on frost crust for
   the Sugar Boots (faster rolls). Five Frost Jars inside.
-- **Four Marshmallow Seals** are hidden behind the mechanics above. Each
+- **Five Marshmallow Seals** are hidden behind the mechanics above. Each
   lengthens the toast meter.
 - **Cooling** is slow outdoors and stops entirely while any fire is on screen,
   so jars, water and houses matter. Each spear hit on the Pyre Lord vents
