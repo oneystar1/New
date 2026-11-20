@@ -24,7 +24,7 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 
 ### B. Systems
 - [x] Toast as health, soggy, steam, squeeze, vault, bat ride, followers, spear moves, frost jars, currency and shops, day/night, NG+, gauntlet
-- [ ] Toppings: three equipment slots (crust, glaze, sprinkle) with stat charms bought, found and crafted at the Baker
+- [x] Toppings: three equipment slots (crust, glaze, sprinkle) with stat charms bought, found and crafted at the Baker (Nov 20)
 - [ ] Quest log on the pause screen with main and side quests, markers on the map
 - [ ] Badges / achievements wall in Puff's home
 - [ ] Save slots (3) and a stats page per slot
@@ -41,11 +41,8 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 
 ### D. Structure and polish backlog (smaller items)
 - [ ] Light budget for phones (cap radial lights, merge small ones)
-- [ ] Auto-pause on background, haptics on hurt
 - [ ] Cornered-block auto reset (keep east wing, grotto)
 - [ ] Cooled keep after the boss (torches out, buddies wandering)
-- [ ] First-contact combat tips (Ember wind-up, knight swing)
-- [ ] Frost sweep charge ring
 - [ ] Villagers who notice progress, night lines
 - [ ] Key rebinding
 - [ ] Reduced-motion and flash safety
@@ -68,5 +65,6 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 - Bosses that must respawn on re-entry use a trigger with a `*Met` flag (taunt once) and are skipped in loadMap.
 
 ## Log
+- Nov 20 (pass 2): Toppings system with seven toppings, shops and crafting; first-contact tips; charge ring; auto-pause and haptics
 - Nov 20: Frosted Peaks + Sugar Glacier + Frost Marshal, cold meter, ice sliding, Mitten Charm, Seal 5; roadmap created; daily pass now builds
 - Nov 19: tests in repo, interaction prompt, enemy facing, erase save, pixel snap, spaced touch buttons

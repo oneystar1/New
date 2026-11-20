@@ -533,11 +533,11 @@ function interior(name,style,npc,extra){const m=newMap(12,10,'w');m.name=name;m.
   m.t[2][2]='@';m.t[2][9]='S';m.t[7][9]='S';if(npc)m.objs.push(Object.assign({type:'npc',x:6,y:3},npc));if(extra.objs)m.objs.push(...extra.objs);m.style=style;m.interior=true;return m;}
 MAPS.house0=interior('Elder Puffington\'s Donut',0,{id:'elder',name:'Elder',style:0.2,
   lines:["Puff! Thank goodness you are still white.","The fire monsters took Fluff, Mallo, Squish, Dot and Bibi to EMBER KEEP in the north.","Take my old sword. Fire monsters burn, so hit them and back away fast. Press C to ROLL out of trouble.","Stay near a flame too long and you TOAST. Toast all the way... and you melt."],
-  gives:'sword',after:["Watch the TOAST meter at the bottom, Puff. Glaze jars and a rest at home cool you down. Every buddy you free makes you a little tougher."],shop:[{id:'swordlv',name:'Sharpen sword',price:12,once:true}]},{ox:5,oy:48});
+  gives:'sword',after:["Watch the TOAST meter at the bottom, Puff. Glaze jars and a rest at home cool you down. Every buddy you free makes you a little tougher."],shop:[{id:'swordlv',name:'Sharpen sword',price:12,once:true},{id:'cracker',top:'cracker',name:'Cracker Crust',price:8,craft:true,needs:'marshalDead'}]},{ox:5,oy:48});
 MAPS.house1=interior('Baker Crumb\'s Donut',1,{id:'baker',name:'Baker',style:0.05,
-  lines:["Welcome, Puff! Have a glazed donut. It cools the soul. There, white as fresh snow.","Fluff was dragged into TOASTY WOODS, north of here and east of the path. Break the wooden cage with your sword."],heal:true,after:["Come back any time you feel toasty. Donuts cure everything."],quest:'donut',shop:[{id:'jar',name:'Glaze Jar',price:3},{id:'lamp',name:'Lamp',price:8,once:true}]},{ox:16,oy:48});
+  lines:["Welcome, Puff! Have a glazed donut. It cools the soul. There, white as fresh snow.","Fluff was dragged into TOASTY WOODS, north of here and east of the path. Break the wooden cage with your sword."],heal:true,after:["Come back any time you feel toasty. Donuts cure everything."],quest:'donut',shop:[{id:'lamp',name:'Lamp',price:8,once:true},{id:'graham',top:'graham',name:'Graham Crust',price:6},{id:'honey',top:'honey',name:'Honey Glaze',price:6},{id:'fire',top:'fire',name:'Fire Sprinkles',price:10,craft:true,needs:'toadDead'},{id:'star',top:'star',name:'Star Sprinkles',price:12,craft:true,needs:'bossDead'}]},{ox:16,oy:48});
 MAPS.house2=interior('Granny Sprinkle\'s Donut',2,{id:'granny',name:'Granny',style:0.4,
-  lines:["In my day we had the FIRE SPEAR. One poke and whoosh, a flame goes out like a birthday candle.","It was lost in CINDER CAVE, east of the woods. Only the spear can douse the gate of Ember Keep.","And here is the secret, dearie: a doused flame cage turns a toasted marshmallow WHITE again."],heal:true,after:["Press B to thrust the spear once you find it. It reaches farther than a sword, too."],quest:'granny',shop:[{id:'frost',name:'Frost Jar',price:5}]},{ox:27,oy:48});
+  lines:["In my day we had the FIRE SPEAR. One poke and whoosh, a flame goes out like a birthday candle.","It was lost in CINDER CAVE, east of the woods. Only the spear can douse the gate of Ember Keep.","And here is the secret, dearie: a doused flame cage turns a toasted marshmallow WHITE again."],heal:true,after:["Press B to thrust the spear once you find it. It reaches farther than a sword, too."],quest:'granny',shop:[{id:'frost',name:'Frost Jar',price:5},{id:'mint',top:'mint',name:'Mint Glaze',price:7}]},{ox:27,oy:48});
 MAPS.home=interior('Puff\'s Home',3,null,{ox:38,oy:48,objs:[{type:'bed',x:8,y:1,h:2},{type:'portrait',x:2,y:0,who:'fluff'},{type:'portrait',x:3,y:0,who:'mallo'},{type:'portrait',x:4,y:0,who:'squish'},{type:'portrait',x:5,y:0,who:'dot'},{type:'portrait',x:6,y:0,who:'bibi'},{type:'trophy',x:3,y:7,what:'toadDead'},{type:'trophy',x:7,y:7,what:'bossDead'},{type:'sign',x:9,y:4,text:"PUFF'S HOME. Sleep in the bed to rest until morning. Portraits of rescued buddies hang on the wall."}]});
 // ---- Cinder Cave 30x18 ----
 {const m=newMap(30,18,'R');m.name='Cinder Cave';m.music='cave';m.heat=1;
@@ -590,6 +590,7 @@ MAPS.home=interior('Puff\'s Home',3,null,{ox:38,oy:48,objs:[{type:'bed',x:8,y:1,
   m.objs.push({type:'sign',x:9,y:15,text:"SUGAR GLACIER. The ice sings when you slide on it. Something armored sleeps at its heart."});
   rect(m,40,18,4,1,'n');m.objs.push({type:'warp',x:43,y:18,to:'overworld',tx:1,ty:24,dir:3,w:1,h:1});
   for(const[x,y]of[[40,19],[32,20],[22,26],[10,16],[6,27],[24,5],[16,6],[36,30]])m.objs.push({type:'campfire',x,y});
+  m.t[13][30]='n';m.t[13][31]='n';m.t[13][32]='n';m.t[13][33]='n';m.t[14][31]='n';m.t[15][31]='n';m.objs.push({type:'chest',id:'topgold',x:32,y:12,item:'topgold'});
   m.objs.push({type:'sign',x:40,y:17,text:"FROSTED PEAKS. Every step away from a fire, Puff stiffens. Campfires thaw him. Stand close."});
   for(const[x,y]of[[20,12],[13,22],[34,28],[6,33],[38,6],[27,8]])m.objs.push({type:'coin',x,y});
   m.objs.push({type:'jar',x:16,y:30});
@@ -742,12 +743,12 @@ function startFade(cb,dir){if(dir!=null){sctx.drawImage(cv,0,0);G.trans={t:0,dir
 // ---------- save / load (browser storage, best effort) ----------
 const SAVE_KEY='marshmallow-quest-save-3';
 function saveGame(){try{const d={flags:G.flags,freed:G.freed,opened:G.opened,q:G.q,taken:G.taken,deaths:G.deaths,lastHome:G.lastHome,cap:P.cap,diff:G.diff,visited:G.visited,
-    coins:G.coins,items:G.items,seals:G.seals,follower:G.follower,dayT:G.dayT,opts:G.opts,playT:G.playT,cleared:G.cleared,ngplus:G.ngplus,stats:G.stats,
+    coins:G.coins,items:G.items,seals:G.seals,toppings:G.toppings,follower:G.follower,dayT:G.dayT,opts:G.opts,playT:G.playT,cleared:G.cleared,ngplus:G.ngplus,stats:G.stats,
     map:G.map.interior?G.mapName:G.lastHome.map,tx:G.map.interior?Math.floor((P.x+5)/T):G.lastHome.x,ty:G.map.interior?Math.floor((P.y+5)/T):G.lastHome.y};
   localStorage.setItem(SAVE_KEY,JSON.stringify(d));G.hasSave=true;}catch(e){}}
 function loadSave(){try{const d=JSON.parse(localStorage.getItem(SAVE_KEY));if(!d||!d.flags)return false;
     Object.assign(G,{flags:d.flags,freed:d.freed,opened:d.opened,q:d.q||{},taken:d.taken||{},deaths:d.deaths||0,lastHome:d.lastHome,diff:d.diff||'normal',visited:d.visited||{},
-      coins:d.coins||0,items:d.items||{frost:0,lamp:false,swordLv:1},seals:d.seals||0,follower:d.follower||null,dayT:d.dayT||2600,opts:d.opts||{timer:false,cooling:'normal'},playT:d.playT||0,cleared:!!d.cleared,ngplus:!!d.ngplus,stats:d.stats||{melts:{},causes:{},time:{}}});P.cap=d.cap||1;
+      coins:d.coins||0,items:d.items||{frost:0,lamp:false,swordLv:1},seals:d.seals||0,toppings:d.toppings||null,follower:d.follower||null,dayT:d.dayT||2600,opts:d.opts||{timer:false,cooling:'normal'},playT:d.playT||0,cleared:!!d.cleared,ngplus:!!d.ngplus,stats:d.stats||{melts:{},causes:{},time:{}}});P.cap=d.cap||1;
     G.saved={map:d.map,tx:d.tx,ty:d.ty};return true;}catch(e){return false;}}
 function checkSave(){try{G.hasSave=!!localStorage.getItem(SAVE_KEY);}catch(e){G.hasSave=false;}}
 function takenKey(o){return G.mapName+':'+o.x+','+o.y;}
@@ -774,6 +775,7 @@ function interact(){const f=facingTile();let o=objAt(f.i,f.j);
     else if(o.item==='bigjar'){giveCap(0.3);say(["Puff found the ROYAL GLAZE! Your TOAST meter is longer. You can take more heat before melting."],null,'ITEM');}
     else if(o.item==='frost5'){G.items.frost+=5;say(["Five FROST JARS, cold as a cellar. Press V (ITEM) to throw one three steps ahead."],null,'ITEM');}
     else if(o.item==='bigjar2'){giveCap(0.3);say(["Puff found a tub of GROTTO GLAZE! The TOAST meter is longer."],null,'ITEM');}
+    else if(o.item==='topgold'){giveTopping('gold','CHEST');return true;}
     else if(o.item==='mitten'){G.items.mitten=true;say(["Puff found the MITTEN CHARM! The cold can't stiffen him any more, and icy monsters barely sting."],null,'ITEM');}
     else if(o.item==='boots'){G.items.boots=true;say(["Puff found the SUGAR BOOTS! Rolls recover twice as fast and go a little farther."],null,'ITEM');}
     else if(o.item==='frost3'){G.items.frost+=3;say(["Puff found three FROST JARS! Press V (ITEM) to throw one. It freezes lava into a crust you can walk on, and puts out any flame it touches."],null,'ITEM');}
@@ -820,7 +822,7 @@ function updatePlayer(){
   if(P.squeeze){const s=P.squeeze;s.t++;const k=s.t/s.dur;P.x=s.fx+(s.tx-s.fx)*k;P.y=s.fy+(s.ty-s.fy)*k;if(s.t>=s.dur){P.x=s.tx;P.y=s.ty;P.squeeze=null;}return;}
   if(P.hop){const h=P.hop;h.t++;const k=h.t/h.dur;P.x=h.fx+(h.tx-h.fx)*k;P.y=h.fy+(h.ty-h.fy)*k;P.z=Math.sin(k*Math.PI)*12;if(h.t>=h.dur){P.x=h.tx;P.y=h.ty;P.hop=null;P.z=0;P.roll=0;}return;}
   if(P.kb.x||P.kb.y){moveEnt(P,P.kb.x,P.kb.y);P.kb.x*=0.8;P.kb.y*=0.8;if(Math.abs(P.kb.x)<0.1)P.kb.x=0;if(Math.abs(P.kb.y)<0.1)P.kb.y=0;}
-  if(P.roll>0){P.roll--;const k=(P.roll>10?2.4:1.6)*(hasFollower('squish')?1.3:1)*(G.items.boots?1.15:1);if(G.flags.spear&&P.roll===15)tip('vault','Press B while rolling to VAULT over a gap or lava.');const ox=P.x,oy=P.y;slideMove(P,P.rollDir.x*k,P.rollDir.y*k);P.anim++;
+  if(P.roll>0){P.roll--;const k=(P.roll>10?2.4:1.6)*(hasFollower('squish')?1.3:1)*(G.items.boots?1.15:1)*(hasTop('star')?1.2:1);if(G.flags.spear&&P.roll===15)tip('vault','Press B while rolling to VAULT over a gap or lava.');const ox=P.x,oy=P.y;slideMove(P,P.rollDir.x*k,P.rollDir.y*k);P.anim++;
     if(P.roll%3===0)G.fx.push({x:P.x+5,y:P.y+12,vx:-P.rollDir.x*0.4,vy:-0.2,life:12,col:'#ffffff88'});
     // spear vault over the next tile, or roll-vault a single cliff tile
     if(justPressed('b')&&G.flags.spear&&!P.spearOut){const d=P.rollDir;const ti=Math.floor((P.x+5)/T)+Math.round(d.x)*2,tj=Math.floor((P.y+5)/T)+Math.round(d.y)*2;if(tileFree(ti,tj)||G.map.t[tj]?.[ti]==='L'){hopTo(ti,tj,14,true);audio.sfx('hop');return;}}
@@ -875,7 +877,7 @@ function updatePlayer(){
   for(const a of G.ash){if(!a.gone&&Math.floor((a.x+5)/T)===ci&&Math.floor((a.y+5)/T)===cj){a.gone=true;puff(a.x+5,a.y+5,'#888',6);}}
 }
 function tip(id,text){if(G.flags['tip_'+id])return;G.flags['tip_'+id]=true;G.banner={title:'TIP',text,t:300};}
-function startRoll(rx,ry){if(P.frozen){tip('frozen2','Too stiff to roll. Warm up by a fire first.');return;}if(!rx&&!ry){const d=dirVec(P.dir);rx=d[0];ry=d[1];}const l=Math.hypot(rx,ry);P.rollDir={x:rx/l,y:ry/l};P.roll=16;P.rollCd=Math.round((hasFollower('squish')?15:30)*(G.items.boots?0.5:1));audio.sfx('roll');}
+function startRoll(rx,ry){if(P.frozen){tip('frozen2','Too stiff to roll. Warm up by a fire first.');return;}if(!rx&&!ry){const d=dirVec(P.dir);rx=d[0];ry=d[1];}const l=Math.hypot(rx,ry);P.rollDir={x:rx/l,y:ry/l};P.roll=16;P.rollCd=Math.round((hasFollower('squish')?15:30)*(G.items.boots?0.5:1)*(hasTop('cracker')?0.8:1));audio.sfx('roll');}
 function giveSeal(){G.seals++;giveCap(0.25);audio.sfx('seal');
   const lines=[`Puff found a MARSHMALLOW SEAL! (${G.seals} of 5) The TOAST meter grows.`];if(G.seals===5){giveCap(0.5);lines.push("All five Seals! Puff feels positively fluffy. A big bonus to the TOAST meter.");}
   say(lines,null,'SEAL');saveGame();}
@@ -909,7 +911,7 @@ function damageEnemy(e,dmg,spear){
   if(spear&&e.blue){audio.sfx('hit');puff(e.x+5,e.y+5,'#3e8cff',3);return;}
   e.hp-=dmg;e.hurt=20;e.flash=5+Math.round(4*(1-e.hp/e.maxhp));G.hitstop=e.hp<=0?5:3;audio.sfx(e.hp<=0?'kill':'hit',e);puff(e.x+5,e.y+5,'#ffd23f',e.hp<=0?14:5);const a=Math.atan2(e.y-P.y,e.x-P.x);e.vx=Math.cos(a)*3;e.vy=Math.sin(a)*3;if(e.hp<=0){e.dead=20;G.shake=Math.max(G.shake,3);}}
 function hitThings(){const box=attackBox();const spear=P.atkType==='spear';const dmg=spear?1:G.items.swordLv;
-  for(const e of G.ents){if(e.type!=='enemy'||e.dead||e.hurt)continue;if(!overlap(box,e))continue;damageEnemy(e,dmg,spear);}
+  for(const e of G.ents){if(e.type!=='enemy'||e.dead||e.hurt)continue;if(!overlap(box,e))continue;damageEnemy(e,dmg+(!spear&&hasTop('fire')&&(e.flame||e.blue)?1:0),spear);}
   for(const o of G.map.objs){
     const ob={x:o.x*T,y:o.y*T,w:(o.w||1)*T,h:T};if(!overlap(box,ob))continue;
     if(o.type==='buddy'&&!G.freed[o.id]){
@@ -940,7 +942,8 @@ const CAUSE_NAMES={ember:'Ember lunge',blue:'blue flame',knight:'Torch Knight',c
 function hurtPlayer(amt,from,kb=3.5,cause){if(P.hurt||P.roll||P.carried||P.hop||P.vault)return;
   P.lastHurt={cause:cause||(from&&from.kind?CAUSE_NAMES[from.kind]:'fireball'),t:G.t};
   if(P.soggy)amt*=0.3;if(toastRatio()>0.5)amt*=0.6;
-  P.hurt=40;P.toast=Math.min(P.cap,P.toast+amt);audio.sfx('hurt');G.shake=5;
+  if(hasTop('graham'))amt*=0.8;
+  P.hurt=40;P.toast=Math.min(P.cap,P.toast+amt);audio.sfx('hurt');G.shake=5;if(navigator.vibrate)try{navigator.vibrate(40);}catch(e){}
   if(from){const a=Math.atan2(P.y+P.h/2-(from.y+from.h/2),P.x+P.w/2-(from.x+from.w/2));P.kb.x=Math.cos(a)*kb;P.kb.y=Math.sin(a)*kb;}}
 function chill(amt,from){if(P.hurt||P.roll||P.carried||P.hop)return;if(G.items.mitten)amt*=0.3;P.hurt=40;P.cold=Math.min(1,P.cold+amt);P.lastHurt={cause:from&&from.kind?(from.kind==='marshal'?'Frost Marshal':from.kind==='icebat'?'icicle bat':'snow slime'):'icicle',t:G.t};audio.sfx('hurt');G.shake=4;
   if(from){const a=Math.atan2(P.y+P.h/2-(from.y+from.h/2),P.x+P.w/2-(from.x+from.w/2));P.kb.x=Math.cos(a)*3;P.kb.y=Math.sin(a)*3;}}
@@ -956,14 +959,14 @@ function updateEnemy(e){const tg=target(e);const d=dist(e,tg);e.st++;const calm=
     case 'ember':case 'blue':
       if(calm||ignore){wander(e);e.state='wander';break;}
       if(e.state==='wander'){wander(e);if(d<48){e.state='windup';e.st=0;}}
-      else if(e.state==='windup'){if(e.st>28){e.state='lunge';e.st=0;const a=Math.atan2(tg.y-e.y,tg.x-e.x);const k=2.2*(G.mapName==='overworld'&&nightAmount()>0.5?1.3:1);e.vx=Math.cos(a)*k;e.vy=Math.sin(a)*k;}}
+      else if(e.state==='windup'){if(e.st===1&&d<70&&e.kind==='ember')tip('ember','Embers shake before they lunge. Hit, then back off.');if(e.st>28){e.state='lunge';e.st=0;const a=Math.atan2(tg.y-e.y,tg.x-e.x);const k=2.2*(G.mapName==='overworld'&&nightAmount()>0.5?1.3:1);e.vx=Math.cos(a)*k;e.vy=Math.sin(a)*k;}}
       else if(e.state==='lunge'){if(!moveEnt(e,e.vx,e.vy)||e.st>16){e.state='cool';e.st=0;}}
       else if(e.state==='cool'){if(e.st>40){e.state=d<80?'windup':'wander';e.st=0;}if(d>24)chase(e,e.speed*0.5,tg);}break;
     case 'knight':
       if(calm){wander(e);e.state='wander';break;}
       if(e.state==='wander'){wander(e);if(d<90){e.state='chase';e.st=0;}}
       else if(e.state==='chase'){chase(e,e.speed,tg);if(d<26){e.state='windup';e.st=0;e.sw=tg.x+tg.w/2>e.x+e.w/2?1:-1;}else if(d>120){e.state='wander';}}
-      else if(e.state==='windup'){if(e.st>22){e.state='swing';e.st=0;audio.sfx('sword',e);}}
+      else if(e.state==='windup'){if(e.st===1&&e.kind==='knight')tip('knight','Knights raise their sword before swinging. Roll past it, then strike.');if(e.st>22){e.state='swing';e.st=0;audio.sfx('sword',e);}}
       else if(e.state==='swing'){const sb=swingBox(e);if(e.st<10){if(overlap(sb,P))hurtPlayer(0.14,e,4,e.kind==='candle'?'Candle Knight sword':'knight sword');if(G.F&&overlap(sb,G.F))G.F.toast+=0.15;}if(e.st>18){e.state='chase';e.st=0;}}break;
     case 'candle':{ // patrols the gallery, relighting doused torches
       const outT=G.map.objs.filter(o=>o.type==='torch'&&o.out&&!o.big);let best=null,bd=1e9;for(const o of outT){const dd=Math.hypot(o.x*T-e.x,o.y*T-e.y);if(dd<bd){bd=dd;best=o;}}
@@ -1019,7 +1022,7 @@ function updateEnemies(){
     if(e.flash)e.flash--;
     e.speed=e.baseSpeed*(inGoo(e)?0.4:1)*(e.kind==='ember'&&G.mapName==='overworld'&&nightAmount()>0.5?1.3:1);
     if(e.dead){e.dead--;if(e.dead<=0){e.gone=true;if(!e.boss&&!e.mini){const tx=Math.floor((e.x+e.w/2)/T),ty=Math.floor((e.y+e.h/2)/T);const r=Math.random();
-        const night=G.mapName==='overworld'&&nightAmount()>0.5;if(r<0.1)G.map.objs.push({type:'jar',x:tx,y:ty,drop:G.t});else if(r<(night?0.75:0.55))G.map.objs.push({type:'coin',x:tx,y:ty,drop:G.t});
+        const night=G.mapName==='overworld'&&nightAmount()>0.5;if(r<0.1)G.map.objs.push({type:'jar',x:tx,y:ty,drop:G.t});else if(r<(night?0.75:0.55)+(hasTop('gold')?0.2:0))G.map.objs.push({type:'coin',x:tx,y:ty,drop:G.t});
         if((e.kind==='ember'||e.kind==='blue')&&nearLava(e.x+5,e.y+5))G.ash.push({x:e.x,y:e.y,t:0,kind:e.kind});}}continue;}
     if(e.pinned>0){e.pinned--;if(e.pinned%8===0)puff(e.x+5,e.y,'#8fc0ff',1);continue;}
     if(e.hurt){e.hurt--;moveEnt(e,e.vx,e.vy);e.vx*=0.8;e.vy*=0.8;continue;}
@@ -1056,18 +1059,18 @@ function updateEnemies(){
   if(heat>0)P.heatSrc=topSrc;
   heat*=G.map.heat*(hard()?1.4:1);
   if(P.soggy||P.carried||P.hop)heat=0;
-  if(G.map.cold){if(G.items.mitten)P.cold=Math.max(0,P.cold-0.02);else if(heat>0)P.cold=Math.max(0,P.cold-0.012);else P.cold=Math.min(1,P.cold+0.0012);
+  if(G.map.cold){if(G.items.mitten)P.cold=Math.max(0,P.cold-0.02);else if(heat>0)P.cold=Math.max(0,P.cold-0.012);else P.cold=Math.min(1,P.cold+0.0012*(hasTop('mint')?0.5:1));
     P.toast=Math.max(0,P.toast-0.01);if(heat>0)heat*=0.15;
     if(P.cold>=1&&!P.frozen){P.frozen=true;audio.sfx('freeze');tip('frozen','FROZEN STIFF: half speed, no rolling. Get to a campfire to thaw.');}if(P.frozen&&P.cold<0.6)P.frozen=false;}
   else{P.cold=Math.max(0,P.cold-0.02);P.frozen=false;}
   if(heat>0){P.toast=Math.min(P.cap,P.toast+heat*0.0022);P.heating=true;}
-  else{P.heating=false;if(G.opts.cooling!=='jars'||G.map.interior){const rate=G.map.interior?0.004:(G.fireNear?0:0.0003);P.toast=Math.max(0,P.toast-rate*(G.flags.charm?2:1));}}
+  else{P.heating=false;if(G.opts.cooling!=='jars'||G.map.interior){const rate=G.map.interior?0.004:(G.fireNear?0:0.0003);P.toast=Math.max(0,P.toast-rate*(G.flags.charm?2:1)*(hasTop('honey')?1.5:1));}}
   if(G.t%10===0)G.fireNear=fireOnScreen();
   audio.sizzle(P.heating?0.4+heat*0.3:0);audio.drone(toastRatio()>0.6?(toastRatio()-0.6)/0.4:0);
   G.alert=G.ents.some(e=>e.type==='enemy'&&!e.dead&&dist(e,P)<110&&(e.boss||e.mini||e.state==='windup'||e.state==='lunge'||e.state==='dive'||e.state==='swing'));
   if(P.toast>=P.cap&&!P.melting){
     if(hasFollower('dot')&&!P.dotUsed){P.dotUsed=true;P.toast=P.cap*0.3;P.hurt=60;audio.sfx('glaze');puff(P.x+5,P.y+5,'#ffb6d9',14);say(["Dot smashes her spare jar over Puff just in time! 'That was my only one, so be careful!'"],null,'Dot');}
-    else{P.melting=90;audio.sfx('melt');audio.sizzle(0);recordMelt();}}
+    else{P.melting=90;audio.sfx('melt');audio.sizzle(0);recordMelt();if(navigator.vibrate)try{navigator.vibrate([60,40,120]);}catch(e){}}}
   updateFollower();updateAmbience();
 }
 function updateAmbience(){const m=G.map;const cx=G.cam.x,cy=G.cam.y;
@@ -1095,12 +1098,30 @@ function inSteam(e){const cx=e.x+e.w/2,cy=e.y+e.h/2;return G.steam.some(s=>Math.
 function inGoo(e){return G.goo.some(g=>overlap({x:g.x,y:g.y,w:12,h:8},e));}
 function nearestFree(i,j){if(tileFree(i,j))return{i,j};for(let r=1;r<6;r++)for(let a=-r;a<=r;a++)for(let b=-r;b<=r;b++){if(Math.max(Math.abs(a),Math.abs(b))!==r)continue;if(tileFree(i+a,j+b))return{i:i+a,j:j+b};}return{i,j};}
 function hopTo(ti,tj,dur,noHeat){P.hop={t:0,dur,fx:P.x,fy:P.y,tx:ti*T+3,ty:tj*T+3};P.roll=0;clearActions();}
+// ---------- Toppings: three equipment slots (crust, glaze, sprinkle) ----------
+const TOPPINGS={
+  graham:{slot:'crust',name:'Graham Crust',desc:'Hits toast you 20% less.'},
+  cracker:{slot:'crust',name:'Cracker Crust',desc:'Rolls recover 20% faster.'},
+  honey:{slot:'glaze',name:'Honey Glaze',desc:'Cool down 50% faster.'},
+  mint:{slot:'glaze',name:'Mint Glaze',desc:'Cold creeps in half as fast.'},
+  gold:{slot:'sprinkle',name:'Gold Sprinkles',desc:'Monsters drop 25% more sprinkles.'},
+  fire:{slot:'sprinkle',name:'Fire Sprinkles',desc:'Sword hits flames +1.'},
+  star:{slot:'sprinkle',name:'Star Sprinkles',desc:'Rolls go 20% farther.'}};
+function tops(){if(!G.toppings)G.toppings={owned:{},eq:{crust:null,glaze:null,sprinkle:null}};return G.toppings;}
+function hasTop(id){const t=tops();return t.eq[TOPPINGS[id].slot]===id;}
+function giveTopping(id,who){const t=tops();t.owned[id]=true;audio.sfx('item');const d=TOPPINGS[id];
+  say([`Puff got the ${d.name.toUpperCase()}! (${d.slot}) ${d.desc} Equip toppings from the pause screen with C (ROLL).`],null,who||'ITEM');saveGame();}
+function toppingsMenu(){const t=tops();const ids=Object.keys(TOPPINGS).filter(id=>t.owned[id]);
+  if(!ids.length){say(["Puff has no toppings yet. The Baker and Granny sell them, and the Baker can craft rarer ones."],null,'TOPPINGS');return;}
+  const eq=['crust','glaze','sprinkle'].map(sl=>t.eq[sl]?TOPPINGS[t.eq[sl]].name:'-').join(' / ');
+  ask('TOPPINGS: '+eq,ids.map(id=>(hasTop(id)?'[on] ':'[  ] ')+TOPPINGS[id].name).concat(['Done']),i=>{if(i<0||i>=ids.length)return;const id=ids[i];const sl=TOPPINGS[id].slot;t.eq[sl]=hasTop(id)?null:id;audio.sfx('menu');saveGame();toppingsMenu();});}
 function shopMenu(o){if(nightAmount()>0.5){say(["We're closed for the night, dearie. Come back in the morning, or sleep it off at home."],null,o.name);return;}
-  const items=o.shop.filter(it=>!(it.once&&G.items[it.id])&&!(it.id==='glaze'&&(G.items.glazeBought||0)>=3));if(!items.length){say(["Nothing left to sell you today!"],null,o.name);return;}
-  ask(`Buy something? You have ${G.coins} sprinkles.`,items.map(it=>`${it.name} (${it.price})`).concat(['Nothing']),i=>{if(i<0||i>=items.length)return;const it=items[i];
+  const items=o.shop.filter(it=>!(it.once&&G.items[it.id])&&!(it.id==='glaze'&&(G.items.glazeBought||0)>=3)&&!(it.top&&tops().owned[it.top])&&!(it.needs&&!G.flags[it.needs]));if(!items.length){say(["Nothing left to sell you today!"],null,o.name);return;}
+  ask(`Buy something? You have ${G.coins} sprinkles.`,items.map(it=>`${it.craft?'Craft: ':''}${it.name} (${it.price})`).concat(['Nothing']),i=>{if(i<0||i>=items.length)return;const it=items[i];
     if(G.coins<it.price){say(["Not enough sprinkles, I'm afraid. Monsters and bushes drop them."],null,o.name);return;}
     G.coins-=it.price;audio.sfx('item');
-    if(it.id==='frost'){G.items.frost++;say(["One FROST JAR. Press V (ITEM) to throw it. Freezes lava into a crust and snuffs any flame, even the blue ones."],null,o.name);}
+    if(it.top){giveTopping(it.top,o.name);}
+    else if(it.id==='frost'){G.items.frost++;say(["One FROST JAR. Press V (ITEM) to throw it. Freezes lava into a crust and snuffs any flame, even the blue ones."],null,o.name);}
     else if(it.id==='lamp'){G.items.lamp=true;say(["A sturdy LAMP. Dark caves and dark nights will be a lot friendlier now."],null,o.name);}
     else if(it.id==='glaze'){G.items.glazeBought=(G.items.glazeBought||0)+1;giveCap(0.1);say(["Honey glaze, fresh from the oven. Your TOAST meter grows a little."],null,o.name);}
     else if(it.id==='swordlv'){G.items.swordLv=2;say(["There. Sharp enough to split a sprinkle. Your sword now hits twice as hard."],null,o.name);}
@@ -1240,7 +1261,8 @@ function drawEnts(){const cx=Math.round(G.cam.x),cy=Math.round(G.cam.y);const f=
       if(P.squeeze){const k=Math.sin(P.squeeze.t/P.squeeze.dur*Math.PI);ctx.save();ctx.translate(x+5,y+13);ctx.scale(1+k*0.6,1-k*0.6);ctx.translate(-x-5,-y-13);drawMallow(x-3,y-3,P.dir,0,P.toast,'sad',0,tint);ctx.restore();continue;}
       if(P.hop){drawMallow(x-3,y-3-(P.z||0),0,0,P.toast,'happy',0,tint);continue;}
       if(P.atkType==='sweep'){const k=1-P.atk/12;ctx.strokeStyle='rgba(191,239,255,'+(1-k)+')';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x+5,y+5,10+k*36,0,7);ctx.stroke();}
-      if(P.charge>=40&&(G.t>>2&1)){ctx.strokeStyle='#bfefff';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x+5,y+5,12,0,7);ctx.stroke();}
+      if(P.charge>0&&P.charge<40){ctx.strokeStyle='rgba(191,239,255,0.8)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x+5,y+5,12,-Math.PI/2,-Math.PI/2+P.charge/40*Math.PI*2);ctx.stroke();}
+      if(P.charge>=40&&(G.t>>2&1)){ctx.strokeStyle='#bfefff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x+5,y+5,12,0,7);ctx.stroke();}
       if(P.roll){ctx.save();ctx.translate(x+5,y+5);ctx.rotate((16-P.roll)/16*Math.PI*2*(P.rollDir.x<0?-1:1));ctx.translate(-x-5,-y-5);drawMallow(x-3,y-3,0,0,P.toast,'happy',0,tint);ctx.restore();continue;}
       const mood=P.hurt>20?'hurt':P.heating?'sad':'ok';const sq=P.anim?0:Math.sin(P.idle/18)*1.3;
       drawWeapon(x-3,y-3,true);drawMallow(x-3,y-3,P.dir,P.anim?(P.frame&3):0,P.toast,mood,sq,tint);drawWeapon(x-3,y-3,false);
@@ -1350,7 +1372,7 @@ function drawPause(){ctx.fillStyle='rgba(23,17,28,0.88)';ctx.fillRect(0,0,W,H-HU
   text('Buddies '+freedCount()+'/6  Melted '+G.deaths+'x  '+(hard()?'HARD':'NORMAL'),W/2,176,'#b9a5c6','center');
   text('Seals '+G.seals+'/5  Sprinkles '+G.coins+'  '+(G.follower?'With '+BUDDY_NAMES[G.follower]:'Alone'),W/2,186,'#b9a5c6','center');
   text((nightAmount()>0.5?'Night':'Day')+'  Time '+fmtTime(G.playT)+(G.ngplus?'  NG+':''),W/2,196,'#b9a5c6','center');
-  text(document.body.classList.contains('touch')?'B: HELP':'X: HELP',W-8,6,'#ffb347','right');text(document.body.classList.contains('touch')?'ITEM: REPORT':'V: REPORT',8,6,'#ffb347','left');text('A: QUIT',W/2,H-HUD-10,'#b9a5c6','center');}
+  text(document.body.classList.contains('touch')?'B: HELP':'X: HELP',W-8,6,'#ffb347','right');text(document.body.classList.contains('touch')?'ITEM: REPORT':'V: REPORT',8,6,'#ffb347','left');text('A: QUIT',W/2,H-HUD-10,'#b9a5c6','center');const tq=tops();text((document.body.classList.contains('touch')?'ROLL':'C')+': TOPPINGS  '+['crust','glaze','sprinkle'].map(sl=>tq.eq[sl]?TOPPINGS[tq.eq[sl]].name.split(' ')[0]:'-').join('/'),W/2,H-HUD-20,'#b9a5c6','center');}
 
 // ---------- title, intro, ending ----------
 function nightSky(){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0d0a2a');g.addColorStop(1,'#2a1a48');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
@@ -1413,10 +1435,10 @@ function drawEnding(){const t=G.endT;const k=Math.min(1,t/900);dawnSky(k);
 // ---------- main loop ----------
 function resetWorld(){for(const k in MAPS)for(const o of MAPS[k].objs){delete o.talked;delete o.hits;delete o.out;delete o.cut;}
   for(const k in MAPS)MAPS[k].objs=MAPS[k].objs.filter(o=>!o.fromBush&&!o.drop&&o.type!=='sprinkle');G.msg=null;G.msgQ=[];G.choice=null;G.goal='';G.banner=null;G.bossPhase=0;G.gauntlet=null;}
-function newGame(plus){const keep=plus?{cap:P.cap,coins:G.coins,items:G.items,seals:G.seals}:null;
-  G.flags={};G.freed={};G.opened={};G.q={};G.taken={};G.deaths=0;G.win=false;G.visited={};G.stats={melts:{},causes:{},time:{}};G.coins=0;G.items={frost:0,lamp:false,swordLv:1};G.seals=0;G.follower=null;G.F=null;G.dayT=2600;G.playT=0;G.cleared=false;G.ngplus=!!plus;
+function newGame(plus){const keep=plus?{cap:P.cap,coins:G.coins,items:G.items,seals:G.seals,toppings:G.toppings}:null;
+  G.flags={};G.freed={};G.opened={};G.q={};G.taken={};G.deaths=0;G.win=false;G.visited={};G.stats={melts:{},causes:{},time:{}};G.coins=0;G.items={frost:0,lamp:false,swordLv:1};G.seals=0;G.toppings=null;G.follower=null;G.F=null;G.dayT=2600;G.playT=0;G.cleared=false;G.ngplus=!!plus;
   resetWorld();Object.assign(P,mkPlayer(0,0));G.lastHome={map:'home',x:5,y:7};
-  if(plus){P.cap=keep.cap;G.coins=keep.coins;G.items=keep.items;G.seals=keep.seals;G.flags.sword=true;G.flags.spear=true;G.diff='hard';for(let k=1;k<=4;k++)if(k<=keep.seals)G.flags['seal'+k]=true;}
+  if(plus){P.cap=keep.cap;G.coins=keep.coins;G.items=keep.items;G.seals=keep.seals;G.toppings=keep.toppings;G.flags.sword=true;G.flags.spear=true;G.diff='hard';for(let k=1;k<=4;k++)if(k<=keep.seals)G.flags['seal'+k]=true;}
   loadMap('overworld',24,52,1);G.scene='play';
   if(plus)say(["NEW GAME+. The fire came back, and this time it reached the village. Puff keeps the sword, the spear and every upgrade. The monsters keep nothing back."],null,'NG+');}
 function continueGame(){resetWorld();Object.assign(P,mkPlayer(0,0));if(!loadSave())return newGame();
@@ -1442,7 +1464,7 @@ function step(){G.t++;pollGamepad();
   if(G.scene==='ending'){G.endT++;if(G.endT>1100&&(justPressed('start')||justPressed('a'))){G.scene='title';G.menu=0;checkSave();loadOpts();audio.play('village');}return;}
   if(G.trans){G.trans.t++;if(G.trans.t>=22)G.trans=null;return;}
   if(G.fade){G.fade+=G.fadeTo?0.08:-0.08;if(G.fade>=1&&G.fadeTo){const cb=G.fadeTo;G.fadeTo=null;cb();}if(G.fade<=0)G.fade=0;return;}
-  if(justPressed('start')){G.paused=!G.paused;audio.sfx('menu');}if(G.paused){if(justPressed('b')){G.help=true;audio.sfx('menu');}if(justPressed('item')){G.showStats=true;audio.sfx('menu');}
+  if(justPressed('start')){G.paused=!G.paused;audio.sfx('menu');}if(G.paused){if(justPressed('b')){G.help=true;audio.sfx('menu');}if(justPressed('item')){G.showStats=true;audio.sfx('menu');}if(justPressed('c')){G.paused=false;audio.sfx('menu');toppingsMenu();}
     if(justPressed('a')){G.paused=false;ask('Quit to the title? Progress is saved at every door.',['Keep playing','Quit'],i=>{if(i===1){saveGame();G.scene='title';G.menu=0;G.paused=false;checkSave();loadOpts();audio.play('village');}});}return;}
   const goal=goalText();if(goal!==G.goal){G.goal=goal;G.banner={text:goal,t:240};}
   if(G.msg){G.skipHold=keys.b?(G.skipHold||0)+1:0;if(G.skipHold===24){G.msgQ=[];G.msgChar=msgTotal();nextMsg();if(!G.msg)P.hurt=Math.max(P.hurt,20);audio.sfx('menu');}
@@ -1467,6 +1489,8 @@ function fit(){const wrapEl=document.getElementById('wrap');const touch=document
   const dpr=window.devicePixelRatio||1;const dev=Math.floor(s*dpr);if(dev>=1)s=dev/dpr;else s=Math.max(0.9,s);cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';}
 addEventListener('orientationchange',()=>setTimeout(fit,100));
 addEventListener('resize',fit);fit();checkSave();loadOpts();
+// pause when the app goes to the background (calls, tab switches)
+const autoPause=()=>{if(G.scene==='play'&&!G.paused&&!G.msg&&!G.choice){G.paused=true;}};document.addEventListener('visibilitychange',()=>{if(document.hidden)autoPause();});addEventListener('blur',autoPause);
 if(document.fonts)document.fonts.load('8px "Press Start 2P"').then(()=>{logoCache=null;}).catch(()=>{});
 requestAnimationFrame(loop);
 </script>

@@ -20,6 +20,7 @@ play the published page.
 | Roll                   | C, L or Shift         | ROLL / X              |
 | Item (frost jar, Mallo)| V or I                | ITEM / Y              |
 | Pause, map, quit       | Enter or Esc          | START                 |
+| Toppings (on pause)    | C                     | ROLL                  |
 | Skip a speech          | hold X                | hold B                |
 | Mute                   | M                     |                       |
 
@@ -40,7 +41,14 @@ play the published page.
   from melting once per area, Bibi draws monsters away. Boost off a buddy to
   reach the trophy-room shelf.
 - **Economy.** Monsters and bushes drop sprinkles. The Baker sells a lamp and
-  honey glaze, Granny sells Frost Jars, the Elder sharpens your sword.
+  toppings, Granny sells Frost Jars and Mint Glaze, the Elder sharpens your
+  sword. Rarer toppings are crafted at the Baker once you have beaten the boss
+  they are named for.
+- **Toppings.** Three equipment slots: crust, glaze, sprinkle. Graham Crust
+  (take less), Cracker Crust (roll sooner), Honey Glaze (cool faster), Mint
+  Glaze (chill slower), Gold Sprinkles (more drops, found in the Peaks), Fire
+  Sprinkles (sword hurts flames more), Star Sprinkles (longer rolls). Open the
+  menu from the pause screen with C.
 - **Day and night.** Embers are faster at night, shops close, and the lamp
   lights dark caves and dark nights. Sleep at home to skip to morning.
 - **Frosted Peaks.** West past the pond: snow, pines, frozen lakes you slide
@@ -83,6 +91,9 @@ play the published page.
   or push. Knights, Candle Knights, snails and the toad face the way they move.
   The title offers Erase Save, and New Game warns before replacing a save.
   Phones scale to a whole number of device pixels per game pixel.
+
+First-contact tips explain Embers and knights, the frost sweep shows a charge
+ring, and the game pauses itself when the app goes to the background.
 
 Progress saves to the browser automatically.
 
