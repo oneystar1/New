@@ -342,3 +342,23 @@ brown noise with a slow LFO) that softens and brightens as the sky does,
 a car door every so often, sparrows once the sky lightens, and a two-note
 door chime when the doors open. It follows the sound-effects setting and
 stops with the phase. No audio assets.
+
+**Streak shield and comeback crate.** The daily streak forgives one
+missed day per seven: claiming two days after the last claim keeps the
+streak and spends the shield, which recharges a week later (the daily
+card shows its state). Opening the game after two or more full days
+away, on a save with at least two minutes of play, queues a welcome-back
+crate: 60 minutes of income plus 1 + days/2 pulls (max 5), shown before
+the offline-earnings card and claimed with one tap.
+
+**Doors scene.** The parking-lot scene stays on screen during the doors
+phase in a cropped strip: the sign reads OPEN, the line funnels into the
+doorway, a shelf counter by the door shows what is left, and your cart
+count rides above your figure.
+
+**Balance guardrails.** CI runs the greedy balance bot for a simulated
+8 hours on every push and fails if income shares drift outside wide
+bounds (stores 35 to 80%, deals 8 to 45%, restocks 3 to 35%, taps under
+15%), if the first Relocate is not reachable within 6 hours, or if the
+bot gets Called Out more than three times. The table lands in the job
+summary.

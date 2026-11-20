@@ -1,4 +1,4 @@
-import { interstitialDue } from '../src/engine/sim';
+import { interstitialDue, streakShieldReady, claimComeback } from '../src/engine/sim';
 import { describe, it, expect } from 'vitest';
 import { initialState, migrate, serialize, deserialize } from '../src/engine/state';
 import {
@@ -268,5 +268,47 @@ describe('forced ads', () => {
     s.iap.noAds = true;
     expect(interstitialDue(s, T0 + 21 * 60_000, 'restock')).toBe(false);
     expect(interstitialDue(s, T0 + 21 * 60_000, 'prestige')).toBe(false);
+  });
+});
+
+describe('comeback and streak shield', () => {
+  const DAY = 86_400_000;
+  it('one missed day per week keeps the streak; two missed days or a second miss within the week reset it', () => {
+    const s = initialState(T0);
+    s.cash = 1000;
+    claimDaily(s, T0);
+    claimDaily(s, T0 + DAY);
+    expect(s.dailyStreak).toBe(2);
+    const r = claimDaily(s, T0 + 3 * DAY)!; // skipped day 3
+    expect(r.shielded).toBe(true);
+    expect(s.dailyStreak).toBe(3);
+    expect(streakShieldReady(s, T0 + 3 * DAY)).toBe(false);
+    const again = claimDaily(s, T0 + 5 * DAY)!; // skipped again within the week
+    expect(again.shielded).toBe(false);
+    expect(s.dailyStreak).toBe(1);
+    claimDaily(s, T0 + 6 * DAY);
+    expect(claimDaily(s, T0 + 9 * DAY)!.shielded).toBe(false); // two days missed: no shield
+    expect(s.dailyStreak).toBe(1);
+    expect(streakShieldReady(s, T0 + 11 * DAY)).toBe(true); // recharged after 7 days
+  });
+  it('a welcome-back crate waits after two days away, once, and pays income plus pulls', () => {
+    const s = initialState(T0);
+    s.stats.playSeconds = 600;
+    s.stores.dollar.units = 5;
+    applyOfflineOnLoad(s, T0 + 3 * 3600_000);
+    expect(s.pendingComeback).toBeNull();
+    s.lastSeen = T0;
+    applyOfflineOnLoad(s, T0 + 3 * DAY);
+    expect(s.pendingComeback).toEqual({ days: 3, pulls: 2, incomeMinutes: 60 });
+    const cash = s.cash;
+    const pulled = claimComeback(s, T0 + 3 * DAY, makeRng(1));
+    expect(pulled.length).toBe(2);
+    expect(s.cash).toBeGreaterThan(cash);
+    expect(s.pendingComeback).toBeNull();
+    // brand-new saves do not get one
+    const fresh = initialState(T0);
+    fresh.lastSeen = T0;
+    applyOfflineOnLoad(fresh, T0 + 5 * DAY);
+    expect(fresh.pendingComeback).toBeNull();
   });
 });

@@ -166,6 +166,7 @@ export function RestockOverlay() {
 
         {run.phase === 'doors' && (
           <>
+            <CampScene run={run} seasonId={s.season.id} compact />
             <div className="row between small">
               <span>Shelf: <b>{run.remaining}</b></span>
               <span>Cart: <b>{run.grabbed}</b>/{run.limit !== null ? Math.min(run.limit, run.carry) : run.carry}</span>

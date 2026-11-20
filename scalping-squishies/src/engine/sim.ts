@@ -344,8 +344,15 @@ export function computeOffline(s: GameState, now: number): { cash: number; secon
 
 /** Called on load: credits offline earnings into a pending bucket the UI
  *  presents with an optional "watch ad to double" offer. */
+/** Away this long and the welcome-back crate is waiting on the next launch. */
+export const COMEBACK_AFTER_DAYS = 2;
+
 export function applyOfflineOnLoad(s: GameState, now: number): void {
   const off = computeOffline(s, now);
+  const awayDays = Math.floor((now - s.lastSeen) / 86_400_000);
+  if (awayDays >= COMEBACK_AFTER_DAYS && s.stats.playSeconds >= 120 && !s.pendingComeback) {
+    s.pendingComeback = { days: awayDays, pulls: Math.min(5, 1 + Math.floor(awayDays / 2)), incomeMinutes: 60 };
+  }
   if (off.seconds >= 60 && off.cash > 0) {
     s.pendingOffline = { cash: off.cash, seconds: off.cappedSeconds };
   }
@@ -358,6 +365,15 @@ export function applyOfflineOnLoad(s: GameState, now: number): void {
   s.offers = [];
   s.nextOfferAt = now + 15_000;
   s.lastSeen = now;
+}
+
+/** Grant the welcome-back crate: an hour of income plus a few pulls. Returns what was pulled. */
+export function claimComeback(s: GameState, now: number, rand: () => number = Math.random): PullView[] {
+  const c = s.pendingComeback;
+  if (!c) return [];
+  s.pendingComeback = null;
+  grantReward(s, { kind: 'cash', minutesOfIncome: c.incomeMinutes }, now, rand);
+  return grantReward(s, { kind: 'pulls', amount: c.pulls }, now, rand);
 }
 
 export function claimOffline(s: GameState, mult = 1): number {
@@ -604,16 +620,29 @@ function yesterdayKey(now: number): string {
   return todayKey(now - 24 * 3600 * 1000);
 }
 
-/** Claims today's login reward; returns the reward or null. */
-export function claimDaily(s: GameState, now: number): { reward: Reward; day: number } | null {
+/** One missed day per week does not break the streak. */
+export const STREAK_SHIELD_DAYS = 7;
+export function streakShieldReady(s: GameState, now: number): boolean {
+  if (!s.streakShieldUsedOn) return true;
+  return now - Date.parse(`${s.streakShieldUsedOn}T00:00:00Z`) >= STREAK_SHIELD_DAYS * 86_400_000;
+}
+
+/** Claims today's login reward; returns the reward or null. `shielded` means a missed day was forgiven. */
+export function claimDaily(s: GameState, now: number): { reward: Reward; day: number; shielded: boolean } | null {
   if (!dailyAvailable(s, now)) return null;
-  s.dailyStreak = s.lastDailyClaim === yesterdayKey(now) ? s.dailyStreak + 1 : 1;
+  let shielded = false;
+  if (s.lastDailyClaim === yesterdayKey(now)) s.dailyStreak += 1;
+  else if (s.dailyStreak > 0 && s.lastDailyClaim === todayKey(now - 2 * 86_400_000) && streakShieldReady(s, now)) {
+    s.dailyStreak += 1;
+    s.streakShieldUsedOn = todayKey(now);
+    shielded = true;
+  } else s.dailyStreak = 1;
   s.lastDailyClaim = todayKey(now);
   const day = ((s.dailyStreak - 1) % DAILY_REWARDS.length) + 1;
   const reward = DAILY_REWARDS[day - 1];
   grantReward(s, reward, now);
   earnTokens(s, SEASON_TOKENS.daily);
-  return { reward, day };
+  return { reward, day, shielded };
 }
 
 export function grantReward(s: GameState, r: Reward, now: number, rand: () => number = Math.random): PullView[] {

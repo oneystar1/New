@@ -26,6 +26,8 @@ export function initialState(now = Date.now()): GameState {
     missionsDate: '',
     dailyStreak: 0,
     lastDailyClaim: '',
+    streakShieldUsedOn: '',
+    pendingComeback: null,
     pass: { season: 1, xp: 0, premium: false, claimedFree: [], claimedPremium: [] },
     iap: { noAds: false, vipUntil: 0, adFreeUntil: 0, starterPackBought: false, purchases: {} },
     piggy: 0,
@@ -124,6 +126,8 @@ export function migrate(raw: unknown, now = Date.now()): GameState {
     restockIntel: s.restockIntel ?? {},
     season: { ...fresh.season, ...(s.season ?? {}), bought: Array.isArray(s.season?.bought) ? s.season!.bought : [], missions: Array.isArray(s.season?.missions) ? s.season!.missions : [] },
     seasonSplashSeen: Array.isArray(s.seasonSplashSeen) ? s.seasonSplashSeen : [],
+    streakShieldUsedOn: typeof s.streakShieldUsedOn === 'string' ? s.streakShieldUsedOn : '',
+    pendingComeback: s.pendingComeback ?? null,
     version: SAVE_VERSION,
   };
   for (const st of STORES) if (!merged.stores[st.id]) merged.stores[st.id] = { units: 0, progress: 0, manager: false };

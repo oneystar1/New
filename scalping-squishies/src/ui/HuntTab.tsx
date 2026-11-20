@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useGame } from '../engine/store';
-import { computeModifiers, tapValue, dailyAvailable, DAILY_REWARDS, highestUnlockedStore } from '../engine/sim';
+import { computeModifiers, tapValue, dailyAvailable, DAILY_REWARDS, highestUnlockedStore, streakShieldReady } from '../engine/sim';
 import { MISSION_POOL } from '../engine/data/missions';
 import { STORE_BY_ID, STORES } from '../engine/data/stores';
 import { restockReady, isBanned } from '../engine/restock';
@@ -121,7 +121,7 @@ export function HuntTab() {
         <div className="ico-lg">📅</div>
         <div className="grow">
           <h3>Day {daily ? nextDay : ((s.dailyStreak - 1) % DAILY_REWARDS.length) + 1} · streak {s.dailyStreak}</h3>
-          <div className="sub">{daily ? `Today: ${rewardLabel(DAILY_REWARDS[nextDay - 1])}` : 'Claimed. Come back tomorrow for more.'}</div>
+          <div className="sub">{daily ? `Today: ${rewardLabel(DAILY_REWARDS[nextDay - 1])}` : 'Claimed. Come back tomorrow for more.'}{streakShieldReady(s, now) ? ' · 🛡️ one missed day is forgiven' : ' · 🛡️ shield recharging'}</div>
         </div>
         <button className="btn mint sm" disabled={!daily} onClick={claimDailyReward}>{daily ? 'Claim' : '✓'}</button>
       </div>

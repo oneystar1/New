@@ -11,7 +11,7 @@ import { pushSave, pullSave, fetchGrants, claimGrant, submitScore, cloudEnabled,
 import { ITEM_BY_ID } from './data/items';
 import { initialState, deserialize, serialize, SAVE_KEY } from './state';
 import {
-  tick, computeModifiers, applyOfflineOnLoad, claimOffline, storeUnlocked, startCycle, earn, tapValue,
+  tick, computeModifiers, applyOfflineOnLoad, claimOffline, claimComeback, storeUnlocked, startCycle, earn, tapValue,
   pullItem, highestUnlockedStore, sellDuplicate, prestige, credForRun, rollMissions, claimMission,
   claimDaily, claimPassTier, addBoost, timeSkip, grantReward, bumpMission, isVip, isAdFree, interstitialDue, rollCityOffer, unpull,
 } from './sim';
@@ -93,6 +93,7 @@ interface GameStore {
   watchAd: (placement: AdPlacement) => Promise<void>;
   claimMissionReward: (id: string) => void;
   claimDailyReward: () => void;
+  claimComebackCrate: () => void;
   buySeasonItem: (itemId: string) => void;
   claimSeasonMission: (id: string) => void;
   claimPass: (tier: number, premium: boolean) => void;
@@ -538,8 +539,16 @@ export const useGame = create<GameStore>((set, get) => {
     claimDailyReward: () => {
       const s = get().s;
       const r = claimDaily(s, Date.now());
-      if (r) toast(`Day ${r.day} reward claimed!`, '📅', 'good');
+      if (r) toast(r.shielded ? `Streak shield used. Day ${r.day}, streak intact.` : `Day ${r.day} reward claimed!`, r.shielded ? '🛡️' : '📅', 'good');
       set({ s: { ...s } });
+    },
+    claimComebackCrate: () => {
+      const s = get().s;
+      const pulled = claimComeback(s, Date.now(), rand);
+      toast('Welcome back. The crew kept your spot.', '📦', 'good');
+      sfx.rare();
+      set({ s: { ...s }, lastPulls: pulled.length ? pulled : null });
+      get().save();
     },
 
     claimPass: (tier, premium) => {

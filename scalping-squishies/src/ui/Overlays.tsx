@@ -19,15 +19,27 @@ export function Overlays() {
   const requestTab = useGame((g) => g.requestTab);
   const dismissToast = useGame((g) => g.dismissToast);
   const dismissSeasonSplash = useGame((g) => g.dismissSeasonSplash);
+  const claimComebackCrate = useGame((g) => g.claimComebackCrate);
   const splashDone = useGame((g) => g.splashDone);
   const noAds = isAdFree(s, Date.now());
   // The season "what's new" card: once per season, after the launch splash and the tutorial choice, never over another overlay.
   const season = s.season.id ? SEASON_BY_ID[s.season.id] : null;
-  const showSeason = Boolean(season && splashDone && !s.seasonSplashSeen.includes(season.id) && (s.tutorialChoice === 'off' || s.tutorialChoice === 'done') && !s.pendingOffline && !lastPulls);
+  const showSeason = Boolean(season && splashDone && !s.seasonSplashSeen.includes(season.id) && (s.tutorialChoice === 'off' || s.tutorialChoice === 'done') && !s.pendingOffline && !s.pendingComeback && !lastPulls);
 
   return (
     <>
-      {s.pendingOffline && (
+      {s.pendingComeback && !s.pendingOffline && !lastPulls && (
+        <div className="overlay">
+          <div className="modal center">
+            <div className="season-hero">📦</div>
+            <h2>{s.pendingComeback.days} days away. The lot missed you.</h2>
+            <p className="sub">Brenda saved your spot in the group. Dalton did not. Here is a crate to get the routes moving again.</p>
+            <div className="big">{s.pendingComeback.incomeMinutes}m of income + {s.pendingComeback.pulls} pull{s.pendingComeback.pulls > 1 ? 's' : ''}</div>
+            <button className="btn primary block" onClick={claimComebackCrate}>Open the crate</button>
+          </div>
+        </div>
+      )}
+      {s.pendingOffline && !s.pendingComeback && (
         <div className="overlay">
           <div className="modal center">
             <h2>Welcome back, hustler</h2>
@@ -42,7 +54,7 @@ export function Overlays() {
           </div>
         </div>
       )}
-      {lastPulls && !s.pendingOffline && (
+      {lastPulls && !s.pendingOffline && !s.pendingComeback && (
         <div className="overlay" onClick={dismissPulls}>
           <div className="modal center" onClick={(e) => e.stopPropagation()}>
             <h2>{lastPulls.length > 1 ? 'Haul!' : 'Found one!'}</h2>

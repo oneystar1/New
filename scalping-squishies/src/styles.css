@@ -242,3 +242,5 @@ input.handle { flex: 1; background: var(--bg); color: var(--text); border: 1px s
 .season-hero { font-size: 56px; line-height: 1; animation: bob 2.4s ease-in-out infinite; }
 .season-items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
 .season-items .item .n { min-height: 0; }
+
+.scene.compact { max-height: 150px; margin-bottom: 6px; }

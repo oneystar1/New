@@ -55,7 +55,7 @@ function Figure({ kind, seed, x, y, scale = 1, you = false, delay = 0, chair = f
   );
 }
 
-export const CampScene = memo(function CampScene({ run, seasonId }: { run: RestockRun; seasonId: string | null }) {
+export const CampScene = memo(function CampScene({ run, seasonId, compact = false }: { run: RestockRun; seasonId: string | null; compact?: boolean }) {
   const camp = run.phase === 'camp';
   const p = run.phase === 'choice' ? 0 : camp ? 1 - run.campLeft / CAMP_SECONDS : 1;
   const open = run.phase === 'doors' || run.phase === 'done';
@@ -84,11 +84,15 @@ export const CampScene = memo(function CampScene({ run, seasonId }: { run: Resto
   const folded = slots.length - shown.length;
   const startX = DOOR_X + 58;
   const step = 27;
-  const youX = startX + (shown.length + (folded ? 1 : 0)) * step + 6;
+  // Doors open: the line funnels into the doorway, the first in first. You step up to the door too.
+  const doorStep = 5;
+  const posX = (i: number) => (open ? DOOR_X + 14 + i * doorStep : startX + i * step);
+  const youX = open ? DOOR_X + 18 + (shown.length + (folded ? 1 : 0)) * doorStep + 10 : startX + (shown.length + (folded ? 1 : 0)) * step + 6;
+  const shelfLeft = run.remaining;
   const tent = run.upgradesSnapshot.includes('u_tent') && !run.seenEvents.includes('camp_security');
 
   return (
-    <svg className="scene" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`The line outside ${st.name} at dawn`}>
+    <svg className={`scene ${compact ? 'compact' : ''}`} viewBox={compact ? `0 60 ${W} ${H - 60}` : `0 0 ${W} ${H}`} role="img" aria-label={`The line outside ${st.name} at dawn`}>
       <defs>
         <linearGradient id="sc-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={skyTop} /><stop offset="1" stopColor={skyBot} /></linearGradient>
         <radialGradient id="sc-lamp" cx="0.5" cy="0" r="0.9"><stop offset="0" stopColor="#ffe8a0" stopOpacity="0.9" /><stop offset="1" stopColor="#ffe8a0" stopOpacity="0" /></radialGradient>
@@ -137,17 +141,27 @@ export const CampScene = memo(function CampScene({ run, seasonId }: { run: Resto
         {/* tent behind you */}
         {tent && <g style={{ transform: `translate(${youX + 22}px, ${GROUND}px)`, transition: 'transform 0.7s' }}><polygon points="-22,0 0,-26 22,0" fill="#3a6a8a" stroke="#1a3a5a" strokeWidth="1.5" /><polygon points="-6,0 0,-12 6,0" fill="#15102a" /></g>}
         {/* the line */}
-        {shown.map((sl, i) => <Figure key={i} kind={sl.kind} seed={sl.seed} x={startX + i * step} y={GROUND} delay={i * 0.37} coffee={run.coffeeRounds > 0 && i % 3 === 1} />)}
+        {shown.map((sl, i) => <Figure key={i} kind={sl.kind} seed={sl.seed} x={posX(i)} y={GROUND} scale={open ? 0.85 : 1} delay={i * 0.37} coffee={!open && run.coffeeRounds > 0 && i % 3 === 1} />)}
         {folded > 0 && (
-          <g style={{ transform: `translate(${startX + shown.length * step}px, ${GROUND}px)`, transition: 'transform 0.7s' }}>
+          <g style={{ transform: `translate(${posX(shown.length)}px, ${GROUND}px)`, transition: 'transform 0.7s' }}>
             <rect x="-11" y="-30" width="22" height="18" rx="4" fill="#1a1230" stroke="#6a5a8a" />
             <text x="0" y="-17" fontSize="9" fontWeight="800" fill="#fff" textAnchor="middle">+{folded}</text>
             <rect x="-1" y="-12" width="2" height="12" fill="#6a5a8a" />
           </g>
         )}
         <Figure kind="you" seed={0} x={youX} y={GROUND} scale={1.15} you chair={hasChair(run)} ticket={run.ticketLocked} coffee={run.coffeeRounds > 0} label="YOU" />
+        {/* doors phase: the shelf count by the door and the cart in your hand */}
+        {open && (
+          <g>
+            <rect x={DOOR_X + 44} y="108" width="54" height="22" rx="4" fill="#1a1230" stroke="#ffe066" strokeWidth="1.5" />
+            <text x={DOOR_X + 71} y="118" fontSize="7" fontWeight="800" fill="#ffe066" textAnchor="middle">SHELF</text>
+            <text x={DOOR_X + 71} y="127" fontSize="8" fontWeight="900" fill="#fff" textAnchor="middle">{shelfLeft} left</text>
+            <text x={youX + 16} y={GROUND - 30} fontSize="10">🛒</text>
+            <text x={youX + 30} y={GROUND - 30} fontSize="8" fontWeight="900" fill="#6ef0c2">{run.grabbed}</text>
+          </g>
+        )}
         {/* whoever is talking to you */}
-        {enc && enc.id !== 'camp_ticket' && camp && (
+        {enc && enc.id !== 'camp_ticket' && (camp || open) && (
           <g className="arrive"><Figure kind={enc.kind} seed={5} x={youX + 30} y={GROUND} delay={0.2} /></g>
         )}
         {/* weather */}

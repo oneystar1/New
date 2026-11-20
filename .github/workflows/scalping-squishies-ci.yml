@@ -35,6 +35,8 @@ jobs:
       - run: npx tsc --noEmit
       - run: npm test
       - run: npm run test:server
+      - name: Balance guardrails (8h greedy bot)
+        run: npm run balance -- 8 --check
       - name: Build
         env:
           VITE_API_URL: ${{ vars.SS_API_URL }}

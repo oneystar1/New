@@ -352,6 +352,10 @@ export interface GameState {
   missionsDate: string; // YYYY-MM-DD the missions were rolled for
   dailyStreak: number;
   lastDailyClaim: string; // YYYY-MM-DD
+  /** Day the streak shield last covered a missed day (one per 7 days). */
+  streakShieldUsedOn: string;
+  /** Welcome-back crate waiting to be claimed after 2+ days away. */
+  pendingComeback: { days: number; pulls: number; incomeMinutes: number } | null;
   pass: PassState;
   iap: IapState;
   piggy: number; // cash accumulated in the piggy bank

@@ -12,7 +12,9 @@ import { MANAGER_BY_STORE } from '../src/engine/data/managers';
 import { UPGRADES } from '../src/engine/data/upgrades';
 import { unitCost, formatCash, makeRng, formatDuration } from '../src/engine/math';
 
-const hours = Number(process.argv[2] ?? 8);
+const args = process.argv.slice(2);
+const check = args.includes('--check');
+const hours = Number(args.find((a) => !a.startsWith('--')) ?? 8);
 const s = initialState(0);
 const rng = makeRng(99);
 let now = 0;
@@ -96,3 +98,31 @@ for (const [k, v] of Object.entries(src)) console.log(`  ${k.padEnd(9)} ${format
 console.log('\nMilestones:');
 for (const m of milestones) console.log('  ' + m);
 console.log(`\nAfter ${hours}h: cred on prestige = ${credForRun(s.stats.totalCashEarned)} · restocks ${s.stats.restocks} · deals ${s.stats.offersAccepted} · called out ${s.stats.calledOut}x`);
+
+// --check: the economy guardrails CI enforces on every push. Bounds are wide
+// on purpose; they catch a mistyped multiplier, not a deliberate retune.
+const pct = (v: number) => (total > 0 ? (v / total) * 100 : 0);
+const prestigeLine = milestones.find((x) => x.includes('prestige'));
+const prestigeSeconds = prestigeLine ? parseDuration(prestigeLine.split(':')[0]) : null;
+const gates: { name: string; value: string; ok: boolean; bound: string }[] = [
+  { name: 'Store income share', value: `${pct(src.stores).toFixed(1)}%`, ok: pct(src.stores) >= 35 && pct(src.stores) <= 80, bound: '35% to 80%' },
+  { name: 'Deals income share', value: `${pct(src.deals).toFixed(1)}%`, ok: pct(src.deals) >= 8 && pct(src.deals) <= 45, bound: '8% to 45%' },
+  { name: 'Restock income share', value: `${pct(src.restocks).toFixed(1)}%`, ok: pct(src.restocks) >= 3 && pct(src.restocks) <= 35, bound: '3% to 35%' },
+  { name: 'Tap income share', value: `${pct(src.taps).toFixed(1)}%`, ok: pct(src.taps) <= 15, bound: 'under 15%' },
+  { name: 'First relocate available', value: prestigeSeconds === null ? 'never' : formatDuration(prestigeSeconds), ok: prestigeSeconds !== null && prestigeSeconds <= 6 * 3600, bound: `within 6h of a ${hours}h run` },
+  { name: 'Called out', value: `${s.stats.calledOut}x`, ok: s.stats.calledOut <= 3, bound: 'at most 3 in the run' },
+];
+const md = ['| Gate | Value | Bound | Result |', '| --- | --- | --- | --- |', ...gates.map((g) => `| ${g.name} | ${g.value} | ${g.bound} | ${g.ok ? '✅' : '❌'} |`)].join('\n');
+console.log('\nGuardrails:\n' + md);
+if (process.env.GITHUB_STEP_SUMMARY) {
+  const fs = await import('node:fs');
+  fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## Balance bot (${hours}h greedy play)\n\n${md}\n\n${gates.every((g) => g.ok) ? 'All guardrails pass.' : 'A guardrail failed: the economy drifted. See tools/balance.ts.'}\n`);
+}
+if (check && !gates.every((g) => g.ok)) { console.error('\nBalance guardrail failed.'); process.exit(1); }
+
+function parseDuration(txt: string): number {
+  // "1h 23m" / "45m 10s" / "12s" as printed by formatDuration
+  let sec = 0;
+  for (const [, n, u] of txt.matchAll(/(\d+)([dhms])/g)) sec += Number(n) * ({ d: 86400, h: 3600, m: 60, s: 1 }[u] ?? 0);
+  return sec;
+}
