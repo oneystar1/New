@@ -153,11 +153,11 @@ export const CampScene = memo(function CampScene({ run, seasonId, compact = fals
         {/* doors phase: the shelf count by the door and the cart in your hand */}
         {open && (
           <g>
-            <rect x={DOOR_X + 44} y="108" width="54" height="22" rx="4" fill="#1a1230" stroke="#ffe066" strokeWidth="1.5" />
-            <text x={DOOR_X + 71} y="118" fontSize="7" fontWeight="800" fill="#ffe066" textAnchor="middle">SHELF</text>
-            <text x={DOOR_X + 71} y="127" fontSize="8" fontWeight="900" fill="#fff" textAnchor="middle">{shelfLeft} left</text>
-            <text x={youX + 16} y={GROUND - 30} fontSize="10">🛒</text>
-            <text x={youX + 30} y={GROUND - 30} fontSize="8" fontWeight="900" fill="#6ef0c2">{run.grabbed}</text>
+            <rect x={W - 118} y="96" width="60" height="24" rx="4" fill="#1a1230" stroke="#ffe066" strokeWidth="1.5" />
+            <text x={W - 88} y="106" fontSize="7" fontWeight="800" fill="#ffe066" textAnchor="middle">SHELF</text>
+            <text x={W - 88} y="116" fontSize="9" fontWeight="900" fill="#fff" textAnchor="middle">{shelfLeft} left</text>
+            <text x={youX + 14} y={GROUND - 62} fontSize="10">🛒</text>
+            <text x={youX + 28} y={GROUND - 62} fontSize="9" fontWeight="900" fill="#6ef0c2">{run.grabbed}</text>
           </g>
         )}
         {/* whoever is talking to you */}
