@@ -1322,7 +1322,7 @@ function drawHUD(){ctx.fillStyle='#17111c';ctx.fillRect(0,H-HUD,W,HUD);ctx.fillS
     text(lab,ix+2,H-21,col);if(has)ctx.drawImage(ic,ix+3,H-19);if(ix===182&&G.items.frost>0)text(String(G.items.frost),ix+12,H-10,'#fffaf0');}
   text('BUDS',208,H-22,'#b9a5c6');for(let i=0;i<6;i++){const id=BUDDIES[i];const bx=206+i*8;ctx.fillStyle='#3a2420';ctx.fillRect(bx,H-12,7,8);ctx.fillStyle=G.freed[id]?'#fffaf0':'#4a3756';ctx.fillRect(bx+1,H-11,5,6);ctx.fillStyle=G.freed[id]?'#1a0d12':'#2a2030';ctx.fillRect(bx+2,H-9,1,1);ctx.fillRect(bx+4,H-9,1,1);if(G.freed[id])ctx.fillRect(bx+2,H-7,3,1);}
   // top overlay: sprinkles, seals, optional timer
-  ctx.drawImage(COIN[0],W-44,3);text(String(G.coins),W-33,3,'#ffd23f');if(G.seals){ctx.drawImage(SEAL,W-70,0,12,12);text(G.seals+'/5',W-57,3,'#fffaf0');}
+  ctx.drawImage(COIN[0],W-44,3);text(String(G.coins),W-33,3,'#ffd23f');if(G.seals){ctx.drawImage(SEAL,W-96,0,12,12);text(G.seals+'/5',W-83,3,'#fffaf0');}
   if(G.opts.timer)text(fmtTime(G.playT),4,3,'#b9a5c6');}
 function drawChoice(){if(!G.choice)return;const c=G.choice;const tl=wrap(c.title,27);const h=12+tl.length*10+c.opts.length*11;const by=H-HUD-h-4;drawBox(8,by,W-16,h);
   tl.forEach((l,i)=>text(l,16,by+6+i*10,'#ffb347'));c.opts.forEach((o,i)=>text((i===c.idx?'> ':'  ')+o,20,by+8+tl.length*10+i*11,i===c.idx?'#fffaf0':'#b9a5c6'));
