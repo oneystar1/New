@@ -19,7 +19,7 @@ play the published page.
 | Vault a gap            | X while rolling       | B while rolling       |
 | Roll                   | C, L or Shift         | ROLL / X              |
 | Item (frost jar, Mallo)| V or I                | ITEM / Y              |
-| Pause, map, quit       | Enter or Esc          | START                 |
+| Pause: map / quest log | Enter, then Left/Right| START, flick stick    |
 | Toppings (on pause)    | C                     | ROLL                  |
 | Skip a speech          | hold X                | hold B                |
 | Mute                   | M                     |                       |
@@ -44,6 +44,13 @@ play the published page.
   toppings, Granny sells Frost Jars and Mint Glaze, the Elder sharpens your
   sword. Rarer toppings are crafted at the Baker once you have beaten the boss
   they are named for.
+- **Quest log.** The pause screen has two tabs: the world map with goal and
+  side-quest markers, and a quest log listing the main quest, the Honey Donut
+  and golden sprinkle errands, Seals, the grotto, the Peaks, buddies home and
+  the gauntlet with their current step.
+- **Cooled keep.** After the Pyre Lord falls, Ember Keep goes quiet: torches
+  out, lava crusted over, no monsters, and the freed buddies wander the halls.
+  Blocks pushed into a dead corner grind back to their start after a moment.
 - **Toppings.** Three equipment slots: crust, glaze, sprinkle. Graham Crust
   (take less), Cracker Crust (roll sooner), Honey Glaze (cool faster), Mint
   Glaze (chill slower), Gold Sprinkles (more drops, found in the Peaks), Fire

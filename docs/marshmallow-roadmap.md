@@ -25,7 +25,7 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 ### B. Systems
 - [x] Toast as health, soggy, steam, squeeze, vault, bat ride, followers, spear moves, frost jars, currency and shops, day/night, NG+, gauntlet
 - [x] Toppings: three equipment slots (crust, glaze, sprinkle) with stat charms bought, found and crafted at the Baker (Nov 20)
-- [ ] Quest log on the pause screen with main and side quests, markers on the map
+- [x] Quest log on the pause screen with main and side quests, markers on the map (Nov 21)
 - [ ] Badges / achievements wall in Puff's home
 - [ ] Save slots (3) and a stats page per slot
 - [ ] Easy mode and assist toggles
@@ -40,9 +40,6 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 - [ ] Title attract mode
 
 ### D. Structure and polish backlog (smaller items)
-- [ ] Light budget for phones (cap radial lights, merge small ones)
-- [ ] Cornered-block auto reset (keep east wing, grotto)
-- [ ] Cooled keep after the boss (torches out, buddies wandering)
 - [ ] Villagers who notice progress, night lines
 - [ ] Key rebinding
 - [ ] Reduced-motion and flash safety
@@ -65,6 +62,7 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 - Bosses that must respawn on re-entry use a trigger with a `*Met` flag (taunt once) and are skipped in loadMap.
 
 ## Log
+- Nov 21: quest log with map markers; light budget (16 lights, merged, small ones skip darkness holes); cooled keep after the boss; cornered-block auto reset
 - Nov 20 (pass 2): Toppings system with seven toppings, shops and crafting; first-contact tips; charge ring; auto-pause and haptics
 - Nov 20: Frosted Peaks + Sugar Glacier + Frost Marshal, cold meter, ice sliding, Mitten Charm, Seal 5; roadmap created; daily pass now builds
 - Nov 19: tests in repo, interaction prompt, enemy facing, erase save, pixel snap, spaced touch buttons
