@@ -9,6 +9,8 @@ import type { ItemFamily, Variant } from '../engine/types';
 import { Sprite } from '../art/Sprite';
 import { SEASON_BY_ID } from '../engine/data/seasons';
 import { visibleSeasonItems } from '../engine/season';
+import { tradeableDupes } from '../engine/trades';
+import { parseShelfKey } from '../engine/data/items';
 
 export function ShelfTab() {
   const s = useGame((g) => g.s);
@@ -16,14 +18,16 @@ export function ShelfTab() {
   const pull = useGame((g) => g.pull);
   const sellDupe = useGame((g) => g.sellDupe);
   const watchAd = useGame((g) => g.watchAd);
-  const [fam, setFam] = useState<ItemFamily | 'all' | 'sets' | 'season'>('all');
+  const [fam, setFam] = useState<ItemFamily | 'all' | 'sets' | 'season' | 'trades'>('all');
+  const acceptTradeOffer = useGame((g) => g.acceptTradeOffer);
   const [sel, setSel] = useState<string | null>(null);
   const m = computeModifiers(s, now);
   const slots = ITEMS.length * VARIANTS.length;
   const ownedSlots = ITEMS.reduce((a, i) => a + VARIANTS.filter((v) => (s.shelf[shelfKey(i.id, v)] ?? 0) > 0).length, 0);
   const seasonItems = visibleSeasonItems(s);
   const liveSeason = s.season.id ? SEASON_BY_ID[s.season.id] : null;
-  const list = fam === 'season' ? seasonItems : ITEMS.filter((i) => fam === 'all' || i.family === fam);
+  const list = fam === 'season' ? seasonItems : fam === 'trades' ? [] : ITEMS.filter((i) => fam === 'all' || i.family === fam);
+  const openTrades = s.trades.offers.filter((o) => !s.trades.done.includes(o.id));
   const hunting = STORE_BY_ID[highestUnlockedStore(s)];
   const selected = sel ? ITEM_BY_ID[sel] ?? null : null;
   const adReady = (s.adCooldowns.free_pull ?? 0) <= now;
@@ -69,14 +73,50 @@ export function ShelfTab() {
       </div>
 
       <div className="seg">
-        {(['all', 'squish', 'doh', 'sets', 'season'] as const).filter((f) => f !== 'season' || seasonItems.length > 0).map((f) => (
+        {(['all', 'squish', 'doh', 'sets', 'trades', 'season'] as const).filter((f) => f !== 'season' || seasonItems.length > 0).map((f) => (
           <button key={f} className={fam === f ? 'active' : ''} onClick={() => setFam(f)}>
-            {f === 'all' ? 'All' : f === 'squish' ? '🍌 Squishies' : f === 'doh' ? '🧊 Dohs' : f === 'sets' ? '📚 Sets' : `${liveSeason?.icon ?? '🎁'} Seasonal`}
+            {f === 'all' ? 'All' : f === 'squish' ? '🍌' : f === 'doh' ? '🧊' : f === 'sets' ? '📚 Sets' : f === 'trades' ? `🔄${openTrades.length ? ` ${openTrades.length}` : ''}` : `${liveSeason?.icon ?? '🎁'}`}
           </button>
         ))}
       </div>
 
-      {fam === 'sets' ? (
+      {fam === 'trades' ? (
+        <div>
+          <div className="card">
+            <h3>Trade board</h3>
+            <div className="sub">Collectors in the group swap pieces you are missing for your duplicates. Three offers a day, you always keep one copy, and nobody trades up more than one tier.</div>
+          </div>
+          {openTrades.length === 0 && (
+            <div className="card center sub">{tradeableDupes(s).length === 0 ? 'No duplicates on the shelf yet. Pull a few and the offers start.' : s.trades.offers.length ? 'All traded. New offers tomorrow.' : 'The board rolls at midnight.'}</div>
+          )}
+          {openTrades.map((o) => {
+            const give = parseShelfKey(o.giveKey);
+            const giveItem = ITEM_BY_ID[give.itemId];
+            const getItem = ITEM_BY_ID[o.getItemId];
+            const have = s.shelf[o.giveKey] ?? 0;
+            const can = have >= o.giveQty + 1;
+            return (
+              <div className="card" key={o.id}>
+                <div className="row"><span style={{ fontSize: 22 }}>{o.icon}</span><div className="grow"><b>{o.collector}</b><div className="sub">{o.line}</div></div></div>
+                <div className="row mt" style={{ alignItems: 'center', gap: 10 }}>
+                  <div className="center" style={{ flex: 1 }}>
+                    <Sprite id={giveItem.id} size={44} variant={give.variant} />
+                    <div className="small">You give ×{o.giveQty}</div>
+                    <div className="small"><b>{give.variant !== 'standard' ? `${VARIANT_LABEL[give.variant]} ` : ''}{giveItem.name}</b> (have {have})</div>
+                  </div>
+                  <span style={{ fontSize: 22 }}>➡️</span>
+                  <div className="center" style={{ flex: 1 }}>
+                    <Sprite id={getItem.id} size={44} variant={o.getVariant} />
+                    <div className="small">You get</div>
+                    <div className="small"><b>{o.getVariant !== 'standard' ? `${VARIANT_LABEL[o.getVariant]} ` : ''}{getItem.name}</b> <span className={`tag ${getItem.rarity}`}>{RARITY_LABEL[getItem.rarity]}</span></div>
+                  </div>
+                </div>
+                <button className="btn mint block mt" disabled={!can} onClick={() => acceptTradeOffer(o.id)}>{can ? 'Trade' : `Need ${o.giveQty + 1} copies`}</button>
+              </div>
+            );
+          })}
+        </div>
+      ) : fam === 'sets' ? (
         <div>
           {STORES.map((st) => {
             const rows = sets.filter((x) => x.id.startsWith(`${st.id}:`));

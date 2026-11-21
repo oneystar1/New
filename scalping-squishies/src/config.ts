@@ -21,6 +21,8 @@ export const CONFIG = {
   siteUrl: (env.VITE_SITE_URL || 'https://oneystar1.github.io/New/').replace(/\/?$/, '/'),
   /** Force a season on for testing: VITE_FORCE_SEASON or ?season=<id> (or 'none'). */
   forceSeason: (typeof location !== 'undefined' && new URLSearchParams(location.search).get('season')) || env.VITE_FORCE_SEASON || '',
+  /** ?quiet=1 hides toasts (screenshot runs). */
+  quiet: typeof location !== 'undefined' && new URLSearchParams(location.search).get('quiet') === '1',
   /** Build label shown in settings. */
   version: env.VITE_APP_VERSION ?? '0.1.0',
 };

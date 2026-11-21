@@ -8,17 +8,19 @@ Mark done with the date. Add anything noticed during a cycle.
 
 | # | Area | Item | Size | Added |
 | --- | --- | --- | --- | --- |
-| 7 | retention | Trade board: NPC collectors who swap your dupes for pieces you are missing | day | 2026-11-09 |
+| 16 | retention | Trade board: a "wanted" post from the player (pick a missing piece; a collector shows up for it within a few days at a steeper price) | half day | 2026-11-21 |
+| 17 | polish | Store shot 02 ("Flip the dohs") captures the pull-result modal; have the smoke test take the hunt capture before the first pull, or add a dedicated listing capture pass | small | 2026-11-21 |
 | 8 | content | Season 2 of the Hustle Pass rotating on the season calendar | day | 2026-11-09 |
-| 12 | polish | Season splash: show the real end date in the player's locale and a "remind me" that schedules the 48h notification on web too (web has no notifications; consider a header reminder instead) | small | 2026-11-19 |
 | 15 | retention | Comeback crate: scale the crate with lifetime progress (a relocated player should get more than 60 minutes) and mention what changed while away (season started, restocks ready) | small | 2026-11-20 |
-| 14 | polish | Store screenshots: capture with tutorial toasts suppressed (a `?quiet=1` flag that hides toasts and the coach) | small | 2026-11-19 |
-| 13 | launch | Enable the `shots:store` step in CI as an uploaded artifact so listing images refresh on every push | small | 2026-11-19 |
 
 ## Done
 
 | # | Area | Item | Done |
 | --- | --- | --- | --- |
+| 12 | polish | Season splash: show the real end date in the player's locale and a "remind me" that schedules the 48h notification on web too (web has no notifications; consider a header reminder instead) (end date is localized and the header countdown is the reminder; nothing further) | 2026-11-21 |
+| 13 | launch | Enable the `shots:store` step in CI as an uploaded artifact so listing images refresh on every push | 2026-11-21 |
+| 14 | polish | Store screenshots: capture with tutorial toasts suppressed (a `?quiet=1` flag that hides toasts and the coach) | 2026-11-21 |
+| 7 | retention | Trade board: NPC collectors who swap your dupes for pieces you are missing | 2026-11-21 |
 | 6 | launch | Balance bot in CI: run the simulation on every push, fail on drift, table in the job summary | 2026-11-20 |
 | 5 | polish | Carry the dawn scene into the doors phase: OPEN sign, line surging in, shelf emptying | 2026-11-20 |
 | 4 | retention | Comeback gift and streak shield: one free missed day, a welcome-back crate after 2+ days away | 2026-11-20 |

@@ -58,6 +58,15 @@ jobs:
           name: screenshots
           path: scalping-squishies/docs/screenshots
           if-no-files-found: ignore
+      - name: App Store listing screenshots (framed, 6.7-inch)
+        env:
+          PLAYWRIGHT_PATH: playwright
+        run: npm run shots:store
+      - uses: actions/upload-artifact@v4
+        with:
+          name: store-screenshots
+          path: scalping-squishies/docs/store
+          if-no-files-found: ignore
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request'
         with:

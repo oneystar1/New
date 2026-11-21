@@ -392,6 +392,8 @@ export interface GameState {
   season: SeasonState;
   /** Season ids whose "what's new" card has been shown. */
   seasonSplashSeen: string[];
+  /** Today's trade board: NPC collectors swapping your dupes for missing pieces. */
+  trades: { date: string; offers: import('./trades').TradeOffer[]; done: number[] };
   stats: Stats;
   settings: { sfx: boolean; haptics: boolean; notation: 'short' | 'scientific' };
 }

@@ -14,6 +14,7 @@ import { RANKED_RIVALS } from './data/rivals';
 import { TUTORIAL } from './data/tutorial';
 import { milestoneMult, todayKey, weightedPick, clamp } from './math';
 import { tickSeason, bumpSeasonMissions, earnTokens, rollSeasonItem, seasonSets } from './season';
+import { rollTrades } from './trades';
 import { SEASON_PULL_CHANCE, SEASON_TOKENS } from './data/seasons';
 
 // ---------------------------------------------------------------------------
@@ -301,6 +302,8 @@ export function tick(s: GameState, dt: number, now: number, rand: () => number =
   const season = tickSeason(s, now, rand);
   if (season.started) res.seasonStarted = season.started.id;
   if (season.ended) res.seasonEnded = { id: season.ended.season.id, clout: season.ended.clout };
+  // Trade board rolls once a day from whatever dupes are on the shelf.
+  rollTrades(s, now, rand);
 
   // Tutorial steps complete themselves from state.
   for (const t of TUTORIAL) {

@@ -7,6 +7,7 @@ import { isAdFree } from '../engine/sim';
 import { Sprite } from '../art/Sprite';
 import type { AdPlacement } from '../monetization';
 import { SEASON_BY_ID, SEASON_SHOP_PRICE, SEASON_TOKENS, seasonEndsAt, itemsForSeason } from '../engine/data/seasons';
+import { CONFIG } from '../config';
 
 /** Offline earnings, pull results, and toasts. */
 export function Overlays() {
@@ -93,7 +94,7 @@ export function Overlays() {
         </div>
       )}
       <div className="toasts">
-        {toasts.map((t) => (
+        {!CONFIG.quiet && toasts.map((t) => (
           <div key={t.id} className={`toast ${t.kind ?? ''} ${t.tab ? 'link' : ''}`} onClick={() => { if (t.tab) { requestTab(t.tab); dismissToast(t.id); } }}>
             {t.icon && <span>{t.icon}</span>}
             {t.text}

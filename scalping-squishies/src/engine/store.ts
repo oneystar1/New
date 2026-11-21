@@ -23,6 +23,7 @@ import { ACHIEVEMENTS } from './data/achievements';
 import { acceptOffer, counterOffer, declineOffer, apologize, tossFake, flipFake, fakeRoll } from './deals';
 import { unitCost, maxAffordable, todayKey } from './math';
 import { buySeasonItem, claimSeasonMission } from './season';
+import { acceptTrade } from './trades';
 import { setSeasonOverride, SEASON_BY_ID } from './data/seasons';
 import { CONFIG } from '../config';
 import { AD_RULES, type AdPlacement, type MonetizationProvider } from '../monetization/provider';
@@ -82,6 +83,7 @@ interface GameStore {
   buyUpgrade: (id: string) => void;
   pull: (count: 1 | 10, free?: boolean) => void;
   sellDupe: (shelfKey: string) => void;
+  acceptTradeOffer: (id: number) => void;
   doPrestige: (cityId: string) => Promise<void>;
   openRelocate: () => void;
   closeRelocate: () => void;
@@ -444,6 +446,16 @@ export const useGame = create<GameStore>((set, get) => {
       set({ s: { ...s }, lastPulls: results });
     },
 
+    acceptTradeOffer: (id) => {
+      const st = get();
+      const got = acceptTrade(st.s, id);
+      if (!got) { toast('That trade is gone', '🔄', 'bad'); return; }
+      toast(`Traded for ${got.variant !== 'standard' ? got.variant + ' ' : ''}${got.item.name}`, '🔄', got.item.rarity === 'common' ? 'info' : 'rare');
+      sfx.deal();
+      track('deal', { action: 'trade_board' });
+      set({ s: { ...st.s }, lastPulls: [got] });
+      get().save();
+    },
     sellDupe: (key) => {
       const st = get();
       const v = sellDuplicate(st.s, key, st.now);

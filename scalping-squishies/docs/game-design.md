@@ -362,3 +362,12 @@ bounds (stores 35 to 80%, deals 8 to 45%, restocks 3 to 35%, taps under
 15%), if the first Relocate is not reachable within 6 hours, or if the
 bot gets Called Out more than three times. The table lands in the job
 summary.
+
+**Trade board (Shelf → 🔄).** Three offers roll at midnight from the
+duplicates on the shelf: a collector (Nana Pat, Group Admin Brenda,
+Dalton, the retired guy, the_other_reseller) asks for 2 copies of a dupe
+for a piece you do not own at the same rarity, or 3 copies for one tier
+up. You always keep one copy, seasonal items are never on the board, and
+when every standard at that tier is owned the offer is a missing variant
+slot instead. Accepting swaps the copies, counts as a trade for stats,
+and shows the piece like a pull.
