@@ -213,6 +213,11 @@ const TRACKS={
   ending:{bpm:112,lead:'triangle',drums:false,pat:[
     [['C5','-','E5','-','G5','-','-','-','A5','-','G5','-','E5','-','-','-'],['C3','.','.','G3','.','.','C3','.','F3','.','.','C4','.','.','F3','.']],
     [['D5','-','F5','-','A5','-','-','-','G5','-','E5','-','C5','-','-','-'],['G2','.','.','D3','.','.','G2','.','C3','.','.','G3','.','.','C3','.']]]},
+  coast:{bpm:126,lead:'square',drums:true,pat:[
+    [['C5','-','E5','-','G5','-','E5','-','A5','-','G5','-','E5','-','D5','-'],['C3','.','G3','.','C3','.','G3','.','F3','.','C4','.','F3','.','G3','.']],
+    [['C5','-','E5','-','G5','-','A5','-','G5','-','-','-','E5','-','-','-'],['C3','.','G3','.','C3','.','G3','.','A2','.','E3','.','A2','.','E3','.']],
+    [['D5','-','F5','-','A5','-','F5','-','G5','-','E5','-','C5','-','D5','-'],['F3','.','C4','.','F3','.','C4','.','G3','.','D3','.','G3','.','D3','.']],
+    [['E5','-','G5','-','C6','-','-','-','G5','-','E5','-','C5','-','-','-'],['C3','.','G3','.','E3','.','G3','.','C3','.','G2','.','C3','.','.','.']]]},
   peaks:{bpm:96,lead:'triangle',drums:false,pat:[
     [['E5','-','-','-','B4','-','-','-','D5','-','-','-','A4','-','-','-'],['E3','.','.','.','B2','.','.','.','G3','.','.','.','D3','.','.','.']],
     [['G5','-','-','-','F#5','-','-','-','E5','-','-','-','-','-','-','-'],['C3','.','.','.','G2','.','.','.','D3','.','.','.','A2','.','.','.']],
@@ -310,6 +315,15 @@ const SNOWSLIME=[spr(_ss,SNOWPAL),spr(_ss2,SNOWPAL)];
 const ICEBATPAL=Object.assign({},BLUEPAL,{K:'#1a0d12'});const ICEBAT=[spr(['................','XX............XX','XrX..........XrX','XrrX...XX...XrrX','XOrrX.XXXX.XrrOX','.XOrrXXKKXXrrOX.','..XOOXrYYrXOOX..','...XXrYKKYrXX...','.....XrYYrX.....','......XrrX......','.......XX.......','................','................','................','................','................'],ICEBATPAL),spr(['................','................','................','.......XX.......','......XXXX......','XXXXX.XKKX.XXXXX','XrrrrXrYYrXrrrrX','.XOOrrrYKKYrrOOX','..XXOOOYYYOOOXX.','....XXXrrXXX....','......XrrX......','.......XX.......','................','................','................','................'],ICEBATPAL)];
 const MARSHALPAL=Object.assign({},PAL,{X:'#1a2a5a',r:'#8fc0ff',O:'#bfefff',Y:'#ffffff',S:'#e6fbff',s:'#9fc8ff',z:'#3e6fd8',k:'#1a2a5a',C:'#5a8fe6',c:'#8fc0ff',M:'#bfefff',m:'#ffffff'});
 const MARSHAL=[spr(['......XrX.......','.....XrOrX......','.....XrYrX......','....kSSSSSk.....','...kSSSSSSSk....','...kSszzzzSk....','...kSsOYYOSk....','...kSszzzzSk....','..kkksSSSskkk...','.kCCkSSSSSkMMk..','.kccksSSSskMmk..','.kCCksSSSskMMk..','..kkkzSSSzkkk...','....ksz.zsk.....','....kss.ssk.....','....kkk.kkk.....'],MARSHALPAL),spr(['.......Xr.......','.....XrOrX......','.....XrYOX......','....kSSSSSk.....','...kSSSSSSSk....','...kSszzzzSk....','...kSsOYYOSk....','...kSszzzzSk....','..kkksSSSskkk...','.kCCkSSSSSkMMk..','.kccksSSSskMmk..','.kCCksSSSskMMk..','..kkkzSSSzkkk...','...ksz...zsk....','...kss...ssk....','...kkk...kkk....'],MARSHALPAL)];const MARSHAL_L=MARSHAL.map(flipX);
+const CRAB=[spr(['................','..XX........XX..','.XOOX......XOOX.','XOYYOX....XOYYOX','XOYYOX....XOYYOX','.XOOXXXXXXXXOOX.','..XXOOOOOOOOXX..','..XOOKOOOOKOOX..','.XOOOOOOOOOOOOX.','.XOYOOOOOOOOYOX.','.XOOOOOOOOOOOOX.','..XXOOOOOOOOXX..','..X.XX.XX.XX.X..','..X..X.X..X..X..','................','................'],Object.assign({},PAL,{X:'#5a2a0a',O:'#e07a1a',Y:'#ffb347',K:'#1a0d12'})),
+  spr(['................','..XX........XX..','.XOOX......XOOX.','XOYYOX....XOYYOX','.XOOX......XOOX.','.XOOXXXXXXXXOOX.','..XXOOOOOOOOXX..','..XOOKOOOOKOOX..','.XOOOOOOOOOOOOX.','.XOYOOOOOOOOYOX.','.XOOOOOOOOOOOOX.','..XXOOOOOOOOXX..','..XX.XX.XX.XX...','...X.X.X.X.X....','................','................'],Object.assign({},PAL,{X:'#5a2a0a',O:'#e07a1a',Y:'#ffb347',K:'#1a0d12'}))];const CRAB_L=CRAB.map(flipX);
+const JELLY=[spr(['................','.....XXXXXX.....','...XXOOOOOOXX...','..XOOOYYYYOOOX..','..XOOYKYYKYOOX..','..XOOOYYYYOOOX..','..XXOOOOOOOOXX..','...X.X.X.X.X....','...X.X.X.X.X....','....X...X.X.....','................','................','................','................','................','................'],Object.assign({},PAL,{X:'#8a4a1a',O:'#f0a040',Y:'#ffd98a',K:'#1a0d12'})),
+  spr(['................','................','.....XXXXXX.....','...XXOOOOOOXX...','..XOOOYYYYOOOX..','..XOOYKYYKYOOX..','..XXOOOOOOOOXX..','....X.X.X.X.....','...X.X.X.X.X....','...X...X...X....','................','................','................','................','................','................'],Object.assign({},PAL,{X:'#8a4a1a',O:'#f0a040',Y:'#ffd98a',K:'#1a0d12'}))];
+const KRAKEN=[spr(['........XXXXXXXX........','......XXOOOOOOOOXX......','.....XOOOOOOOOOOOOX.....','....XOOOOOOOOOOOOOOX....','...XOOOOOOOOOOOOOOOOX...','...XOOOYYYOOOOYYYOOOX...','...XOOYKKYOOOOYKKYOOX...','...XOOYKKYOOOOYKKYOOX...','...XOOOYYYOOOOYYYOOOX...','...XOOOOOOOOOOOOOOOOX...','...XOOOOOOOKKOOOOOOOX...','....XOOOOOKOOKOOOOOX....','....XOOOOOOOOOOOOOOX....','.....XXOOOOOOOOOOXX.....','......XXXXOOOOXXXX......','..XX.....XOOOOX.....XX..','.XOOX...XOOOOOOX...XOOX.','XOOOOX.XOOOOOOOOX.XOOOOX','XOOOOXXOOOOXXOOOOXXOOOOX','.XOOOOOOOOX..XOOOOOOOOX.','..XOOOOOOX....XOOOOOOX..','...XXXXXX......XXXXXX...','........................','........................'],Object.assign({},PAL,{X:'#3a1a4a',O:'#8a4aa0',Y:'#ffd98a',K:'#1a0d12'})),
+  spr(['........XXXXXXXX........','......XXOOOOOOOOXX......','.....XOOOOOOOOOOOOX.....','....XOOOOOOOOOOOOOOX....','...XOOOOOOOOOOOOOOOOX...','...XOOOYYYOOOOYYYOOOX...','...XOOYKKYOOOOYKKYOOX...','...XOOYKKYOOOOYKKYOOX...','...XOOOYYYOOOOYYYOOOX...','...XOOOOOOOOOOOOOOOOX...','...XOOOOOOOKKOOOOOOOX...','....XOOOOOKOOKOOOOOX....','....XOOOOOOOOOOOOOOX....','.....XXOOOOOOOOOOXX.....','......XXXXOOOOXXXX......','...XX...XOOOOOOX...XX...','..XOOX.XOOOOOOOOX.XOOX..','.XOOOOXXOOOOXXOOOOXXOOX.','XOOOOOOOOOOX..XOOOOOOOOX','.XOOOOOOOOX....XOOOOOOX.','..XXXXXXXX......XXXXXX..','........................','........................','........................'],Object.assign({},PAL,{X:'#3a1a4a',O:'#8a4aa0',Y:'#ffd98a',K:'#1a0d12'}))];
+const TENT=[spr(['................','................','................','................','................','................','......XXX.......','.....XOOOX......','....XOOOOOX.....','....XOYOOOX.....','....XOOOOOX.....','...XOOOOOOOX....','...XOOYOOOOX....','..XOOOOOOOOOX...','..XXXXXXXXXXX...','................'],Object.assign({},PAL,{X:'#3a1a4a',O:'#8a4aa0',Y:'#c98ad8'})),
+  spr(['......XXX.......','.....XOOOX......','....XOOOOOX.....','....XOYOOOX.....','....XOOOOOX.....','...XOOOOOOOX....','...XOOYOOOOX....','...XOOOOOOOX....','..XOOOOOOOOOX...','..XOOYOOOOOOX...','..XOOOOOOOOOX...','.XOOOOOOOOOOOX..','.XOOOOYOOOOOOX..','.XOOOOOOOOOOOX..','.XXXXXXXXXXXXX..','................'],Object.assign({},PAL,{X:'#3a1a4a',O:'#8a4aa0',Y:'#c98ad8'}))];
+const COMPASS=spr(['................','.....KKKKKK.....','...KKMmmmmMKK...','..KMmWWWWWWmMK..','..KmWWWrWWWWmK..','.KMWWWWrWWWWWMK.','.KmWWWWrWWWWWmK.','.KmWWrrKrrWWWmK.','.KmWWWWBWWWWWmK.','.KMWWWWBWWWWWMK.','..KmWWWBWWWWmK..','..KMmWWWWWWmMK..','...KKMmmmmMKK...','.....KKKKKK.....','................','................']);
 const MITTEN=spr(['................','....KKKKK.......','...KPppppK......','..KPppppppK.....','..KPppppppK.....','.KKPppppppK.....','KPpKppppppK.....','KPppppppppK.....','.KKKKKKKKKK.....','..KWWWWWWK......','..KWwwwwWK......','..KKKKKKKK......','................','................','................','................']);
 const KNIGHT_L=KNIGHT.map(flipX),CANDLE_L=CANDLE.map(flipX),SNAIL_L=SNAIL.map(flipX),TOAD_L=TOAD.map(flipX);
 const COIN=[spr(['..KKKK..','.KmMMmK.','KmMPPMmK','KMPmmPMK','KMPmmPMK','KmMPPMmK','.KmMMmK.','..KKKK..']),spr(['...KK...','..KmMK..','..KMPK..','..KMmK..','..KMmK..','..KMPK..','..KmMK..','...KK...'])];
@@ -387,8 +401,8 @@ function drawLogo(cx,cy,t){if(!logoCache){const c=document.createElement('canvas
   const f=(t>>3)&1;for(let i=0;i<5;i++){const fx=cx-36+i*18+(f?1:0),fy=cy+26-((t>>2)+i*3)%3;drawFlame(fx,fy-6,6,(f+i)&1,0.9);}
   ctx.drawImage(logoCache,cx-120,cy);}
 // ---------- auto-tiled terrain ----------
-const SOLID=new Set(['t','~','r','R','#','L','H','D','@','B','q','P']);
-const GROUP={t:'t','~':'~',r:'r',R:'R','#':'#',c:'c',p:'p',L:'L',H:'H',s:'~',q:'t',P:'P',i:'i'};
+const SOLID=new Set(['t','~','r','R','#','L','H','D','@','B','q','P','Y']);
+const GROUP={t:'t','~':'~',r:'r',R:'R','#':'#',c:'c',p:'p',L:'L',H:'H',s:'~',q:'t',P:'P',i:'i',Y:'Y',d:'d'};
 const tileCache={};
 function tileAt(i,j){const m=G.map;i=Math.max(0,Math.min(m.w-1,i));j=Math.max(0,Math.min(m.h-1,j));return m.t[j][i];}
 function maskFor(i,j){const ch=tileAt(i,j),g=GROUP[ch];if(!g)return 0;let k=0;if(GROUP[tileAt(i,j-1)]===g)k|=1;if(GROUP[tileAt(i+1,j)]===g)k|=2;if(GROUP[tileAt(i,j+1)]===g)k|=4;if(GROUP[tileAt(i-1,j)]===g)k|=8;return k;}
@@ -425,6 +439,9 @@ function tile(ch,mask,frame,v){const key=ch+mask+frame+v;if(tileCache[key])retur
       if(!N)px('#e0b040',0,0,16,2);if(!S)px('#e0b040',0,14,16,2);if(!Wt)px('#e0b040',0,0,2,16);if(!E)px('#e0b040',14,0,2,16);break;}
     case 'L':{px(frame?'#ff6a1a':'#ff7a24',0,0,16,16);px('#b03010',2,2,5,3);px('#b03010',9,8,5,4);px('#b03010',1,11,4,3);px(frame?'#ffe060':'#ffd23f',3+(frame?2:0),6,6,1);px(frame?'#ffd23f':'#ffe060',8,3,1,4);px('#fff5a8',11-(frame?3:0),12,3,1);
       if(!N)px('#7a1a08',0,0,16,1);if(!S)px('#7a1a08',0,15,16,1);if(!Wt)px('#7a1a08',0,0,1,16);if(!E)px('#7a1a08',15,0,1,16);break;}
+    case 'd':{px('#f0d9a0',0,0,16,16);for(let i=0;i<6;i++)px('#e2c88a',rnd()*16|0,rnd()*16|0,2,1);for(let i=0;i<3;i++)px('#fff0c8',rnd()*16|0,rnd()*16|0,1,1);if(v===1){px('#d9b878',3,10,5,1);px('#d9b878',9,4,4,1);}if(!N)px('#e2c88a',0,0,16,1);break;}
+    case 'Y':{px('#f0d9a0',0,0,16,16);px('#2a6a3a',1,1,14,8);px('#3fa34d',2,2,12,6);px('#6fd070',3,3,4,2);px('#6fd070',9,4,3,2);px('#1d4a2a',0,4,2,2);px('#1d4a2a',14,4,2,2);px('#8a5a2a',7,8,2,8);px('#6b3a22',8,9,1,7);px('#d9b878',6,14,4,2);break;}
+    case 'k':{px('#b8803e',0,0,16,16);px('#8a5a2a',0,5,16,1);px('#8a5a2a',0,11,16,1);px('#c99050',2,1,10,1);px('#c99050',4,7,8,1);px('#3a2214',3,3,1,1);px('#3a2214',12,9,1,1);px('#6b3a22',6+v*3,0,1,5);px('#6b3a22',10-v*4,6,1,5);break;}
     case 'n':{px('#eef4ff',0,0,16,16);for(let i=0;i<5;i++)px('#dde6f8',rnd()*16|0,rnd()*16|0,3,1);for(let i=0;i<3;i++)px('#ffffff',rnd()*16|0,rnd()*16|0,2,1);if(v===1)px('#c9d6ee',4,9,4,1);if(v===2)px('#c9d6ee',9,4,3,1);break;}
     case 'i':{px(frame?'#a8d8ff':'#b4defc',0,0,16,16);px('#d8f0ff',2,2,6,1);px('#d8f0ff',9+(frame?1:0),10,4,1);px('#8fc0ff',4,12,5,1);px('#ffffff',12,3,2,1);px('#8fc0ff',1,7,1,3);
       if(!N)px('#e6fbff',0,0,16,1);if(!S)px('#6fa8e0',0,15,16,1);if(!Wt)px('#e6fbff',0,0,1,16);if(!E)px('#6fa8e0',15,0,1,16);break;}
@@ -479,7 +496,8 @@ const MAPS={};
   m.objs.push({type:'sign',x:10,y:51,text:"DONUT VILLAGE. Pink: the Elder. Blue: Baker Crumb. Yellow: Granny Sprinkle. Purple: Puff's home."});
   m.objs.push({type:'campfire',x:30,y:41});m.objs.push({type:'campfire',x:12,y:27});
   m.objs.push({type:'sign',x:25,y:40,text:"NORTH: Toasty Woods, then Ember Keep. EAST of the woods: Cinder Cave. WEST, past the pond: the Frosted Peaks. Fire monsters ahead. Stay cool, stay white."});
-  m.objs.push({type:'warp',x:0,y:24,to:'peaks',tx:42,ty:18,dir:2,w:1,h:1});m.objs.push({type:'sign',x:4,y:25,text:"WEST: the FROSTED PEAKS. Cold enough to stiffen a marshmallow. Keep a fire close."});
+  m.objs.push({type:'warp',x:0,y:24,to:'peaks',tx:42,ty:18,dir:2,w:1,h:1});
+  rect(m,44,30,4,1,'p');m.objs.push({type:'warp',x:47,y:30,to:'coast',tx:2,ty:14,dir:3,w:1,h:1});m.objs.push({type:'sign',x:43,y:29,text:"EAST: the CARAMEL COAST. The tide comes and goes with the sun. Hot sand, hotter crabs."});m.objs.push({type:'sign',x:4,y:25,text:"WEST: the FROSTED PEAKS. Cold enough to stiffen a marshmallow. Keep a fire close."});
   const clusters=[[3,22,9,6],[14,16,7,5],[30,14,8,6],[36,24,8,5],[5,30,10,5],[28,30,8,6],[14,34,6,4],[33,36,8,4],[8,10,8,5],[38,2,8,6],[2,2,10,6]];
   for(const c of clusters)rect(m,c[0],c[1],c[2],c[3],'t');
   rect(m,10,25,4,3,'.');
@@ -580,6 +598,40 @@ MAPS.home=interior('Puff\'s Home',3,null,{ox:38,oy:48,objs:[{type:'bed',x:8,y:1,
   m.hard=[{kind:'slime',x:16,y:7},{kind:'blue',x:19,y:15}];
   m.rooms=[[1,16,8,21],[9,18,16,18],[17,14,24,20],[25,15,28,19],[20,9,21,13],[13,4,27,8],[9,5,12,7],[25,1,27,3],[1,9,8,13],[3,14,4,15]];
   m.spawn={x:2,y:20};MAPS.grotto=m;}
+// ---- Caramel Coast 44x30: sand, palms, tide pools that open at low tide ----
+{const m=newMap(44,30,'d');m.name='Caramel Coast';m.music='coast';m.heat=1.0;m.wall='r';const rnd=seeded(31);
+  rect(m,0,0,44,30,'Y');rect(m,1,2,42,27,'d');rect(m,0,13,2,3,'d');m.objs.push({type:'warp',x:0,y:14,to:'overworld',tx:46,ty:30,dir:2,w:1,h:1});
+  rect(m,26,2,18,27,'~');rect(m,24,6,2,20,'~');rect(m,22,10,2,12,'~');                 // the sea on the east
+  for(const c of [[3,3,6,3],[10,24,8,3],[4,16,3,5]])rect(m,c[0],c[1],c[2],c[3],'Y');scatter(m,1,2,22,27,'Y',14,rnd);
+  rect(m,14,4,6,4,'r');rect(m,6,9,4,3,'r');
+  // tide pools: shallow at low tide, deep at high tide; the only way to the wreck
+  const pools=[[22,14],[23,14],[24,14],[25,14],[26,14],[27,15],[28,15],[29,15],[30,16],[31,16],[32,16],[33,17],[34,17]];for(const[x,y]of pools){m.t[y][x]='s';m.objs.push({type:'tide',x,y});}
+  rect(m,35,15,6,5,'d');rect(m,36,16,4,3,'k');m.t[18][38]='k';m.objs.push({type:'warp',x:38,y:16,to:'wreck',tx:15,ty:18,dir:1,w:1,h:1});
+  m.objs.push({type:'sign',x:36,y:19,text:"THE SUGARPLUM, run aground. Her captain never came back up. Something in the hold still hums."});
+  m.t[23][24]='s';m.objs.push({type:'tide',x:24,y:23});m.t[23][25]='d';m.objs.push({type:'seal',id:'seal6',x:25,y:23});   // a seal on an islet, reachable only at low tide
+  m.objs.push({type:'sign',x:2,y:13,text:"CARAMEL COAST. The pools drain at LOW TIDE (morning and dusk) and flood at HIGH TIDE (midday and night)."});
+  m.objs.push({type:'sign',x:21,y:13,text:"Low tide: wade across. High tide: wait, or swim home soggy."});
+  for(const[x,y]of[[8,6],[12,20],[18,26],[4,22],[20,6]])m.objs.push({type:'campfire',x,y});m.objs.push({type:'jar',x:9,y:13});m.objs.push({type:'jar',x:40,y:19});
+  for(const[x,y]of[[6,7],[16,22],[10,27],[19,3],[2,26],[37,15]])m.objs.push({type:'coin',x,y});
+  [[8,12],[16,16],[12,8],[18,24],[6,26]].forEach(p=>m.enemies.push({kind:'crab',x:p[0],y:p[1]}));
+  [[23,12],[28,20],[25,26]].forEach(p=>m.enemies.push({kind:'jelly',x:p[0],y:p[1]}));
+  m.enemies.push({kind:'ember',x:14,y:12});m.hard=[{kind:'crab',x:20,y:18},{kind:'jelly',x:30,y:8}];
+  for(let k=0;k<24;k++){const i=1+(rnd()*22|0),j=2+(rnd()*27|0);if(m.t[j][i]==='d')m.objs.push({type:'shell',x:i,y:j});}
+  m.spawn={x:2,y:14};MAPS.coast=m;}
+// ---- The Sugarplum (shipwreck) 30x20: flooded hold, crate puzzle, the Kraken ----
+{const m=newMap(30,20,'#');m.name='The Sugarplum';m.music='cave';m.heat=1.0;m.wall='#';
+  rect(m,11,14,9,5,'k');m.t[19][15]='k';m.objs.push({type:'warp',x:15,y:19,to:'coast',tx:38,ty:17,dir:0,w:1,h:1});
+  rect(m,3,9,24,4,'k');rect(m,13,13,5,1,'k');                                                 // the hold
+  for(const[x,y]of[[5,10],[6,10],[7,10],[8,11],[9,11],[18,10],[19,10],[20,11],[21,11],[22,11]]){m.t[y][x]='s';m.objs.push({type:'tide',x,y});}
+  m.objs.push({type:'block',x:12,y:11});m.t[12][24]='o';m.objs.push({type:'pdoor',id:'wreck',x:14,y:8,w:2});rect(m,14,8,2,1,'k');
+  m.objs.push({type:'sign',x:4,y:12,text:"Bilge water rises with the tide. Crates float... no they don't. Push one onto the plate by the stern."});
+  rect(m,9,2,12,6,'k');rect(m,12,3,6,4,'~');m.objs.push({type:'trigger',id:'kraken',x:9,y:7,w:12,h:1});
+  m.objs.push({type:'chest',id:'compass',x:10,y:2,item:'compass',needs:'krakenDead'});m.objs.push({type:'campfire',x:20,y:2});
+  m.objs.push({type:'jar',x:26,y:12});m.objs.push({type:'coin',x:3,y:12});m.objs.push({type:'coin',x:25,y:9});
+  [[16,11],[24,10]].forEach(p=>m.enemies.push({kind:'crab',x:p[0],y:p[1]}));[[6,10],[20,11]].forEach(p=>m.enemies.push({kind:'jelly',x:p[0],y:p[1]}));
+  m.enemies.push({kind:'kraken',x:15,y:4});
+  m.rooms=[[11,13,19,19],[3,8,26,13],[9,1,20,7]];
+  m.spawn={x:15,y:18};MAPS.wreck=m;}
 // ---- Frosted Peaks 44x36: snow, ice, pines; cold stiffens Puff unless a fire is near ----
 {const m=newMap(44,36,'n');m.name='Frosted Peaks';m.music='peaks';m.heat=0.8;m.cold=true;m.wall='r';const rnd=seeded(77);
   rect(m,0,0,44,36,'P');rect(m,2,2,40,32,'n');
@@ -634,7 +686,7 @@ MAPS.home=interior('Puff\'s Home',3,null,{ox:38,oy:48,objs:[{type:'bed',x:8,y:1,
   m.objs.push({type:'pdoor',id:'east',x:34,y:21,w:2});m.objs.push({type:'pdoor',id:'west',x:6,y:13,w:2});
   m.objs.push({type:'block',x:30,y:25});
   m.objs.push({type:'torch',id:'brazier',x:9,y:16,big:true});
-  for(const[x,y,ph]of[[4,23,0],[6,25,40],[8,27,80],[10,24,20],[5,26,60],[8,23,100],[11,27,0],[12,24,60],[3,27,30]])m.objs.push({type:'vent',x,y,phase:ph});
+  for(const[x,y,ph]of[[4,23,0],[6,25,45],[8,27,90],[10,24,20],[5,26,70],[8,23,110],[11,27,0],[12,24,60],[3,27,35]])m.objs.push({type:'vent',x,y,phase:ph});
   m.objs.push({type:'buddy',id:'squish',x:2,y:25,cage:'fire',name:'Squish'});
   m.objs.push({type:'buddy',id:'dot',x:35,y:19,cage:'fire',name:'Dot'});
   m.objs.push({type:'buddy',id:'bibi',x:6,y:7,cage:'fire',name:'Bibi'});
@@ -670,7 +722,7 @@ const G={scene:'title',map:null,mapName:'',cam:{x:0,y:0},t:0,fade:0,fadeTo:null,
   coins:0,items:{frost:0,lamp:false,swordLv:1},seals:0,follower:null,F:null,steam:[],goo:[],frozen:{},ash:[],dayT:2600,opts:{timer:false,cooling:'normal'},playT:0,cleared:false,ngplus:false,gauntlet:null,best:null,choice:null};
 const BUDDIES=['fluff','mallo','squish','dot','bibi','king'];
 function freedCount(){return BUDDIES.filter(b=>G.freed[b]).length;}
-function hard(){return G.diff==='hard';}
+function hard(){return G.diff==='hard';}function easy(){return G.diff==='easy';}
 
 // ---------- entities ----------
 function mkPlayer(x,y){return{type:'player',x,y,w:10,h:10,dir:0,frame:0,anim:0,toast:0,cap:1,hurt:0,atk:0,atkType:null,speed:1.1,kb:{x:0,y:0},roll:0,rollCd:0,rollDir:{x:0,y:1},idle:0,heating:false,melting:0,pushT:0,equip:'sword',
@@ -685,6 +737,10 @@ function mkEnemy(e){const base={type:'enemy',kind:e.kind,x:e.x*T+3,y:e.y*T+3,w:1
     case 'slime':Object.assign(base,{hp:3,speed:0,heat:0.9,radius:26,flame:true,w:12,h:9,x:e.x*T+2,y:e.y*T+5});break;
     case 'snowslime':Object.assign(base,{hp:3,speed:0,heat:0,radius:0,cold:0.3,w:12,h:9,x:e.x*T+2,y:e.y*T+5});break;
     case 'icebat':Object.assign(base,{hp:1,speed:0.9,heat:0,radius:0,cold:0.25,fly:true,w:12,h:8,x:e.x*T+2,y:e.y*T+4,ang:Math.random()*6.28});break;
+    case 'crab':Object.assign(base,{hp:4,speed:0.9,heat:0.5,radius:18,flame:false,crab:true,w:14,h:10,x:e.x*T+1,y:e.y*T+4});break;
+    case 'jelly':Object.assign(base,{hp:2,speed:0.35,heat:0.6,radius:20,flame:false,fly:true,w:12,h:8,x:e.x*T+2,y:e.y*T+4,ang:Math.random()*6.28});break;
+    case 'tent':Object.assign(base,{hp:1,speed:0,heat:0,radius:0,flame:false,tent:true,w:12,h:10,x:e.x*T+2,y:e.y*T+4,st:0});break;
+    case 'kraken':Object.assign(base,{hp:10+(hard()?3:0),maxhp:10+(hard()?3:0),speed:0,heat:0,radius:0,flame:false,mini:true,boss3:true,w:22,h:20,x:e.x*T-3,y:e.y*T+6,phase:0,sub:false});break;
     case 'marshal':Object.assign(base,{hp:10+(hard()?3:0),maxhp:10+(hard()?3:0),speed:1.0,heat:0,radius:0,cold:0.35,aura:50,boss2:true,mini:true,w:20,h:18,x:e.x*T-2,y:e.y*T+2,phase:0});break;
     case 'bat':Object.assign(base,{hp:1,speed:0.9,heat:0.8,radius:22,flame:true,fly:true,w:12,h:8,x:e.x*T+2,y:e.y*T+4,ang:Math.random()*6.28});break;
     case 'wisp':Object.assign(base,{hp:1,speed:0.5,heat:0,radius:0,flame:true,blue:true,fly:true,wisp:true,w:8,h:8,x:e.x*T+4,y:e.y*T+4,ang:Math.random()*6.28,life:0});break;
@@ -700,12 +756,12 @@ function loadMap(name,tx,ty,dir){const m=MAPS[name];G.map=m;G.mapName=name;G.vis
   for(const o of m.objs){if(o.type==='block'){o.x=o.ox!=null?o.ox:(o.ox=o.x);o.y=o.oy!=null?o.oy:(o.oy=o.y);o.ax=o.ay=0;}}
   const cooled=name==='castle'&&G.flags.bossDead&&!G.gauntlet;
   const list=(cooled?[]:m.enemies).concat(!cooled&&hard()&&m.hard?m.hard:[]).concat(G.ngplus&&m.ngplus?m.ngplus:[]);
-  for(const e of list){if(e.kind==='boss'||e.kind==='marshal')continue;if(e.kind==='toad'&&G.flags.toadDead)continue;G.ents.push(mkEnemy(e));}
-  if(name==='glacier'&&!G.flags.marshalDead)G.flags.trig_marshal=false;
+  for(const e of list){if(e.kind==='boss'||e.kind==='marshal'||e.kind==='kraken')continue;if(e.kind==='toad'&&G.flags.toadDead)continue;G.ents.push(mkEnemy(e));}
+  if(name==='glacier'&&!G.flags.marshalDead)G.flags.trig_marshal=false;if(name==='wreck'&&!G.flags.krakenDead)G.flags.trig_kraken=false;G.lastTide=tideHigh();
   if(name==='castle'&&!G.flags.bossDead)G.flags.trig_taunt=false; // the Pyre Lord waits in the throne room until you walk in
   if(cooled){for(const o of m.objs){if(o.type==='torch')o.out=true;}for(let j=0;j<m.h;j++)for(let i=0;i<m.w;i++)if(m.t[j][i]==='L')G.frozen[i+','+j]=1e9;m.cooledNow=true;}else if(name==='castle'){for(const o of m.objs){if(o.type==='torch')delete o.out;}m.cooledNow=false;}
   if((name==='cave'||name==='castle'||name==='grotto')&&tx===m.spawn.x&&ty===m.spawn.y)G.checkpoint={map:name,x:tx,y:ty};
-  if(name==='castle'&&G.flags.eastDoor){const b=m.objs.find(o=>o.type==='block');b.x=34;b.y=26;}if(name==='grotto'&&G.flags.grottoEastDoor){const b=m.objs.find(o=>o.type==='block');b.x=22;b.y=15;}
+  if(name==='castle'&&G.flags.eastDoor){const b=m.objs.find(o=>o.type==='block');b.x=34;b.y=26;}if(name==='wreck'&&G.flags.wreckDoor){const b=m.objs.find(o=>o.type==='block');b.x=24;b.y=12;}if(name==='grotto'&&G.flags.grottoEastDoor){const b=m.objs.find(o=>o.type==='block');b.x=22;b.y=15;}
   G.flags.bossFight=G.ents.some(e=>e.boss);
   P.x=tx*T+3;P.y=ty*T+3;P.dir=dir==null?P.dir:dir;P.kb.x=P.kb.y=0;P.atk=0;P.roll=0;P.wasToasted=P.toast/P.cap>=0.5;refreshSolids();
   G.F=G.follower?{id:G.follower,x:P.x,y:P.y+12,w:10,h:10,toast:0,trail:[],parked:false,frame:0}:null;
@@ -722,6 +778,7 @@ function refreshSolids(){const m=G.map;const s={};const add=(x,y,w=1)=>{for(let 
     case 'npc':if(npcVisible(o))add(o.x,o.y);break;
     case 'bush':if(!o.cut)add(o.x,o.y);break;
     case 'firegate':if(!G.flags[o.id])add(o.x,o.y,o.w);break;
+    case 'tide':if(tideHigh())add(o.x,o.y);break;
     case 'bossdoor':if(freedCount()<5)add(o.x,o.y,o.w);break;
     case 'pdoor':if(!G.flags[o.id+'Door'])add(o.x,o.y,o.w);break;}}
   m.solidObj=s;}
@@ -782,6 +839,7 @@ function interact(){const f=facingTile();let o=objAt(f.i,f.j);
     else if(o.item==='frost5'){G.items.frost+=5;say(["Five FROST JARS, cold as a cellar. Press V (ITEM) to throw one three steps ahead."],null,'ITEM');}
     else if(o.item==='bigjar2'){giveCap(0.3);say(["Puff found a tub of GROTTO GLAZE! The TOAST meter is longer."],null,'ITEM');}
     else if(o.item==='topgold'){giveTopping('gold','CHEST');return true;}
+    else if(o.item==='compass'){G.items.compass=true;say(["Puff found the CAPTAIN'S COMPASS! Out in the open, an arrow on the screen edge points toward your current goal."],null,'ITEM');}
     else if(o.item==='mitten'){G.items.mitten=true;say(["Puff found the MITTEN CHARM! The cold can't stiffen him any more, and icy monsters barely sting."],null,'ITEM');}
     else if(o.item==='boots'){G.items.boots=true;say(["Puff found the SUGAR BOOTS! Rolls recover twice as fast and go a little farther."],null,'ITEM');}
     else if(o.item==='frost3'){G.items.frost+=3;say(["Puff found three FROST JARS! Press V (ITEM) to throw one. It freezes lava into a crust you can walk on, and puts out any flame it touches."],null,'ITEM');}
@@ -798,7 +856,12 @@ function interact(){const f=facingTile();let o=objAt(f.i,f.j);
   return false;}
 const BUDDY_NAMES={fluff:'Fluff',mallo:'Mallo',squish:'Squish',dot:'Dot',bibi:'Bibi',king:'King Mallow'};
 const SKILL_TEXT={fluff:"Fluff floats along. Lava and burning trails toast you half as much.",mallo:"Mallo is heavy. Press V (ITEM) on a golden plate to have Mallo stand on it.",squish:"Squish shows you the moves. Rolls go farther, recover faster, and squeezing is quick.",dot:"Dot carries a spare jar. If you would melt, she catches you once per area.",bibi:"Bibi is loud. Nearby monsters chase Bibi instead of you. Watch her toast!"};
-function talk(o){const first=!o.talked;o.talked=true;let lines=first?o.lines:o.after||o.lines;
+const PROGRESS_LINES={elder:[['bossDead',"The Pyre Lord, doused by my old sword. I knew that blade had one more adventure in it."],['gate',"You opened the gate? Then the keep is yours to take back, Puff."],['spear',"The Fire Spear! Granny will be insufferable about this, and she has earned it."]],
+  baker:[['marshalDead',"Ice knights, fire lords... and you still find time for donuts. I like that in a marshmallow."],['spear',"A spear! Don't go poking my ovens with it."]],
+  granny:[['krakenDead',"A kraken? In MY cove? Well. Caramel never did know when to quit."],['mitten',"My old mittens! I lost those on the Peaks forty winters ago. Keep them, dearie."]],
+  nibs:[['bossDead',"You beat the Pyre Lord?! Can I have your autograph? Can I have TWO?"]]};
+function progressLine(o){const list=PROGRESS_LINES[o.id];if(!list)return null;for(const[flag,txt]of list){if(G.flags[flag]||G.items[flag]){const key='pl_'+o.id+'_'+flag;if(!G.flags[key]){G.flags[key]=true;return txt;}}}return null;}
+function talk(o){const first=!o.talked;o.talked=true;let lines=first?o.lines:o.after||o.lines;const pl=!first&&progressLine(o);if(pl)lines=[pl].concat(nightAmount()>0.5?["...It's late, Puff. Even marshmallows need sleep."]:[]);
   // rescued buddies in the village can come along
   if(o.cond&&G.freed[o.cond]){const id=o.cond;
     if(G.follower===id){ask(BUDDY_NAMES[id]+' is following you.',['Keep following','Stay here'],i=>{if(i===1){G.follower=null;G.F=null;say([`${BUDDY_NAMES[id]} waves and heads home.`],null,BUDDY_NAMES[id]);saveGame();}});return;}
@@ -816,7 +879,7 @@ function talk(o){const first=!o.talked;o.talked=true;let lines=first?o.lines:o.a
 function tryPush(dx,dy){const f=facingTile();const b=objAt(f.i,f.j,'block');if(!b)return false;P.pushT++;if(P.pushT<12)return true;
   const nx=b.x+dx,ny=b.y+dy;const m=G.map;if(!tileFree(nx,ny)||objAt(nx,ny,'buddy'))return true;
   b.ax=-dx*16;b.ay=-dy*16;b.x=nx;b.y=ny;P.pushT=0;audio.sfx('push');refreshSolids();
-  if(m.t[ny][nx]==='o'){const id=G.mapName==='grotto'?'grottoEastDoor':'eastDoor';if(!G.flags[id]){G.flags[id]=true;audio.sfx('switch');refreshSolids();G.shake=4;say(["The plate sinks with a clunk. Somewhere, a door grinds open."]);saveGame();}}
+  if(m.t[ny][nx]==='o'){const id=G.mapName==='grotto'?'grottoEastDoor':G.mapName==='wreck'?'wreckDoor':'eastDoor';if(!G.flags[id]){G.flags[id]=true;audio.sfx('switch');refreshSolids();G.shake=4;say(["The plate sinks with a clunk. Somewhere, a door grinds open."]);saveGame();}}
   return true;}
 function trySqueeze(){const f=facingTile();if(G.map.t[f.j]?.[f.i]!=='q')return false;const f2=facingTile(2);if(!tileFree(f2.i,f2.j))return false;
   P.squeeze={t:0,dur:hasFollower('squish')?16:40,fx:P.x,fy:P.y,tx:f2.i*T+3,ty:f2.j*T+3};clearActions();audio.sfx('squeeze');tip('squeeze','Narrow gaps: Puff squeezes through on his own. Squish makes it quick.');return true;}
@@ -885,7 +948,7 @@ function updatePlayer(){
 function tip(id,text){if(G.flags['tip_'+id])return;G.flags['tip_'+id]=true;G.banner={title:'TIP',text,t:300};}
 function startRoll(rx,ry){if(P.frozen){tip('frozen2','Too stiff to roll. Warm up by a fire first.');return;}if(!rx&&!ry){const d=dirVec(P.dir);rx=d[0];ry=d[1];}const l=Math.hypot(rx,ry);P.rollDir={x:rx/l,y:ry/l};P.roll=16;P.rollCd=Math.round((hasFollower('squish')?15:30)*(G.items.boots?0.5:1)*(hasTop('cracker')?0.8:1));audio.sfx('roll');}
 function giveSeal(){G.seals++;giveCap(0.25);audio.sfx('seal');
-  const lines=[`Puff found a MARSHMALLOW SEAL! (${G.seals} of 5) The TOAST meter grows.`];if(G.seals===5){giveCap(0.5);lines.push("All five Seals! Puff feels positively fluffy. A big bonus to the TOAST meter.");}
+  const lines=[`Puff found a MARSHMALLOW SEAL! (${G.seals} of 6) The TOAST meter grows.`];if(G.seals===6){giveCap(0.5);lines.push("All six Seals! Puff feels positively fluffy. A big bonus to the TOAST meter.");}
   say(lines,null,'SEAL');saveGame();}
 function useItem(){
   if(G.F&&G.F.id==='mallo'){const ci=Math.floor((G.F.x+5)/T),cj=Math.floor((G.F.y+5)/T);const pi=Math.floor((P.x+5)/T),pj=Math.floor((P.y+5)/T);
@@ -903,15 +966,19 @@ function fireTrigger(id){
     if(G.flags.taunt){G.flags.bossFight=true;G.ents.push(mkEnemy(e));audio.play('boss');audio.sfx('boss');G.shake=10;G.banner={title:'PYRE LORD',text:'"Back for seconds, soft one?"',t:150};return;}
     G.flags.taunt=true;say(["So. The little white one who douses my fires.","Your friends made FINE kindling, Puff. Come closer. Let me see how you toast!"],()=>{G.flags.bossFight=true;G.ents.push(mkEnemy(e));audio.play('boss');audio.sfx('boss');G.shake=10;saveGame();},'Pyre Lord');}
   if(id==='toad'){say(["A great wet croak echoes off the stone. The MAGMA TOAD guards the spear!"]);}
+  if(id==='kraken'){if(G.flags.krakenDead||G.ents.some(x=>x.boss3))return;const e=G.map.enemies.find(x=>x.kind==='kraken');const go=()=>{G.flags.bossFight=true;G.ents.push(mkEnemy(e));audio.play('boss');audio.sfx('boss');G.shake=8;};
+    if(G.flags.krakenMet){go();G.banner={title:'KRAKEN',text:'The water churns. It remembers you.',t:150};return;}G.flags.krakenMet=true;
+    say(["The bilge heaves. Eight caramel arms slap the deck, and two great eyes rise from the black water.","It is hungry, and you are the only soft thing aboard."],go,'Kraken');}
   if(id==='marshal'){if(G.flags.marshalDead||G.ents.some(x=>x.boss2))return;const e=G.map.enemies.find(x=>x.kind==='marshal');const go=()=>{G.flags.bossFight=true;G.ents.push(mkEnemy(e));audio.play('boss');audio.sfx('boss');G.shake=8;};
     if(G.flags.marshalMet){go();G.banner={title:'FROST MARSHAL',text:'"Still soft. Still warm. Not for long."',t:150};return;}G.flags.marshalMet=true;
     say(["A knight of blue ice rises from the floor, frost pouring off his armor.","\"A marshmallow, this deep in the cold? You will make a fine ornament. Hold still.\""],go,'Frost Marshal');}}
 function douseAt(x,y){if(P.soggy){G.steam.push({x,y,r:34,ttl:180});audio.sfx('steam');}}
-function damageEnemy(e,dmg,spear){
+function damageEnemy(e,dmg,spear){if(e.boss3&&e.sub){audio.sfx('hit');puff(e.x+11,e.y+10,'#8fc0ff',3);return;}
   if(e.boss){if(!spear){audio.sfx('hit');puff(e.x+11,e.y+11,'#ff8c1a',4);return;}e.hp-=1;e.hurt=30;e.flash=6;G.hitstop=5;audio.sfx('douse');puff(e.x+11,e.y+11,'#9cc8ff',10);G.shake=8;P.bossCool=90;G.steam.push({x:e.x+11,y:e.y+11,r:30,ttl:90});audio.sfx('steam');
     if(e.hp<=0){e.dead=70;if(G.gauntlet){G.gauntlet.stage=3;}else{G.flags.bossDead=true;G.flags.bossFight=false;audio.sfx('win');audio.play('keep');}}return;}
   if(e.mini){e.hp-=dmg;e.hurt=18;e.flash=5+Math.round(4*(1-e.hp/e.maxhp));G.hitstop=4;audio.sfx(e.hp<=0?'kill':'hit',e);puff(e.x+10,e.y+8,'#ffd23f',e.hp<=0?16:6);G.shake=e.hp<=0?8:4;const a=Math.atan2(e.y-P.y,e.x-P.x);e.vx=Math.cos(a)*1.5;e.vy=Math.sin(a)*1.5;
-    if(e.hp<=0){e.dead=50;if(e.boss2){G.flags.marshalDead=true;G.flags.bossFight=false;audio.play('cave');say(["The Frost Marshal shatters into a thousand sugar crystals. The glacier sighs, and a chest thaws open by the fires."]);saveGame();}
+    if(e.hp<=0){e.dead=50;if(e.boss3){G.flags.krakenDead=true;G.flags.bossFight=false;audio.play('cave');say(["The Kraken lets out a long caramel sigh and sinks for good. The captain's chest creaks open at the bow."]);saveGame();}
+      else if(e.boss2){G.flags.marshalDead=true;G.flags.bossFight=false;audio.play('cave');say(["The Frost Marshal shatters into a thousand sugar crystals. The glacier sighs, and a chest thaws open by the fires."]);saveGame();}
       else if(G.gauntlet){G.gauntlet.stage=2;G.gauntlet.spawnT=G.t+90;}else{G.flags.toadDead=true;say(["The Magma Toad deflates with a long, sad hiss. The chest in the corner cools and clicks open."]);saveGame();}}return;}
   if(spear&&e.flame){e.hp=0;e.dead=20;audio.sfx('douse',e);puff(e.x+5,e.y+5,'#9cc8ff',10);douseAt(e.x+5,e.y+5);return;}
   if(spear&&e.blue){audio.sfx('hit');puff(e.x+5,e.y+5,'#3e8cff',3);return;}
@@ -995,6 +1062,21 @@ function updateEnemy(e){const tg=target(e);const d=dist(e,tg);e.st++;const calm=
     case 'snail':
       if(d<120&&!calm)chase(e,e.speed,tg);else wander(e);
       if(e.st%34===0){G.patches.push({x:Math.floor((e.x+e.w/2)/T),y:Math.floor((e.y+e.h/2)/T),ttl:320});}break;
+    case 'crab':{ // sidesteps, then pinches with a short horizontal dash
+      if(calm){wander(e);e.state='wander';break;}
+      if(e.state==='wander'){wander(e);if(d<80){e.state='side';e.st=0;}}
+      else if(e.state==='side'){const dy=tg.y-e.y;const dx=tg.x-e.x;if(Math.abs(dy)>6)moveEnt(e,0,Math.sign(dy)*e.speed*0.8);else if(Math.abs(dx)>40)moveEnt(e,Math.sign(dx)*e.speed,0);else if(e.st>30){e.state='windup';e.st=0;e.sw=dx<0?-1:1;}if(d>140){e.state='wander';}}
+      else if(e.state==='windup'){if(e.st>18){e.state='lunge';e.st=0;e.vx=e.sw*2.4;e.vy=0;}}
+      else if(e.state==='lunge'){if(!moveEnt(e,e.vx,0)||e.st>14){e.state='side';e.st=0;}}break;}
+    case 'jelly':{e.ang+=0.05;if(!calm&&d<90){const a=Math.atan2(tg.y-e.y,tg.x-e.x);e.x+=Math.cos(a)*e.speed;e.y+=Math.sin(a)*e.speed;}else{e.x+=Math.cos(e.ang)*0.4;e.y+=Math.sin(e.ang*1.3)*0.3;}
+      e.x=Math.max(16,Math.min(G.map.w*T-32,e.x));e.y=Math.max(16,Math.min(G.map.h*T-32,e.y));break;}
+    case 'tent':{if(e.st>30&&e.st<40&&overlap(e,P))hurtPlayer(0.15,e,3,'Kraken tentacle');if(e.st>80){e.dead=10;}break;}
+    case 'kraken':{e.phase++;const p2=e.hp<=Math.ceil(e.maxhp/2);
+      if(!e.sub){if(e.phase%260===200){e.sub=true;e.hurt=0;audio.sfx('splash');puff(e.x+11,e.y+10,'#8fc0ff',12);}
+        if(e.phase%90===30&&!calm){for(let k=-1;k<=1;k++){const a=Math.atan2(tg.y-e.y,tg.x-e.x)+k*0.4;G.shots.push({x:e.x+11,y:e.y+10,vx:Math.cos(a)*1.4,vy:Math.sin(a)*1.4,life:120,ink:true});}audio.sfx('boss',e);}}
+      else{if(e.phase%260===0){e.sub=false;audio.sfx('boss',e);}
+        if(e.phase%(p2?40:60)===10){const n=p2?3:2;for(let k=0;k<n;k++){for(let tries=0;tries<8;tries++){const tx=Math.floor((tg.x+5)/T)+(Math.random()*5|0)-2,ty=Math.floor((tg.y+5)/T)+(Math.random()*5|0)-2;if(tileFree(tx,ty)){G.ents.push(mkEnemy({kind:'tent',x:tx,y:ty}));break;}}}}}
+      break;}
     case 'marshal':{e.phase++;const p2=e.hp<=Math.ceil(e.maxhp/2);const sp=e.speed*(p2?1.3:1);
       if(e.state==='wander'){if(d<150){if(e.phase%200<110)chase(e,sp,tg);else if(e.st>30){e.state=(e.phase%400<200)?'windup':'rain';e.st=0;}}else wander(e);}
       else if(e.state==='windup'){if(e.st>25){e.state='charge';e.st=0;const a=Math.atan2(tg.y-e.y,tg.x-e.x);e.vx=Math.cos(a)*2.6;e.vy=Math.sin(a)*2.6;audio.sfx('boss',e);}}
@@ -1027,13 +1109,13 @@ function updateEnemies(){
   for(const e of G.ents){if(e.type!=='enemy')continue;
     if(e.flash)e.flash--;
     e.speed=e.baseSpeed*(inGoo(e)?0.4:1)*(e.kind==='ember'&&G.mapName==='overworld'&&nightAmount()>0.5?1.3:1);
-    if(e.dead){e.dead--;if(e.dead<=0){e.gone=true;if(!e.boss&&!e.mini){const tx=Math.floor((e.x+e.w/2)/T),ty=Math.floor((e.y+e.h/2)/T);const r=Math.random();
+    if(e.dead){e.dead--;if(e.dead<=0){e.gone=true;if(!e.boss&&!e.mini&&!e.tent){const tx=Math.floor((e.x+e.w/2)/T),ty=Math.floor((e.y+e.h/2)/T);const r=Math.random();
         const night=G.mapName==='overworld'&&nightAmount()>0.5;if(r<0.1)G.map.objs.push({type:'jar',x:tx,y:ty,drop:G.t});else if(r<(night?0.75:0.55)+(hasTop('gold')?0.2:0))G.map.objs.push({type:'coin',x:tx,y:ty,drop:G.t});
         if((e.kind==='ember'||e.kind==='blue')&&nearLava(e.x+5,e.y+5))G.ash.push({x:e.x,y:e.y,t:0,kind:e.kind});}}continue;}
     if(e.pinned>0){e.pinned--;if(e.pinned%8===0)puff(e.x+5,e.y,'#8fc0ff',1);continue;}
     if(e.hurt){e.hurt--;moveEnt(e,e.vx,e.vy);e.vx*=0.8;e.vy*=0.8;continue;}
     const px=e.x;updateEnemy(e);const mdx=e.x-px;if(Math.abs(mdx)>0.15)e.face=mdx<0?-1:1;if((e.state==='windup'||e.state==='swing')&&e.sw)e.face=e.sw;if(e.kind==='knight'&&e.state==='chase'){const tgx=target(e).x;e.face=tgx<e.x?-1:1;}
-    if(!e.wisp&&overlap(e,P)&&!((e.kind==='slime'||e.kind==='snowslime')&&e.z>3)&&P.carried!==e){if(e.cold)chill(e.cold,e);else hurtPlayer(e.boss?0.25:e.mini?0.2:0.15,e);}
+    if(!e.wisp&&!e.tent&&!(e.boss3&&e.sub)&&overlap(e,P)&&!((e.kind==='slime'||e.kind==='snowslime')&&e.z>3)&&P.carried!==e){if(e.cold)chill(e.cold,e);else hurtPlayer(e.boss?0.25:e.mini?0.2:0.15,e);}
     if(G.F&&!G.F.parked&&overlap(e,G.F)&&G.t%20===0)G.F.toast+=0.2;
   }
   G.ents=G.ents.filter(e=>!e.gone);
@@ -1043,14 +1125,14 @@ function updateEnemies(){
   G.ash=G.ash.filter(a=>!a.gone);
   for(const o of G.map.objs){if(o.type==='torch'&&!o.out&&o.shoot){
       if(G.t%(o.shoot===1?90:130)===0&&dist({x:o.x*T,y:o.y*T,w:16,h:16},P)<140){const a=Math.atan2(P.y-o.y*T,P.x-o.x*T);G.shots.push({x:o.x*T+5,y:o.y*T+2,vx:Math.cos(a)*1.3,vy:Math.sin(a)*1.3,life:150});}}
-    if(o.type==='vent'){o.on=((G.t+o.phase)%120)<50;o.warn=!o.on&&((G.t+o.phase)%120)>=100;if(o.on&&overlap({x:o.x*T+2,y:o.y*T+2,w:12,h:12},P))hurtPlayer(0.16,null,3.5,'fire vent');}
+    if(o.type==='vent'){o.on=((G.t+o.phase)%120)<70;o.warn=!o.on&&((G.t+o.phase)%120)>=100;if(o.on&&overlap({x:o.x*T+2,y:o.y*T+2,w:12,h:12},P))hurtPlayer(0.16,null,3.5,'fire vent');}
     if(o.type==='curtain'&&toastRatio()<0.5&&overlap({x:o.x*T,y:o.y*T-4,w:o.w*T,h:20},P))hurtPlayer(0.12,{x:o.x*T+o.w*8-5,y:o.y*T-5,w:10,h:10},3,'flame curtain');}
   for(const p of G.patches){p.ttl--;if(p.ttl>0&&overlap({x:p.x*T+3,y:p.y*T+3,w:10,h:10},P))hurtPlayer(hasFollower('fluff')?0.05:0.1,null,1.5,'burning trail');}
   G.patches=G.patches.filter(p=>p.ttl>0);
   for(const s of G.shots){s.x+=s.vx;s.y+=s.vy;s.life--;if(solidAt(s.x+3,s.y+3)&&!G.map.solidObj[Math.floor((s.x+3)/T)+','+Math.floor((s.y+3)/T)])s.life=0;
     const sb={x:s.x,y:s.y,w:6,h:6};
     if(P.atk&&P.atkType==='spear'&&overlap(attackBox(),sb)){s.life=0;puff(s.x+3,s.y+3,'#9cc8ff',4);audio.sfx('douse');continue;}
-    if(overlap(sb,P)&&!P.hurt&&!P.roll){s.life=0;if(s.ice)chill(0.2,s);else hurtPlayer(0.12,s,2);}
+    if(overlap(sb,P)&&!P.hurt&&!P.roll){s.life=0;if(s.ice)chill(0.2,s);else if(s.ink){G.ink=120;hurtPlayer(0.06,s,1,'Kraken ink');}else hurtPlayer(0.12,s,2);}
     if(G.F&&!G.F.parked&&overlap(sb,G.F)){s.life=0;G.F.toast+=0.1;}}
   G.shots=G.shots.filter(s=>s.life>0);
   // radiant heat
@@ -1063,19 +1145,19 @@ function updateEnemies(){
   const ci=Math.floor((P.x+P.w/2)/T),cj=Math.floor((P.y+P.h/2)/T);
   for(let j=cj-1;j<=cj+1;j++)for(let i=ci-1;i<=ci+1;i++){if(j>=0&&i>=0&&j<G.map.h&&i<G.map.w&&G.map.t[j][i]==='L'&&!(G.frozen[i+','+j]>0))addH(0.5*lavaMul,'lava');}
   if(heat>0)P.heatSrc=topSrc;
-  heat*=G.map.heat*(hard()?1.4:1);
+  heat*=G.map.heat*(hard()?1.4:easy()?0.7:1);
   if(P.soggy||P.carried||P.hop)heat=0;
   if(G.map.cold){if(G.items.mitten)P.cold=Math.max(0,P.cold-0.02);else if(heat>0)P.cold=Math.max(0,P.cold-0.012);else P.cold=Math.min(1,P.cold+0.0012*(hasTop('mint')?0.5:1));
     P.toast=Math.max(0,P.toast-0.01);if(heat>0)heat*=0.15;
     if(P.cold>=1&&!P.frozen){P.frozen=true;audio.sfx('freeze');tip('frozen','FROZEN STIFF: half speed, no rolling. Get to a campfire to thaw.');}if(P.frozen&&P.cold<0.6)P.frozen=false;}
   else{P.cold=Math.max(0,P.cold-0.02);P.frozen=false;}
   if(heat>0){P.toast=Math.min(P.cap,P.toast+heat*0.0022);P.heating=true;}
-  else{P.heating=false;if(G.opts.cooling!=='jars'||G.map.interior){const rate=G.map.interior?0.004:(G.fireNear?0:0.0003);P.toast=Math.max(0,P.toast-rate*(G.flags.charm?2:1)*(hasTop('honey')?1.5:1));}}
+  else{P.heating=false;if(G.opts.cooling!=='jars'||G.map.interior){const rate=G.map.interior?0.004:(G.fireNear&&!easy()?0:0.0003);P.toast=Math.max(0,P.toast-rate*(G.flags.charm?2:1)*(hasTop('honey')?1.5:1));}}
   if(G.t%10===0)G.fireNear=fireOnScreen();
   audio.sizzle(P.heating?0.4+heat*0.3:0);audio.drone(toastRatio()>0.6?(toastRatio()-0.6)/0.4:0);
   G.alert=G.ents.some(e=>e.type==='enemy'&&!e.dead&&dist(e,P)<110&&(e.boss||e.mini||e.state==='windup'||e.state==='lunge'||e.state==='dive'||e.state==='swing'));
   if(P.toast>=P.cap&&!P.melting){
-    if(hasFollower('dot')&&!P.dotUsed){P.dotUsed=true;P.toast=P.cap*0.3;P.hurt=60;audio.sfx('glaze');puff(P.x+5,P.y+5,'#ffb6d9',14);say(["Dot smashes her spare jar over Puff just in time! 'That was my only one, so be careful!'"],null,'Dot');}
+    if((hasFollower('dot')||easy())&&!P.dotUsed){P.dotUsed=true;P.toast=P.cap*0.3;P.hurt=60;audio.sfx('glaze');puff(P.x+5,P.y+5,'#ffb6d9',14);say(["Dot smashes her spare jar over Puff just in time! 'That was my only one, so be careful!'"],null,'Dot');}
     else{P.melting=90;audio.sfx('melt');audio.sizzle(0);recordMelt();if(navigator.vibrate)try{navigator.vibrate([60,40,120]);}catch(e){}}}
   updateFollower();updateAmbience();
 }
@@ -1098,6 +1180,7 @@ function updateMelt(){P.melting--;if(P.melting<=0){P.melting=0;P.toast=0;G.death
 // ---------- mechanics: choices, shops, followers, items, world clock, gauntlet ----------
 function ask(title,opts,cb){G.choice={title,opts,idx:0,cb};pressed.up=0;pressed.down=0;pressed.a=0;pressed.b=0;}
 function hasFollower(id){return !!(G.F&&G.F.id===id&&!G.F.parked);}
+function tideHigh(){const t=(G.dayT%14400)/14400;return (t>0.1&&t<0.4)||(t>0.6&&t<0.9);}
 function nightAmount(){const t=(G.dayT%14400)/14400;return t<0.5?0:t<0.6?(t-0.5)/0.1:t<0.9?1:1-(t-0.9)/0.1;}
 function fmtTime(f){const s=Math.floor(f/60);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
 function inSteam(e){const cx=e.x+e.w/2,cy=e.y+e.h/2;return G.steam.some(s=>Math.hypot(s.x-cx,s.y-cy)<s.r);}
@@ -1171,6 +1254,7 @@ function updateMechanics(){
   for(const o of G.map.objs){if(o.type!=='block')continue;const onPlate=G.map.t[o.y]?.[o.x]==='o';const free=[[1,0],[-1,0],[0,1],[0,-1]].filter(([a,b])=>tileFree(o.x+a,o.y+b)).length;
     const dead=!onPlate&&free<4; // against any wall it can never be pushed back toward the plate
     o.stuckT=dead?(o.stuckT||0)+1:0;if(o.stuckT>180&&(o.x!==o.ox||o.y!==o.oy)){o.ax=(o.x-o.ox)*16;o.ay=(o.y-o.oy)*16;o.x=o.ox;o.y=o.oy;o.stuckT=0;refreshSolids();audio.sfx('push');G.banner={title:'BLOCK',text:'The block grinds back to where it started.',t:150};}}
+  const th=tideHigh();if(th!==G.lastTide){G.lastTide=th;if(G.map.objs.some(o=>o.type==='tide')){refreshSolids();if(th&&hitsWall(P.x,P.y,P.w,P.h)){const t=nearestFree(Math.floor((P.x+5)/T),Math.floor((P.y+5)/T));hopTo(t.i,t.j,12,true);P.soggy=600;audio.sfx('splash');}G.banner={title:'TIDE',text:th?'The tide is coming in. The pools are deep water now.':'The tide is going out. The pools are shallow again.',t:150};}}
   if(G.gauntlet)updateGauntlet();}
 function startGauntlet(){G.gauntlet={stage:1,t:0,spawnT:G.t+60};G.ents=G.ents.filter(e=>!e.boss&&!e.mini);say(["The plinths glow. Something heavy lands behind you..."]);}
 function updateGauntlet(){const g=G.gauntlet;g.t++;
@@ -1198,6 +1282,8 @@ function drawMap(){const m=G.map,cx=Math.round(G.cam.x),cy=Math.round(G.cam.y);c
     switch(o.type){
       case 'house':drawDonutHouse(o.x-cx,o.y-cy,o.style,G.t);break;
       case 'campfire':ctx.drawImage(CAMPFIRE,ox,oy);drawFlame(ox+3,oy-6,10,f);break;
+      case 'tide':if(tideHigh()){ctx.drawImage(tile('~',15,f,0),ox,oy);ctx.fillStyle='rgba(255,255,255,0.25)';ctx.fillRect(ox+2+(f?3:0),oy+5,5,1);}break;
+      case 'shell':ctx.fillStyle='#fff0c8';ctx.fillRect(ox+6,oy+9,4,3);ctx.fillStyle='#ffb6d9';ctx.fillRect(ox+7,oy+10,2,1);break;
       case 'curtain':for(let i=0;i<o.w;i++){drawFlame(ox+i*T+1,oy-6,14,(f+i)&1,toastRatio()>=0.5?0.55:1);}break;
       case 'seal':if(!G.flags[o.id]){drawShadow(ox+8,oy+14,8);ctx.drawImage(SEAL,ox,oy-2+Math.sin(G.t/9)*1.5);lights.push({x:ox+8,y:oy+6,r:14});}break;
       case 'coin':if(!o.got&&(o.drop||!G.taken[takenKey(o)])){ctx.drawImage(COIN[(G.t>>3)&1],ox+4,oy+4-(G.t>>3&1));}break;
@@ -1253,6 +1339,10 @@ function drawEnemy(e,x,y,f){const fl=e.flash>0;if(fl){ctx.save();ctx.filter='bri
     case 'slime':{const z=e.z||0;drawShadow(x+6,y+9,12-z*0.4);ctx.drawImage(SLIME[e.state==='hop'?1:f],x-2,y-7-z);lights.push({x:x+6,y:y+2-z,r:20});break;}
     case 'snowslime':{const z=e.z||0;drawShadow(x+6,y+9,12-z*0.4);ctx.drawImage(SNOWSLIME[e.state==='hop'?1:f],x-2,y-7-z);break;}
     case 'icebat':{drawShadow(x+6,y+14,8);ctx.drawImage(ICEBAT[(G.t>>2)&1],x-2,y-4+Math.sin(G.t/5)*1.5);break;}
+    case 'crab':{drawShadow(x+7,y+11,14);ctx.drawImage((e.face<0?CRAB_L:CRAB)[e.state==='lunge'?1:f],x-1+shakeX,y-5);break;}
+    case 'jelly':{drawShadow(x+6,y+12,8);ctx.drawImage(JELLY[(G.t>>3)&1],x-2,y-4+Math.sin(G.t/6)*1.5);break;}
+    case 'tent':{const up=Math.min(1,e.st/30);ctx.drawImage(TENT[e.st>30&&e.st<50?1:0],x-2,y-6-up*2);if(e.st<30){ctx.fillStyle='rgba(143,192,255,'+(0.6-up*0.4)+')';ctx.fillRect(x-2,y+6,16,3);}break;}
+    case 'kraken':{if(e.sub){ctx.fillStyle='rgba(143,192,255,0.6)';for(let k=0;k<3;k++)ctx.fillRect(x+2+k*7+((G.t>>3)&1),y+6+((G.t+k*5)>>4&1)*2,4,2);}else{drawShadow(x+11,y+20,26);ctx.drawImage(KRAKEN[f],x-1,y-6+Math.sin(G.t/9)*1.5);}break;}
     case 'marshal':{drawShadow(x+10,y+18,24);ctx.save();ctx.translate(x+10,y+9);ctx.scale(1.5,1.5);ctx.drawImage((e.face<0?MARSHAL_L:MARSHAL)[f],-8+(e.state==='windup'?shakeX:0),-9);ctx.restore();
       if(e.state==='windup'||e.state==='charge'){ctx.fillStyle='rgba(191,239,255,0.5)';ctx.fillRect(x-2,y+e.h+1,24,1);}break;}
     case 'bat':{drawShadow(x+6,y+14,8);ctx.drawImage(BAT[(G.t>>2)&1],x-2,y-4+Math.sin(G.t/5)*1.5);lights.push({x:x+6,y:y+2,r:16});break;}
@@ -1285,10 +1375,11 @@ function drawEnts(){const cx=Math.round(G.cam.x),cy=Math.round(G.cam.y);const f=
     if(e.hurt&&(G.t&2)&&!e.flash)continue;
     drawEnemy(e,x,y,f);
     if(P.carried===e){drawMallow(x-2,y+8,0,0,P.toast,'hurt',0,P.soggy?'soggy':undefined);}
+    if(e.boss3){ctx.fillStyle='#1a0d12';ctx.fillRect(x-7,y-18,36,4);ctx.fillStyle=e.sub?'#5a4a8a':'#c98ad8';ctx.fillRect(x-6,y-17,Math.round(34*e.hp/e.maxhp),2);}
     if(e.boss2){ctx.fillStyle='#1a0d12';ctx.fillRect(x-7,y-18,36,4);ctx.fillStyle='#bfefff';ctx.fillRect(x-6,y-17,Math.round(34*e.hp/e.maxhp),2);}
     if(e.boss){ctx.fillStyle='#1a0d12';ctx.fillRect(x-7,y-16,36,4);ctx.fillStyle=G.bossPhase===2?'#ff3b1f':'#ffd23f';ctx.fillRect(x-6,y-15,Math.round(34*e.hp/e.maxhp),2);}}
   if(P.prompt&&!G.msg&&!P.atk&&!P.roll&&!G.choice){const bx=Math.round(P.prompt.x-cx)-6,by=Math.round(P.prompt.y-cy)-16+Math.round(Math.sin(G.t/9)*1.5);ctx.fillStyle='#1a0d12';ctx.fillRect(bx-1,by-1,14,13);ctx.fillRect(bx+4,by+12,4,2);ctx.fillStyle=P.prompt.push?'#c9a0ff':'#ffb347';ctx.fillRect(bx,by,12,11);ctx.fillStyle='#1a0d12';ctx.font='8px "Press Start 2P", monospace';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(P.prompt.push?'>':'A',bx+6,by+2);}
-  for(const s of G.shots){const sx=Math.round(s.x-cx),sy=Math.round(s.y-cy);if(s.ice){ctx.fillStyle='#1a2a5a';ctx.fillRect(sx+2,sy,2,8);ctx.fillRect(sx+1,sy+1,4,5);ctx.fillStyle='#bfefff';ctx.fillRect(sx+2,sy+1,2,5);ctx.fillStyle='#ffffff';ctx.fillRect(sx+2,sy+1,1,2);}else{ctx.drawImage(FIREBALL[f],sx,sy);lights.push({x:s.x+3-cx,y:s.y+3-cy,r:14});}}
+  for(const s of G.shots){const sx=Math.round(s.x-cx),sy=Math.round(s.y-cy);if(s.ink){ctx.fillStyle='#2a1040';ctx.fillRect(sx,sy+1,6,4);ctx.fillRect(sx+1,sy,4,6);ctx.fillStyle='#5a3a7a';ctx.fillRect(sx+2,sy+2,2,2);}else if(s.ice){ctx.fillStyle='#1a2a5a';ctx.fillRect(sx+2,sy,2,8);ctx.fillRect(sx+1,sy+1,4,5);ctx.fillStyle='#bfefff';ctx.fillRect(sx+2,sy+1,2,5);ctx.fillStyle='#ffffff';ctx.fillRect(sx+2,sy+1,1,2);}else{ctx.drawImage(FIREBALL[f],sx,sy);lights.push({x:s.x+3-cx,y:s.y+3-cy,r:14});}}
   if(G.F){const F=G.F;const fx=Math.round(F.x-cx),fy=Math.round(F.y-cy);drawShadow(fx+5,fy+13,10);const moving=Math.hypot(P.x-F.x,P.y-F.y)>16&&!F.parked;drawMallow(fx-3,fy-3,P.dir,moving?(F.frame>>3)&3:0,F.toast,F.heating?'sad':'happy',moving?0:Math.sin(F.frame/16)*1.2);
     if(F.toast>0.05){ctx.fillStyle='#1a0d12';ctx.fillRect(fx-3,fy-8,16,3);ctx.fillStyle=F.toast>0.7?'#ff3b1f':'#deaa5a';ctx.fillRect(fx-2,fy-7,Math.round(14*F.toast),1);}}
   if(P.spearOut){const s=P.spearOut;ctx.save();ctx.translate(Math.round(s.x-cx)+5,Math.round(s.y-cy)+5);ctx.rotate(s.ret?G.t*0.6:[Math.PI,0,-Math.PI/2,Math.PI/2][s.dir]);ctx.drawImage(SPEAR,-8,-12,16,16);ctx.restore();}
@@ -1309,6 +1400,7 @@ function drawScene(){ctx.save();if(G.shake){ctx.translate((Math.random()-0.5)*G.
   ctx.beginPath();ctx.rect(0,0,W,H-HUD);ctx.clip();drawMap();drawEnts();drawAmbience();drawLights();
   if(G.map.interior||G.mapName==='cave'){ctx.fillStyle=G.mapName==='cave'?'rgba(20,10,40,0.25)':'rgba(255,200,120,0.08)';ctx.fillRect(0,0,W,H);}
   if(G.flags.bossFight&&G.bossPhase===2){ctx.fillStyle='rgba(30,0,10,'+(0.28+Math.sin(G.t/9)*0.06)+')';ctx.fillRect(0,0,W,H);}
+  if(G.ink>0){G.ink--;ctx.fillStyle='rgba(20,8,40,'+Math.min(0.85,G.ink/60)+')';ctx.fillRect(0,0,W,H);}
   drawDarkness();if(G.mapName==='overworld'){const n=nightAmount();if(n>0){ctx.fillStyle=`rgba(20,20,90,${0.18*n})`;ctx.fillRect(0,0,W,H);}}
   ctx.restore();}
 // cave darkness and night: a dark layer with a hole around Puff (bigger with the lamp) and soft holes around fires
@@ -1346,7 +1438,8 @@ function questList(){const fc=freedCount();const main={id:'main',name:'Free the 
   const q=[main,
     {id:'donut',name:'Honey Donut delivery',area:'village',status:G.q.donut===2?'done':G.q.donut===1?'active':'new',line:G.q.donut===2?'Granny got her donut. Glaze Charm earned.':G.q.donut===1?'Bring the Baker\'s honey donut to Granny (yellow house).':'Talk to the Baker in the blue donut house.'},
     {id:'sprinkle',name:'Nibs\' golden sprinkle',area:'woods',status:G.q.sprinkle>=3?'done':G.q.sprinkle?'active':'new',line:G.q.sprinkle>=3?'Returned. Nibs is thrilled.':G.q.sprinkle===2?'Bring the sprinkle back to Nibs by the village path.':G.q.sprinkle===1?'Cut the bushes by the pond, west of the path.':'A kid named Nibs by the village path lost something.'},
-    {id:'seals',name:'Marshmallow Seals',area:G.seals<1?'woods':G.seals<2?'cave':G.seals<4?'keep':'peaks',status:G.seals>=5?'done':G.seals?'active':'new',line:G.seals>=5?'All five found. Puff is positively fluffy.':`${G.seals} of 5 found. Hidden behind squeezes, flames, shelves, lava and ice.`},
+    {id:'seals',name:'Marshmallow Seals',area:G.seals<1?'woods':G.seals<2?'cave':G.seals<4?'keep':G.seals<5?'peaks':'coast',status:G.seals>=6?'done':G.seals?'active':'new',line:G.seals>=6?'All six found. Puff is positively fluffy.':`${G.seals} of 6 found. Behind squeezes, flames, shelves, lava, ice and tides.`},
+    {id:'coast',name:'Caramel Coast',area:'coast',status:G.items.compass?'done':G.visited.coast?'active':'new',line:G.items.compass?'The Kraken sleeps. Captain\'s Compass claimed.':G.visited.coast?'Cross the pools at low tide and board the Sugarplum.':'East of the woods. Hot sand, hotter crabs, and a wreck in the shallows.'},
     {id:'grotto',name:'Glaze Grotto',area:'grotto',status:G.items.boots?'done':G.visited.grotto?'active':G.flags.spear?'new':'locked',line:G.items.boots?'Sugar Boots claimed.':G.visited.grotto?'Freeze a path to the island for the Sugar Boots.':'A flame seals stairs east of the pond. The spear can douse it.'},
     {id:'peaks',name:'Frosted Peaks',area:'peaks',status:G.items.mitten?'done':G.visited.peaks?'active':'new',line:G.items.mitten?'The Frost Marshal is sugar dust. Mitten Charm claimed.':G.visited.peaks?'Slide to the plate in Sugar Glacier and face the Frost Marshal.':'West past the pond. Cold enough to stiffen a marshmallow.'},
     {id:'home',name:'Everyone home',area:'village',status:fc>=5?'done':fc?'active':'new',line:`${Math.min(fc,5)} of 5 buddies back in Donut Village. Visit them, or ask one along.`},
@@ -1372,8 +1465,10 @@ function drawHUD(){ctx.fillStyle='#17111c';ctx.fillRect(0,H-HUD,W,HUD);ctx.fillS
     text(lab,ix+2,H-21,col);if(has)ctx.drawImage(ic,ix+3,H-19);if(ix===182&&G.items.frost>0)text(String(G.items.frost),ix+12,H-10,'#fffaf0');}
   text('BUDS',208,H-22,'#b9a5c6');for(let i=0;i<6;i++){const id=BUDDIES[i];const bx=206+i*8;ctx.fillStyle='#3a2420';ctx.fillRect(bx,H-12,7,8);ctx.fillStyle=G.freed[id]?'#fffaf0':'#4a3756';ctx.fillRect(bx+1,H-11,5,6);ctx.fillStyle=G.freed[id]?'#1a0d12':'#2a2030';ctx.fillRect(bx+2,H-9,1,1);ctx.fillRect(bx+4,H-9,1,1);if(G.freed[id])ctx.fillRect(bx+2,H-7,3,1);}
   // top overlay: sprinkles, seals, optional timer
-  ctx.drawImage(COIN[0],W-44,3);text(String(G.coins),W-33,3,'#ffd23f');if(G.seals){ctx.drawImage(SEAL,W-96,0,12,12);text(G.seals+'/5',W-83,3,'#fffaf0');}
-  if(G.opts.timer)text(fmtTime(G.playT),4,3,'#b9a5c6');}
+  ctx.drawImage(COIN[0],W-44,3);text(String(G.coins),W-33,3,'#ffd23f');if(G.seals){ctx.drawImage(SEAL,W-96,0,12,12);text(G.seals+'/6',W-83,3,'#fffaf0');}
+  if(G.opts.timer)text(fmtTime(G.playT),4,3,'#b9a5c6');
+  if(G.items.compass&&G.mapName==='overworld'){const AREA_POS={village:[24,52],woods:[34,28],cave:[42,19],keep:[23,10],grotto:[18,41],peaks:[0,24],coast:[47,30]};const tgt=AREA_POS[goalArea()]||AREA_POS.village;const dx=tgt[0]*T-(P.x+5),dy=tgt[1]*T-(P.y+5);const d=Math.hypot(dx,dy);
+    if(d>96){const a=Math.atan2(dy,dx);const cx=W/2,cy=(H-HUD)/2;const r=Math.min(cx-14,cy-14);const ax=cx+Math.cos(a)*r,ay=cy+Math.sin(a)*r;ctx.save();ctx.translate(ax,ay);ctx.rotate(a);ctx.fillStyle='#1a0d12';ctx.beginPath();ctx.moveTo(8,0);ctx.lineTo(-5,-6);ctx.lineTo(-5,6);ctx.closePath();ctx.fill();ctx.fillStyle='#ffd23f';ctx.beginPath();ctx.moveTo(6,0);ctx.lineTo(-3,-4);ctx.lineTo(-3,4);ctx.closePath();ctx.fill();ctx.restore();}}}
 function drawChoice(){if(!G.choice)return;const c=G.choice;const tl=wrap(c.title,27);const h=12+tl.length*10+c.opts.length*11;const by=H-HUD-h-4;drawBox(8,by,W-16,h);
   tl.forEach((l,i)=>text(l,16,by+6+i*10,'#ffb347'));c.opts.forEach((o,i)=>text((i===c.idx?'> ':'  ')+o,20,by+8+tl.length*10+i*11,i===c.idx?'#fffaf0':'#b9a5c6'));
   tapZones=c.opts.map((o,i)=>({x:8,y:by+6+tl.length*10+i*11,w:W-16,h:11,cb:()=>{if(c.idx===i)pressed.a=1;else{c.idx=i;audio.sfx('menu');}}}));}
@@ -1389,18 +1484,18 @@ function pauseHeader(tab){const touch=document.body.classList.contains('touch');
   text((tab==='map'?'[MAP]':' MAP ')+' '+(tab==='quests'?'[QUESTS]':' QUESTS '),W/2,6,'#fffaf0','center');text((touch?'ROLL':'C')+': TOPPINGS   A: QUIT   <> TABS',W/2,16,'#b9a5c6','center');}
 function drawPause(){ctx.fillStyle='rgba(23,17,28,0.88)';ctx.fillRect(0,0,W,H-HUD);pauseHeader('map');
   // schematic map of Sugarfield
-  const areas={village:{x:76,y:150,w:104,h:22,n:'Donut Village'},woods:{x:76,y:110,w:104,h:30,n:'Toasty Woods'},cave:{x:184,y:114,w:68,h:22,n:'Cinder Cave'},keep:{x:92,y:66,w:72,h:34,n:'Ember Keep'},grotto:{x:2,y:114,w:72,h:22,n:'Glaze Grotto'},peaks:{x:2,y:66,w:84,h:30,n:'Frosted Peaks'}};
-  const vis={village:true,woods:G.visited.overworld,cave:G.visited.cave,keep:G.visited.castle,grotto:G.visited.grotto,peaks:G.visited.peaks||G.visited.glacier};
-  ctx.fillStyle='#4a3756';ctx.fillRect(127,100,2,52);ctx.fillRect(180,124,6,2);ctx.fillRect(72,124,4,2);
+  const areas={village:{x:76,y:150,w:104,h:22,n:'Donut Village'},woods:{x:76,y:110,w:104,h:30,n:'Toasty Woods'},cave:{x:184,y:114,w:68,h:22,n:'Cinder Cave'},keep:{x:92,y:66,w:72,h:34,n:'Ember Keep'},grotto:{x:2,y:114,w:72,h:22,n:'Glaze Grotto'},peaks:{x:2,y:66,w:84,h:30,n:'Frosted Peaks'},coast:{x:184,y:150,w:68,h:22,n:'Caramel Coast'}};
+  const vis={village:true,woods:G.visited.overworld,cave:G.visited.cave,keep:G.visited.castle,grotto:G.visited.grotto,peaks:G.visited.peaks||G.visited.glacier,coast:G.visited.coast||G.visited.wreck};
+  ctx.fillStyle='#4a3756';ctx.fillRect(127,100,2,52);ctx.fillRect(180,124,6,2);ctx.fillRect(72,124,4,2);ctx.fillRect(180,160,4,2);
   for(const k in areas){const a=areas[k];const on=vis[k];ctx.fillStyle=on?'#2e2440':'#1e1826';ctx.fillRect(a.x,a.y,a.w,a.h);ctx.fillStyle=on?'#ffb347':'#4a3756';ctx.fillRect(a.x,a.y,a.w,1);ctx.fillRect(a.x,a.y+a.h-1,a.w,1);ctx.fillRect(a.x,a.y,1,a.h);ctx.fillRect(a.x+a.w-1,a.y,1,a.h);
     if(on){ctx.font='8px "Press Start 2P", monospace';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillStyle='#e9d6c4';ctx.save();ctx.translate(a.x+a.w/2,a.y+a.h/2-3);ctx.scale(0.75,0.75);ctx.fillText(a.n,0,0);ctx.restore();}
     else text('?',a.x+a.w/2,a.y+a.h/2-4,'#4a3756','center');
     if(goalArea()===k&&(G.t>>4&1)){ctx.fillStyle='#ffd23f';ctx.fillRect(a.x+a.w-7,a.y-3,5,5);ctx.fillStyle='#ff3b1f';ctx.fillRect(a.x+a.w-6,a.y-2,3,3);}
     const side=questList().filter(q=>q.id!=='main'&&q.area===k&&q.status!=='done');if(side.length&&on){ctx.fillStyle='#1a0d12';ctx.fillRect(a.x+2,a.y-4,8,9);ctx.fillStyle=side.some(q=>q.status==='active')?'#ffd23f':'#8fc0ff';ctx.fillRect(a.x+3,a.y-3,6,7);ctx.fillStyle='#1a0d12';ctx.fillRect(a.x+5,a.y-2,2,3);ctx.fillRect(a.x+5,a.y+2,2,1);}}
-  const here=G.map.interior||(G.mapName==='overworld'&&P.y>40*T)?'village':G.mapName==='overworld'?'woods':G.mapName==='cave'?'cave':G.mapName==='grotto'?'grotto':(G.mapName==='peaks'||G.mapName==='glacier')?'peaks':'keep';const a=areas[here];
+  const here=G.map.interior||(G.mapName==='overworld'&&P.y>40*T)?'village':G.mapName==='overworld'?'woods':G.mapName==='cave'?'cave':G.mapName==='grotto'?'grotto':(G.mapName==='peaks'||G.mapName==='glacier')?'peaks':(G.mapName==='coast'||G.mapName==='wreck')?'coast':'keep';const a=areas[here];
   drawMallow(a.x+2,a.y+a.h-14,0,0,P.toast/P.cap,'ok');
   wrap(G.goal,29).slice(0,3).forEach((l,i)=>text(l,W/2,28+i*10,'#fffaf0','center'));
-  text('Buddies '+freedCount()+'/6 Seals '+G.seals+'/5 Melted '+G.deaths+'x',W/2,178,'#b9a5c6','center');
+  text('Buddies '+freedCount()+'/6 Seals '+G.seals+'/6 Melted '+G.deaths+'x',W/2,178,'#b9a5c6','center');
   text((hard()?'HARD':'NORMAL')+'  '+(nightAmount()>0.5?'Night':'Day')+' '+fmtTime(G.playT)+'  '+(G.follower?'+'+BUDDY_NAMES[G.follower]:'Alone')+(G.ngplus?'  NG+':''),W/2,188,'#b9a5c6','center');
   }
 
@@ -1429,7 +1524,7 @@ function drawHelp(){const touch=document.body.classList.contains('touch');ctx.fi
   ['Fire TOASTS you. Full = melt.','Jars, water, houses cool you.','Soggy Puff cannot be toasted.','Half toasted: slow but tough.'].forEach((l,i)=>text(l,14,138+i*11,'#e9d6c4'));
   if(G.t>>4&1)text(touch?'TAP OR A TO CLOSE':'A OR ENTER TO CLOSE',W/2,H-16,'#ffb347','center');tapZones=[{x:0,y:0,w:W,h:H,cb:()=>{pressed.a=1;}}];}
 function menuItems(){const it=[];if(G.hasSave)it.push({id:'cont',label:'CONTINUE'});it.push({id:'new',label:'NEW GAME'});if(G.savedCleared)it.push({id:'ngp',label:'NEW GAME+'});it.push({id:'help',label:'HOW TO PLAY'});if(G.hasSave)it.push({id:'erase',label:'ERASE SAVE'});
-  it.push({id:'diff',label:'DIFFICULTY: '+(hard()?'HARD':'NORMAL')});it.push({id:'timer',label:'TIMER: '+(G.opts.timer?'ON':'OFF')});it.push({id:'cool',label:'COOLING: '+(G.opts.cooling==='jars'?'JARS ONLY':'NORMAL')});
+  it.push({id:'diff',label:'DIFFICULTY: '+(hard()?'HARD':easy()?'EASY':'NORMAL')});it.push({id:'timer',label:'TIMER: '+(G.opts.timer?'ON':'OFF')});it.push({id:'cool',label:'COOLING: '+(G.opts.cooling==='jars'?'JARS ONLY':'NORMAL')});
   if(document.body.classList.contains('touch')){const t=touchOpts();it.push({id:'bsize',label:'BUTTONS: '+['SMALL','NORMAL','LARGE'][t.size]});it.push({id:'hand',label:'LAYOUT: '+(t.left?'LEFT-HANDED':'RIGHT-HANDED')});it.push({id:'swipe',label:'SWIPE ROLL: '+(t.swipe?'ON':'OFF')});}return it;}
 function touchOpts(){if(!G.opts.touch)G.opts.touch={size:1,left:false,swipe:true};return G.opts.touch;}
 function applyTouchOpts(){const t=touchOpts();document.documentElement.style.setProperty('--btnscale',[0.85,1,1.2][t.size]);document.body.classList.toggle('lefty',!!t.left);if(typeof fit==='function')fit();}
@@ -1486,7 +1581,7 @@ function step(){G.t++;pollGamepad();
       else if(id==='new'){if(G.hasSave)ask('Start a new game? Your saved game will be replaced at the first auto-save.',['Keep my save','Start new'],i=>{if(i===1)startNew();});else startNew();}
       else if(id==='erase'){ask('Erase the saved game? This cannot be undone.',['Keep it','Erase'],i=>{if(i===1){try{localStorage.removeItem(SAVE_KEY);}catch(e){}G.hasSave=false;G.savedCleared=false;G.menu=0;audio.sfx('douse');}});}
       else if(id==='ngp')newGame(true);
-      else if(id==='diff'){G.diff=hard()?'normal':'hard';audio.sfx('menu');saveOpts();}else if(id==='timer'){G.opts.timer=!G.opts.timer;audio.sfx('menu');saveOpts();}else if(id==='cool'){G.opts.cooling=G.opts.cooling==='jars'?'normal':'jars';audio.sfx('menu');saveOpts();}
+      else if(id==='diff'){G.diff=G.diff==='normal'?'hard':G.diff==='hard'?'easy':'normal';audio.sfx('menu');saveOpts();}else if(id==='timer'){G.opts.timer=!G.opts.timer;audio.sfx('menu');saveOpts();}else if(id==='cool'){G.opts.cooling=G.opts.cooling==='jars'?'normal':'jars';audio.sfx('menu');saveOpts();}
       else if(id==='bsize'){const t=touchOpts();t.size=(t.size+1)%3;applyTouchOpts();audio.sfx('menu');saveOpts();}else if(id==='hand'){const t=touchOpts();t.left=!t.left;applyTouchOpts();audio.sfx('menu');saveOpts();}else if(id==='swipe'){const t=touchOpts();t.swipe=!t.swipe;audio.sfx('menu');saveOpts();}}
     pressed.b=0;pressed.c=0;pressed.item=0;return;}
   if(G.scene==='intro'){G.introT++;if(justPressed('start')){newGame();return;}

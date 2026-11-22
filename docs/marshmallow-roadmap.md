@@ -18,7 +18,7 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 - [x] Ember Keep + Pyre Lord, three wings of puzzles (Nov 7-8)
 - [x] Glaze Grotto, optional dungeon (Nov 9)
 - [x] Frosted Peaks region: snow, ice sliding, cold meter that inverts the fire rule, Snow Slime and Icicle Bat, Sugar Glacier dungeon, Frost Marshal boss, Mitten Charm, Seal 5 (Nov 20)
-- [ ] Caramel Coast region: tide pools that cycle with the clock, Crab Knights, a shipwreck dungeon, Kraken boss, Seal 6
+- [x] Caramel Coast region: tide pools on the clock, Crab Knights, Caramel Jellies, the Sugarplum wreck, Kraken boss, Captain's Compass, Seal 6 (Nov 22)
 - [ ] Sky Bakery (late game): wind currents, floating platforms, the Oven Lord
 - [ ] Rewritten throne room finale with a two-stage Pyre Lord arena
 
@@ -28,7 +28,7 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 - [x] Quest log on the pause screen with main and side quests, markers on the map (Nov 21)
 - [ ] Badges / achievements wall in Puff's home
 - [ ] Save slots (3) and a stats page per slot
-- [ ] Easy mode and assist toggles
+- [x] Easy mode (Nov 22); assist toggles still open
 
 ### C. Presentation
 - [x] Auto-tiled terrain, outlined sprites, fire glow, room camera, reactive music, spatial sfx
@@ -40,10 +40,8 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 - [ ] Title attract mode
 
 ### D. Structure and polish backlog (smaller items)
-- [ ] Villagers who notice progress, night lines
 - [ ] Key rebinding
 - [ ] Reduced-motion and flash safety
-- [ ] Vent corridor timing so a non-stop run always crosses a live vent
 - [ ] Sprinkle economy: raise drops or lower sharpen/glaze prices
 - [ ] Replace generated cliffs/water corner tiles with rounded corners
 
@@ -59,9 +57,11 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 ## Notes for the next passes
 - Sliding state must reset on map change (fixed Nov 20); any new movement state needs the same reset in loadMap.
 - Peaks enemies use `cold` instead of `heat`; `chill()` is the cold counterpart of `hurtPlayer()`.
+- Tide objects sit on shallow tiles and become solid at high tide; refreshSolids runs on every tide change and Puff is hopped out if caught.
 - Bosses that must respawn on re-entry use a trigger with a `*Met` flag (taunt once) and are skipped in loadMap.
 
 ## Log
+- Nov 22: Caramel Coast + Sugarplum wreck + Kraken, tide system, compass, Seal 6; Easy mode; villager progress lines; vent timing
 - Nov 21: quest log with map markers; light budget (16 lights, merged, small ones skip darkness holes); cooled keep after the boss; cornered-block auto reset
 - Nov 20 (pass 2): Toppings system with seven toppings, shops and crafting; first-contact tips; charge ring; auto-pause and haptics
 - Nov 20: Frosted Peaks + Sugar Glacier + Frost Marshal, cold meter, ice sliding, Mitten Charm, Seal 5; roadmap created; daily pass now builds

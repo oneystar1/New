@@ -58,6 +58,14 @@ play the published page.
   menu from the pause screen with C.
 - **Day and night.** Embers are faster at night, shops close, and the lamp
   lights dark caves and dark nights. Sleep at home to skip to morning.
+- **Caramel Coast.** East of the woods: hot sand, palms and the sea. Tide
+  pools are shallow at low tide (morning and dusk) and deep at high tide
+  (midday and night); they are the only way to the wrecked Sugarplum and to
+  Seal 6 on an islet. Crab Knights sidestep and pinch, Caramel Jellies drift
+  in the shallows. In the wreck, push a crate across the flooded hold at low
+  tide to open the cabin, then face the Kraken: it surfaces to spit blinding
+  ink and submerges to slap tentacles up through the deck. Reward: the
+  Captain's Compass, an on-screen arrow toward your goal in the overworld.
 - **Frosted Peaks.** West past the pond: snow, pines, frozen lakes you slide
   across, and a COLD meter that replaces toast. Away from fire Puff stiffens;
   frozen stiff he moves at half speed and cannot roll. Campfires thaw him.
@@ -69,7 +77,7 @@ play the published page.
   until you have the spear: a vent corridor, a block puzzle, a squeeze-crack
   side room, a plate for Mallo, and a lava island you cross on frost crust for
   the Sugar Boots (faster rolls). Five Frost Jars inside.
-- **Five Marshmallow Seals** are hidden behind the mechanics above. Each
+- **Six Marshmallow Seals** are hidden behind the mechanics above. Each
   lengthens the toast meter.
 - **Cooling** is slow outdoors and stops entirely while any fire is on screen,
   so jars, water and houses matter. Each spear hit on the Pyre Lord vents
@@ -101,6 +109,9 @@ play the published page.
 
 First-contact tips explain Embers and knights, the frost sweep shows a charge
 ring, and the game pauses itself when the app goes to the background.
+
+Difficulty cycles Normal, Hard, Easy (70% heat, cooling never pauses, one
+free save from melting per area). Villagers comment on your latest milestone.
 
 Progress saves to the browser automatically.
 
