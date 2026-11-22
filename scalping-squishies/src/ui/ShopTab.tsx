@@ -1,6 +1,6 @@
 import { useGame } from '../engine/store';
 import { PRODUCTS, CLOUT_COSTS } from '../engine/data/shop';
-import { PASS_TIERS, PASS_SEASON_NAME, PASS_XP_PER_TIER } from '../engine/data/pass';
+import { passTiersFor, currentPassSeason, PASS_XP_PER_TIER } from '../engine/data/pass';
 import { passTierReached, isVip, isAdFree } from '../engine/sim';
 import { AD_RULES, type AdPlacement } from '../monetization';
 import { formatCash, formatDuration, formatNumber } from '../engine/math';
@@ -41,7 +41,9 @@ export function ShopTab() {
 
   const starter = PRODUCTS.find((p) => p.kind === 'starter')!;
   const vipProd = PRODUCTS.find((p) => p.kind === 'vip')!;
-  const passProd = PRODUCTS.find((p) => p.kind === 'pass')!;
+  const passSeason = currentPassSeason(now);
+  const passProd = PRODUCTS.find((p) => p.id === passSeason.productId) ?? PRODUCTS.find((p) => p.kind === 'pass')!;
+  const passTiers = passTiersFor(passSeason.finalItem);
   const noAdsProd = PRODUCTS.find((p) => p.kind === 'noAds')!;
 
   return (
@@ -103,18 +105,18 @@ export function ShopTab() {
         </div>
       </div>
 
-      <h2 className="sec">{PASS_SEASON_NAME}</h2>
+      <h2 className="sec">{passSeason.name} · ends {new Date(passSeason.endsAt - 1).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</h2>
       <div className="card">
         <div className="row between">
           <div>
             <h3>Tier {tierReached}/30 · {s.pass.xp} XP</h3>
-            <div className="sub">Earn XP from daily missions. {s.pass.premium ? 'Premium unlocked.' : passProd.blurb}</div>
+            <div className="sub">{passSeason.blurb} Earn XP from daily missions. {s.pass.premium ? 'Premium unlocked.' : passProd.blurb}</div>
           </div>
           {!s.pass.premium && <button className="btn primary sm" onClick={() => void buyProduct(passProd.id)}>{provider?.iap.getPrice(passProd.id)}</button>}
         </div>
         <div className="progress mt"><i style={{ width: `${((s.pass.xp % PASS_XP_PER_TIER) / PASS_XP_PER_TIER) * 100}%` }} /></div>
         <div className="pass-track mt">
-          {PASS_TIERS.map((t) => {
+          {passTiers.map((t) => {
             const reached = tierReached >= t.tier;
             const fDone = s.pass.claimedFree.includes(t.tier);
             const pDone = s.pass.claimedPremium.includes(t.tier);

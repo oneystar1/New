@@ -6,7 +6,7 @@ import { EVENTS, EVENT_WEIGHTS } from './data/events';
 import { ITEMS, ALL_ITEMS, ITEM_BY_ID, RARITY_ORDER, RARITY_SHELF_BONUS, itemsForStore, VARIANTS, VARIANT_WEIGHTS, VARIANT_BONUS_MULT, VARIANT_VALUE_MULT, SET_BONUS, FAMILY_SET_BONUS, shelfKey, parseShelfKey } from './data/items';
 import { ACHIEVEMENTS } from './data/achievements';
 import { MISSION_POOL } from './data/missions';
-import { PASS_TIERS } from './data/pass';
+import { PASS_TIERS, passTiersFor, currentPassSeason } from './data/pass';
 import { VIP } from './data/shop';
 import { AD_RULES } from '../monetization/provider';
 import { CITY_BY_ID, CITIES } from './data/cities';
@@ -240,10 +240,12 @@ export interface TickResult {
   overtook: string[];
   seasonStarted: string | null;
   seasonEnded: { id: string; clout: number } | null;
+  /** A new Hustle Pass season began this tick (its number). */
+  passSeasonStarted: number | null;
 }
 
 export function tick(s: GameState, dt: number, now: number, rand: () => number = Math.random): TickResult {
-  const res: TickResult = { completedCycles: 0, eventStarted: null, achievementsUnlocked: [], offerArrived: null, calledOut: false, tutorialDone: [], overtook: [], seasonStarted: null, seasonEnded: null };
+  const res: TickResult = { completedCycles: 0, eventStarted: null, achievementsUnlocked: [], offerArrived: null, calledOut: false, tutorialDone: [], overtook: [], seasonStarted: null, seasonEnded: null, passSeasonStarted: null };
   if (dt <= 0) return res;
   const m = computeModifiers(s, now);
   s.stats.playSeconds += dt;
@@ -304,6 +306,8 @@ export function tick(s: GameState, dt: number, now: number, rand: () => number =
   if (season.ended) res.seasonEnded = { id: season.ended.season.id, clout: season.ended.clout };
   // Trade board rolls once a day from whatever dupes are on the shelf.
   rollTrades(s, now, rand);
+  // Hustle Pass seasons rotate on the calendar; premium carries only for seasons actually bought.
+  if (tickPassSeason(s, now)) res.passSeasonStarted = s.pass.season;
 
   // Tutorial steps complete themselves from state.
   for (const t of TUTORIAL) {
@@ -686,6 +690,14 @@ export function addBoost(s: GameState, id: string, label: string, mult: number, 
 // Season pass
 // ---------------------------------------------------------------------------
 
+/** Move the pass to the calendar's season if it changed. Returns true on a rotation. */
+export function tickPassSeason(s: GameState, now: number): boolean {
+  const cur = currentPassSeason(now);
+  if (s.pass.season === cur.season) return false;
+  s.pass = { season: cur.season, xp: 0, premium: s.pass.premiumSeasons.includes(cur.season), claimedFree: [], claimedPremium: [], premiumSeasons: s.pass.premiumSeasons };
+  return true;
+}
+
 export function passTierReached(s: GameState): number {
   let t = 0;
   for (const tier of PASS_TIERS) if (s.pass.xp >= tier.xp) t = tier.tier;
@@ -693,7 +705,7 @@ export function passTierReached(s: GameState): number {
 }
 
 export function claimPassTier(s: GameState, tier: number, premium: boolean, now: number): PullView[] | null {
-  const def = PASS_TIERS.find((t) => t.tier === tier);
+  const def = passTiersFor(currentPassSeason(now).finalItem).find((t) => t.tier === tier);
   if (!def || passTierReached(s) < tier) return null;
   if (premium && !s.pass.premium) return null;
   const list = premium ? s.pass.claimedPremium : s.pass.claimedFree;

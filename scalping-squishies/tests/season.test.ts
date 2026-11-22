@@ -159,3 +159,39 @@ describe('season play', () => {
     expect(migrate({ seasonSplashSeen: ['dohlidays'] }).seasonSplashSeen).toEqual(['dohlidays']);
   });
 });
+
+describe('hustle pass seasons', () => {
+  it('rotates every two months from the launch epoch and names seasons by theme', async () => {
+    const { currentPassSeason, passTiersFor, PASS_THEMES } = await import('../src/engine/data/pass');
+    const s1 = currentPassSeason(Date.UTC(2026, 10, 25));
+    expect(s1).toMatchObject({ season: 1, productId: 'ss_pass', finalItem: 'doh_holo' });
+    expect(s1.endsAt).toBe(Date.UTC(2027, 0, 1));
+    const s2 = currentPassSeason(Date.UTC(2027, 0, 1));
+    expect(s2).toMatchObject({ season: 2, productId: 'ss_pass_s2', finalItem: 'sq_chrome' });
+    expect(currentPassSeason(Date.UTC(2027, 1, 28)).season).toBe(2);
+    expect(currentPassSeason(Date.UTC(2027, 2, 1)).season).toBe(3);
+    const s7 = currentPassSeason(Date.UTC(2027, 10, 1));
+    expect(s7.season).toBe(7);
+    expect(s7.finalItem).toBe(PASS_THEMES[0].finalItem); // themes repeat, numbers keep counting
+    expect(passTiersFor('sq_chrome')[29].premium).toEqual({ kind: 'item', itemId: 'sq_chrome' });
+    expect(currentPassSeason(Date.UTC(2026, 9, 1)).season).toBe(1); // before the epoch still season 1
+  });
+  it('the tick resets the track on rotation and premium carries only for seasons bought', async () => {
+    const { tickPassSeason, claimPassTier } = await import('../src/engine/sim');
+    const s = initialState(Date.UTC(2026, 10, 25));
+    s.pass.xp = 3000; s.pass.premium = true; s.pass.premiumSeasons = [1]; s.pass.claimedFree = [1, 2];
+    expect(tickPassSeason(s, Date.UTC(2026, 11, 20))).toBe(false);
+    const got = claimPassTier(s, 30, true, Date.UTC(2026, 11, 20))!;
+    expect(got[0].item.id).toBe('doh_holo');
+    expect(tickPassSeason(s, Date.UTC(2027, 0, 2))).toBe(true);
+    expect(s.pass).toMatchObject({ season: 2, xp: 0, premium: false, claimedFree: [], claimedPremium: [], premiumSeasons: [1] });
+    s.pass.premiumSeasons.push(2);
+    s.pass.premium = true;
+    s.pass.xp = 3000;
+    expect(claimPassTier(s, 30, true, Date.UTC(2027, 0, 2))![0].item.id).toBe('sq_chrome');
+    tickPassSeason(s, Date.UTC(2027, 2, 2));
+    expect(s.pass.season).toBe(3);
+    expect(s.pass.premium).toBe(false);
+    expect(migrate({ pass: { season: 1, xp: 5, premium: true, claimedFree: [], claimedPremium: [] } }).pass.premiumSeasons).toEqual([1]);
+  });
+});

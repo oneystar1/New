@@ -371,3 +371,13 @@ up. You always keep one copy, seasonal items are never on the board, and
 when every standard at that tier is owned the offer is a missing variant
 slot instead. Accepting swaps the copies, counts as a trade for stats,
 and shows the piece like a pull.
+
+**Hustle Pass seasons.** Seasons run two calendar months from the
+November 2026 epoch and rotate forever through six themes (Kube Fever,
+Nana Rush, Glow Up, Bot Summer, Factory Season, Smusher Season), each
+with its own tier-30 premium exclusive. The season number keeps
+counting while the themes repeat. On rotation the track resets to tier 0
+with nothing claimed; premium is per season (`ss_pass` for season 1, the
+consumable `ss_pass_s<N>` after), and a restored purchase for another
+season is remembered without unlocking the current one. The Shop shows
+the live season's name, blurb, end date and product only.

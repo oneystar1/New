@@ -28,6 +28,8 @@ export const PRODUCTS: Product[] = [
   { id: 'ss_noads', kind: 'noAds', name: 'Remove Ads', blurb: 'No interstitials, ever. Rewarded boosts become free instant claims.', icon: '🚫', priceUsd: 4.99, oneTime: true },
   { id: 'ss_vip', kind: 'vip', name: 'VIP Flipper', blurb: 'Weekly: x2 permanent profit, +4h offline cap, 20 Clout/day, no ads.', icon: '👑', priceUsd: 4.99, periodDays: 7, badge: 'Most popular' },
   { id: 'ss_pass', kind: 'pass', name: 'Hustle Pass Premium', blurb: 'Unlock the premium track: 3x rewards and the exclusive Holo Kube at tier 30.', icon: '🎫', priceUsd: 9.99, oneTime: true },
+  // Later pass seasons: consumables so each season can be bought once. Only the live season's product is shown.
+  ...[2, 3, 4, 5, 6].map((n) => ({ id: `ss_pass_s${n}`, kind: 'pass' as const, name: `Hustle Pass Premium (Season ${n})`, blurb: 'Unlock this season\'s premium track: 3x rewards and the exclusive item at tier 30.', icon: '🎫', priceUsd: 9.99, oneTime: true })),
   { id: 'ss_clout_s', kind: 'clout', name: 'Pocket Clout', blurb: '120 Clout', icon: '💠', priceUsd: 1.99, clout: 120 },
   { id: 'ss_clout_m', kind: 'clout', name: 'Bag of Clout', blurb: '700 Clout', icon: '💠', priceUsd: 9.99, clout: 700, badge: '+17%' },
   { id: 'ss_clout_l', kind: 'clout', name: 'Crate of Clout', blurb: '1,600 Clout', icon: '💠', priceUsd: 19.99, clout: 1600, badge: '+33%' },

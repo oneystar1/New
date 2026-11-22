@@ -275,9 +275,12 @@ export type Reward =
 export interface PassState {
   season: number;
   xp: number;
+  /** Premium unlocked for the current season. */
   premium: boolean;
   claimedFree: number[];
   claimedPremium: number[];
+  /** Every season whose premium track was bought (restores survive a rotation). */
+  premiumSeasons: number[];
 }
 
 export interface IapState {

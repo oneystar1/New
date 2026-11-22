@@ -101,3 +101,13 @@ npm run build && npm run smoke
 npm run test:server
 SS_ADMIN_TOKEN=x npm run server   # then: SS_API_URL=http://localhost:8787 SS_ADMIN_TOKEN=x npm run dashboard
 ```
+
+## 5. Release preflight
+
+`npm run preflight` checks what App Review and the first launch trip
+over: icon assets, privacy and support pages, the support email
+variable, every product id in `shop.ts` documented for App Store Connect,
+the server's consumable rule, bundle id consistency across Capacitor,
+fastlane and docs, seasonal windows that do not overlap, pass themes,
+and leftover TODOs. CI prints it on every push (report only); run
+`npm run preflight -- --strict` before a store build to make it a gate.

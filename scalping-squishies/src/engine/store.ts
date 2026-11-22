@@ -335,6 +335,7 @@ export const useGame = create<GameStore>((set, get) => {
       if (res.offerArrived) { toast(`${res.offerArrived.buyer} messaged you about your ${ITEM_BY_ID[res.offerArrived.itemId]?.name ?? 'listing'}. Tap to open Messages.`, '💬', 'info', 'deals'); sfx.message(); }
       if (res.seasonStarted) { const sd = SEASON_BY_ID[res.seasonStarted]; toast(`${sd.name} has started! Seasonal items drop now.`, sd.icon, 'good', 'hunt'); }
       if (res.seasonEnded) { const sd = SEASON_BY_ID[res.seasonEnded.id]; toast(`${sd.name} is over. Leftover ${sd.tokenName} became ${res.seasonEnded.clout} Clout.`, sd.icon, 'info'); }
+      if (res.passSeasonStarted) toast(`Hustle Pass Season ${res.passSeasonStarted} has started. Tiers reset, premium is per season.`, '🎫', 'info', 'shop');
       if (res.calledOut) { toast('CALLED OUT. The group posted your listings. Profit x0.4 for 3 min.', '📸', 'bad'); sfx.calledOut(); fx({ kind: 'shake' }); fx({ kind: 'flash', color: '#ff6b6b' }); }
       for (const id of res.tutorialDone) { const t = TUTORIAL.find((x) => x.id === id); toast(`Tutorial: ${t?.text} (+${t?.clout} Clout)`, '✅', 'good'); sfx.achievement(); }
       for (const id of res.overtook) { const r = RANKED_RIVALS.find((x) => x.id === id); toast(`You passed ${r?.name} in the local rankings! +${r?.clout} Clout`, r?.icon ?? '🏆', 'rare'); sfx.rare(); fx({ kind: 'confetti', intensity: 1 }); }
@@ -753,7 +754,14 @@ export function applyProduct(s: GameState, productId: string, now: number): void
       s.iap.adFreeUntil = Math.max(s.iap.adFreeUntil, now + 7 * 86400_000);
       break;
     case 'vip': s.iap.vipUntil = Math.max(s.iap.vipUntil, now) + (prod.periodDays ?? 7) * 86400_000; break;
-    case 'pass': s.pass.premium = true; break;
+    case 'pass': {
+      // ss_pass is season 1; ss_pass_s<N> is season N. A restored purchase for another season is remembered, not applied now.
+      const m = /^ss_pass_s(\d+)$/.exec(prod.id);
+      const season = m ? Number(m[1]) : 1;
+      if (!s.pass.premiumSeasons.includes(season)) s.pass.premiumSeasons.push(season);
+      if (season === s.pass.season) s.pass.premium = true;
+      break;
+    }
     default: break;
   }
 }

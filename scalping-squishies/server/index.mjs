@@ -231,7 +231,7 @@ export function computeStats(db, days, now = Date.now()) {
 
 /** Consumable product ids (Clout packs, bundles) vs lifetime/subscription. */
 export function isConsumable(productId) {
-  return /^ss_clout_|^ss_bundle_/.test(productId);
+  return /^ss_clout_|^ss_bundle_|^ss_pass_s\d+$/.test(productId);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

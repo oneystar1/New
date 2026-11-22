@@ -18,7 +18,8 @@
     "cap:sync": "npm run build && npx cap sync",
     "dashboard": "node tools/dashboard.mjs",
     "icons": "node tools/icons.mjs",
-    "shots:store": "node tools/store-shots.mjs"
+    "shots:store": "node tools/store-shots.mjs",
+    "preflight": "node tools/preflight.mjs"
   },
   "license": "MIT",
   "dependencies": {

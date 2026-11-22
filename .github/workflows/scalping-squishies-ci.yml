@@ -37,6 +37,10 @@ jobs:
       - run: npm run test:server
       - name: Balance guardrails (8h greedy bot)
         run: npm run balance -- 8 --check
+      - name: Release preflight (report only)
+        env:
+          VITE_SUPPORT_EMAIL: ${{ vars.SS_SUPPORT_EMAIL }}
+        run: npm run preflight
       - name: Build
         env:
           VITE_API_URL: ${{ vars.SS_API_URL }}

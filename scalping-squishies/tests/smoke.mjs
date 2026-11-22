@@ -35,9 +35,11 @@ try {
   await page.waitForSelector('.coach');
   await page.waitForSelector('.shelf', { timeout: 15000 });
   await shot('00b-tour.png');
-  for (let i = 0; i < 70; i++) await page.locator('.shelf').dispatchEvent('pointerdown', { clientX: 200, clientY: 400 });
+  for (let i = 0; i < 40; i++) await page.locator('.shelf').dispatchEvent('pointerdown', { clientX: 200, clientY: 400 });
   await page.waitForTimeout(300);
-  await shot('01-hunt.png');
+  await shot('01-hunt.png'); // before the meter fills, so the capture is the shelf and not the pull modal
+  for (let i = 0; i < 30; i++) await page.locator('.shelf').dispatchEvent('pointerdown', { clientX: 200, clientY: 400 });
+  await page.waitForTimeout(300);
   if (await page.locator('.overlay .btn.primary').count()) await page.locator('.overlay .btn.primary').first().click();
   await tab('Routes');
   for (let i = 0; i < 6; i++) { await page.locator('.card .btn.primary').first().click(); await page.waitForTimeout(50); }

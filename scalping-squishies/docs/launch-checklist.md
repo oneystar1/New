@@ -21,8 +21,10 @@ What is done, what you do, and what still needs code.
       (change in `capacitor.config.ts` if you want another)
 - [ ] In-app purchases in App Store Connect with the exact ids in
       `src/engine/data/shop.ts`: `ss_starter`, `ss_noads`, `ss_pass`
-      (non-consumable), `ss_vip` (auto-renewable weekly, 3-day trial),
-      `ss_clout_s/m/l/xl/xxl`, `ss_bundle_drop` (consumable)
+      (non-consumable), `ss_pass_s2` … `ss_pass_s6` (consumable, one per later
+      pass season; `ss_pass_s2` must exist before Jan 1), `ss_vip` (auto-renewable weekly, 3-day trial),
+      `ss_clout_s`, `ss_clout_m`, `ss_clout_l`, `ss_clout_xl`, `ss_clout_xxl`,
+      `ss_bundle_drop` (consumable)
 - [ ] RevenueCat project: iOS app, public SDK key into `VITE_RC_IOS_KEY`,
       entitlements `noads`, `vip`, `pass`, webhook to the backend
 - [ ] AdMob account: app id into `ios/App/App/Info.plist` (`GADApplicationIdentifier`),
