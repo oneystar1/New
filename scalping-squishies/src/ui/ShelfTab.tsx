@@ -20,6 +20,7 @@ export function ShelfTab() {
   const watchAd = useGame((g) => g.watchAd);
   const [fam, setFam] = useState<ItemFamily | 'all' | 'sets' | 'season' | 'trades'>('all');
   const acceptTradeOffer = useGame((g) => g.acceptTradeOffer);
+  const postWantedAd = useGame((g) => g.postWantedAd);
   const [sel, setSel] = useState<string | null>(null);
   const m = computeModifiers(s, now);
   const slots = ITEMS.length * VARIANTS.length;
@@ -86,6 +87,15 @@ export function ShelfTab() {
             <h3>Trade board</h3>
             <div className="sub">Collectors in the group swap pieces you are missing for your duplicates. Three offers a day, you always keep one copy, and nobody trades up more than one tier.</div>
           </div>
+          {s.trades.wanted ? (
+            <div className="card row" style={{ borderColor: 'var(--gold)' }}>
+              <div className="ico-lg">📌</div>
+              <div className="grow"><b>Wanted: {ITEM_BY_ID[s.trades.wanted.itemId]?.name}</b><div className="sub">Posted {s.trades.wanted.postedOn}. A collector shows up within three days if you hold a dupe near its tier, for one copy more than usual.</div></div>
+              <button className="btn sm ghost" onClick={() => postWantedAd(null)}>Take down</button>
+            </div>
+          ) : (
+            <div className="card sub">📌 No wanted post. Open any piece you do not own and post it; one at a time.</div>
+          )}
           {openTrades.length === 0 && (
             <div className="card center sub">{tradeableDupes(s).length === 0 ? 'No duplicates on the shelf yet. Pull a few and the offers start.' : s.trades.offers.length ? 'All traded. New offers tomorrow.' : 'The board rolls at midnight.'}</div>
           )}
@@ -97,7 +107,7 @@ export function ShelfTab() {
             const can = have >= o.giveQty + 1;
             return (
               <div className="card" key={o.id}>
-                <div className="row"><span style={{ fontSize: 22 }}>{o.icon}</span><div className="grow"><b>{o.collector}</b><div className="sub">{o.line}</div></div></div>
+                <div className="row"><span style={{ fontSize: 22 }}>{o.icon}</span><div className="grow"><b>{o.collector}</b>{o.wanted && <span className="tag select" style={{ marginLeft: 6 }}>📌 your post</span>}<div className="sub">{o.line}</div></div></div>
                 <div className="row mt" style={{ alignItems: 'center', gap: 10 }}>
                   <div className="center" style={{ flex: 1 }}>
                     <Sprite id={giveItem.id} size={44} variant={give.variant} />
@@ -182,6 +192,11 @@ export function ShelfTab() {
                 </div>
               );
             })}
+            {!selected.season && (s.shelf[selected.id] ?? 0) === 0 && (
+              s.trades.wanted?.itemId === selected.id
+                ? <button className="btn gold block mt" onClick={() => postWantedAd(null)}>📌 Posted as wanted · take down</button>
+                : <button className="btn block mt" onClick={() => { postWantedAd(selected.id); setFam('trades'); setSel(null); }}>📌 Post a wanted ad{s.trades.wanted ? ' (replaces the current one)' : ''}</button>
+            )}
             <button className="btn block mt" onClick={() => setSel(null)}>Close</button>
           </div>
         </div>

@@ -381,3 +381,18 @@ with nothing claimed; premium is per season (`ss_pass` for season 1, the
 consumable `ss_pass_s<N>` after), and a restored purchase for another
 season is remembered without unlocking the current one. The Shop shows
 the live season's name, blurb, end date and product only.
+
+**Wanted post (trade board).** Open any core piece you do not own and
+post it as wanted (one post at a time). On each daily roll, if you hold
+a dupe within one tier of it, a collector comes for that exact piece
+with 50% odds, certain by the third day, at one copy more than the
+usual price. The post clears when you get the piece by any route.
+
+**Comeback crate scaling.** The crate grows with progress: 60 minutes of
+income plus an hour per relocation (capped at four hours), and up to two
+extra pulls for relocated players. The card lists what changed while
+you were away: a live season, restock lines ready, trade offers waiting.
+
+**Pass recap.** When a Hustle Pass season rotates on a save that touched
+it, a one-time card shows the tier reached and rewards claimed, names
+the new season's final premium item, and opens the Shop.

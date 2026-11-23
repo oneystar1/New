@@ -312,3 +312,24 @@ describe('comeback and streak shield', () => {
     expect(fresh.pendingComeback).toBeNull();
   });
 });
+
+describe('comeback crate scaling and pass recap', () => {
+  it('a relocated player gets a bigger crate; the recap captures the old season', async () => {
+    const { tickPassSeason } = await import('../src/engine/sim');
+    const DAY = 86_400_000;
+    const s = initialState(T0);
+    s.stats.playSeconds = 600; s.stats.prestiges = 2; s.lastSeen = T0;
+    applyOfflineOnLoad(s, T0 + 3 * DAY);
+    expect(s.pendingComeback).toEqual({ days: 3, pulls: 4, incomeMinutes: 180 });
+    s.stats.prestiges = 9; s.pendingComeback = null; s.lastSeen = T0;
+    applyOfflineOnLoad(s, T0 + 2 * DAY);
+    expect(s.pendingComeback!.incomeMinutes).toBe(240);
+    expect(s.pendingComeback!.pulls).toBe(4);
+    const p = initialState(Date.UTC(2026, 10, 25));
+    tickPassSeason(p, Date.UTC(2027, 0, 2));
+    expect(p.pendingPassRecap).toBeNull(); // untouched season: no card
+    p.pass.xp = 1250; p.pass.claimedFree = [1, 2, 3]; p.pass.premium = true; p.pass.premiumSeasons = [2];
+    tickPassSeason(p, Date.UTC(2027, 2, 2));
+    expect(p.pendingPassRecap).toEqual({ season: 2, tier: 12, claimedFree: 3, claimedPremium: 0, premium: true, newSeason: 3 });
+  });
+});

@@ -83,7 +83,10 @@ Requires an Apple Developer account. Then:
    Pushing a tag like `ss-ios-v0.1.0` does the same.
 
 What the workflow does to the generated Xcode project each time: icons and
-launch screen from `assets/` via `@capacitor/assets`, and
+launch screen from `assets/` via `@capacitor/assets`, the privacy manifest
+(`ios-assets/PrivacyInfo.xcprivacy`, added to the App target by the beta
+lane; it declares AdMob tracking, the collected data types from the
+privacy label, and the UserDefaults / file-timestamp reason codes), and
 `tools/ios-plist.sh` adds `GADApplicationIdentifier`,
 `NSUserTrackingUsageDescription`, `ITSAppUsesNonExemptEncryption=false`
 and the SKAdNetwork list. The `ios/` folder is never committed.

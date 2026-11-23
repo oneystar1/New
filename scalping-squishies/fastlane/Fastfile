@@ -47,6 +47,10 @@ platform :ios do
       profile_name: ENV.fetch("sigh_#{APP_ID}_appstore_profile-name")
     )
 
+    # Privacy manifest: copy ios-assets/PrivacyInfo.xcprivacy into the app and
+    # add it to the App target's resources (idempotent).
+    add_privacy_manifest
+
     build_app(
       workspace: WORKSPACE,
       scheme: "App",
@@ -64,3 +68,20 @@ platform :ios do
     )
   end
 end
+
+  private_lane :add_privacy_manifest do
+    require "xcodeproj"
+    src = File.expand_path("../ios-assets/PrivacyInfo.xcprivacy", __dir__)
+    dest_dir = File.expand_path("../ios/App/App", __dir__)
+    dest = File.join(dest_dir, "PrivacyInfo.xcprivacy")
+    FileUtils.cp(src, dest)
+    project = Xcodeproj::Project.open(File.expand_path("../ios/App/App.xcodeproj", __dir__))
+    target = project.targets.find { |t| t.name == "App" }
+    group = project.main_group.find_subpath("App", true)
+    ref = group.files.find { |f| f.path == "PrivacyInfo.xcprivacy" } || group.new_file(dest)
+    unless target.resources_build_phase.files_references.include?(ref)
+      target.add_resources([ref])
+    end
+    project.save
+    UI.message("PrivacyInfo.xcprivacy in place")
+  end

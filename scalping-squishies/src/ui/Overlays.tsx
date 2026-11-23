@@ -8,6 +8,10 @@ import { Sprite } from '../art/Sprite';
 import type { AdPlacement } from '../monetization';
 import { SEASON_BY_ID, SEASON_SHOP_PRICE, SEASON_TOKENS, seasonEndsAt, itemsForSeason } from '../engine/data/seasons';
 import { CONFIG } from '../config';
+import { STORES } from '../engine/data/stores';
+import { currentPassSeason, PASS_THEMES } from '../engine/data/pass';
+import { ITEM_BY_ID } from '../engine/data/items';
+import { restockReady } from '../engine/restock';
 
 /** Offline earnings, pull results, and toasts. */
 export function Overlays() {
@@ -21,21 +25,43 @@ export function Overlays() {
   const dismissToast = useGame((g) => g.dismissToast);
   const dismissSeasonSplash = useGame((g) => g.dismissSeasonSplash);
   const claimComebackCrate = useGame((g) => g.claimComebackCrate);
+  const dismissPassRecap = useGame((g) => g.dismissPassRecap);
+  const recap = s.pendingPassRecap;
+  const liveSeason = currentPassSeason(Date.now());
   const splashDone = useGame((g) => g.splashDone);
   const noAds = isAdFree(s, Date.now());
   // The season "what's new" card: once per season, after the launch splash and the tutorial choice, never over another overlay.
   const season = s.season.id ? SEASON_BY_ID[s.season.id] : null;
-  const showSeason = Boolean(season && splashDone && !s.seasonSplashSeen.includes(season.id) && (s.tutorialChoice === 'off' || s.tutorialChoice === 'done') && !s.pendingOffline && !s.pendingComeback && !lastPulls);
+  const showSeason = Boolean(season && splashDone && !s.seasonSplashSeen.includes(season.id) && (s.tutorialChoice === 'off' || s.tutorialChoice === 'done') && !s.pendingOffline && !s.pendingComeback && !s.pendingPassRecap && !lastPulls);
 
   return (
     <>
+      {recap && !s.pendingOffline && !s.pendingComeback && !lastPulls && (
+        <div className="overlay">
+          <div className="modal center">
+            <div className="season-hero">🎫</div>
+            <h2>Season {recap.season} is in the books</h2>
+            <p className="sub">Tier {recap.tier} of 30 · {recap.claimedFree} free reward{recap.claimedFree === 1 ? '' : 's'} claimed{recap.premium ? ` · ${recap.claimedPremium} premium` : ''}{recap.tier >= 30 ? ' · maxed' : ''}</p>
+            <p>{liveSeason.name} starts now. Tiers reset, and the premium track ends on the <b>{ITEM_BY_ID[liveSeason.finalItem]?.name ?? PASS_THEMES[0].finalItem}</b>.{recap.premium ? ' Premium is per season; pick it up again in the Shop.' : ''}</p>
+            <button className="btn primary block" onClick={() => { dismissPassRecap(); requestTab('shop'); }}>See the new track</button>
+          </div>
+        </div>
+      )}
       {s.pendingComeback && !s.pendingOffline && !lastPulls && (
         <div className="overlay">
           <div className="modal center">
             <div className="season-hero">📦</div>
             <h2>{s.pendingComeback.days} days away. The lot missed you.</h2>
             <p className="sub">Brenda saved your spot in the group. Dalton did not. Here is a crate to get the routes moving again.</p>
-            <div className="big">{s.pendingComeback.incomeMinutes}m of income + {s.pendingComeback.pulls} pull{s.pendingComeback.pulls > 1 ? 's' : ''}</div>
+            <div className="big">{s.pendingComeback.incomeMinutes >= 60 ? `${s.pendingComeback.incomeMinutes / 60}h` : `${s.pendingComeback.incomeMinutes}m`} of income + {s.pendingComeback.pulls} pull{s.pendingComeback.pulls > 1 ? 's' : ''}</div>
+            <div className="small" style={{ color: 'var(--muted)' }}>
+              {[
+                season ? `${season.icon} ${season.name} is on` : null,
+                STORES.filter((st) => (s.stores[st.id]?.units ?? 0) > 0 && restockReady(s, st.id, Date.now())).length ? `⛺ ${STORES.filter((st) => (s.stores[st.id]?.units ?? 0) > 0 && restockReady(s, st.id, Date.now())).length} restock line${STORES.filter((st) => (s.stores[st.id]?.units ?? 0) > 0 && restockReady(s, st.id, Date.now())).length > 1 ? 's' : ''} ready` : null,
+                s.trades.offers.filter((o) => !s.trades.done.includes(o.id)).length ? `🔄 ${s.trades.offers.filter((o) => !s.trades.done.includes(o.id)).length} trade offers waiting` : null,
+                s.stats.prestiges > 0 ? `⭐ ${s.stats.prestiges} relocation${s.stats.prestiges > 1 ? 's' : ''} of Street Cred intact` : null,
+              ].filter(Boolean).join(' · ') || 'Nothing changed. Brenda is still typing.'}
+            </div>
             <button className="btn primary block" onClick={claimComebackCrate}>Open the crate</button>
           </div>
         </div>

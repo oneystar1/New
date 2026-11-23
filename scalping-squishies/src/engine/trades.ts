@@ -18,6 +18,8 @@ export interface TradeOffer {
   /** What you get: always a slot you do not own. */
   getItemId: string;
   getVariant: Variant;
+  /** Came from your wanted post (steeper price). */
+  wanted?: boolean;
 }
 
 export interface TradeBoard {
@@ -73,6 +75,28 @@ export function rollTrades(s: GameState, now: number, rand: () => number): boole
   const usedGive = new Set<string>();
   const usedGet = new Set<string>();
   let guard = 0;
+  // A wanted post: a collector shows up for that exact piece, for one copy more than usual,
+  // with growing odds each day (certain by the third roll) as long as you hold a suitable dupe.
+  const w = s.trades.wanted;
+  if (w && (s.shelf[w.itemId] ?? 0) === 0 && ITEM_BY_ID[w.itemId]) {
+    const want = ITEM_BY_ID[w.itemId];
+    const daysPosted = Math.max(0, Math.round((Date.parse(`${key}T00:00:00Z`) - Date.parse(`${w.postedOn}T00:00:00Z`)) / 86_400_000));
+    const chance = daysPosted >= 3 ? 1 : 0.5;
+    const givers = dupes.filter((d) => rarityIndex(want.rarity) <= rarityIndex(d.item.rarity) + 1);
+    if (givers.length && rand() < chance) {
+      const d = givers[Math.floor(rand() * givers.length)];
+      const up = rarityIndex(want.rarity) - rarityIndex(d.item.rarity);
+      const qty = (up >= 1 ? 3 : 2) + 1;
+      if (d.count >= qty + 1) {
+        const c = COLLECTORS[Math.floor(rand() * COLLECTORS.length)];
+        usedGive.add(d.key);
+        usedGet.add(want.id);
+        offers.push({ id: 1, collector: c.name, icon: c.icon, line: `"Saw your wanted post. I have the ${want.name}. It costs extra. You know why."`, giveKey: d.key, giveQty: qty, getItemId: want.id, getVariant: 'standard', wanted: true });
+      }
+    }
+  } else if (w && (s.shelf[w.itemId] ?? 0) > 0) {
+    s.trades.wanted = null; // got it some other way
+  }
   while (offers.length < 3 && dupes.length && guard++ < 30) {
     const d = dupes[Math.floor(rand() * dupes.length)];
     if (usedGive.has(d.key)) continue;
@@ -88,7 +112,7 @@ export function rollTrades(s: GameState, now: number, rand: () => number): boole
     usedGet.add(getKey);
     offers.push({ id: offers.length + 1, collector: c.name, icon: c.icon, line: c.lines[Math.floor(rand() * c.lines.length)], giveKey: d.key, giveQty: qty, getItemId: want.item.id, getVariant: want.variant });
   }
-  s.trades = { date: key, offers, done: [] };
+  s.trades = { date: key, offers, done: [], wanted: s.trades.wanted };
   return true;
 }
 
@@ -102,5 +126,15 @@ export function acceptTrade(s: GameState, id: number): PullView | null {
   s.shelf[getKey] = (s.shelf[getKey] ?? 0) + 1;
   s.trades.done.push(id);
   s.stats.tradesDone += 1;
+  if (s.trades.wanted?.itemId === o.getItemId) s.trades.wanted = null;
   return { item: ITEM_BY_ID[o.getItemId], variant: o.getVariant };
+}
+
+/** Post (or clear) a wanted ad for one core item you do not own. One post at a time. */
+export function postWanted(s: GameState, itemId: string | null, now: number): boolean {
+  if (itemId === null) { s.trades.wanted = null; return true; }
+  const it = ITEM_BY_ID[itemId];
+  if (!it || it.season || (s.shelf[itemId] ?? 0) > 0) return false;
+  s.trades.wanted = { itemId, postedOn: todayKey(now) };
+  return true;
 }

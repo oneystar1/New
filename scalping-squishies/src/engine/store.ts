@@ -23,7 +23,7 @@ import { ACHIEVEMENTS } from './data/achievements';
 import { acceptOffer, counterOffer, declineOffer, apologize, tossFake, flipFake, fakeRoll } from './deals';
 import { unitCost, maxAffordable, todayKey } from './math';
 import { buySeasonItem, claimSeasonMission } from './season';
-import { acceptTrade } from './trades';
+import { acceptTrade, postWanted } from './trades';
 import { setSeasonOverride, SEASON_BY_ID } from './data/seasons';
 import { CONFIG } from '../config';
 import { AD_RULES, type AdPlacement, type MonetizationProvider } from '../monetization/provider';
@@ -84,6 +84,7 @@ interface GameStore {
   pull: (count: 1 | 10, free?: boolean) => void;
   sellDupe: (shelfKey: string) => void;
   acceptTradeOffer: (id: number) => void;
+  postWantedAd: (itemId: string | null) => void;
   doPrestige: (cityId: string) => Promise<void>;
   openRelocate: () => void;
   closeRelocate: () => void;
@@ -106,6 +107,7 @@ interface GameStore {
   dismissPulls: () => void;
   /** Close the season "what's new" card; it never shows again for that season. */
   dismissSeasonSplash: () => void;
+  dismissPassRecap: () => void;
   restockStart: (storeId: string) => void;
   restockOpen: () => void;
   restockCamp: () => void;
@@ -447,6 +449,9 @@ export const useGame = create<GameStore>((set, get) => {
       set({ s: { ...s }, lastPulls: results });
     },
 
+    postWantedAd: (itemId) => mutate((s) => {
+      if (postWanted(s, itemId, Date.now())) toast(itemId ? 'Wanted post is up. A collector will come around, at a price.' : 'Wanted post taken down.', '📌', 'info');
+    }),
     acceptTradeOffer: (id) => {
       const st = get();
       const got = acceptTrade(st.s, id);
@@ -683,6 +688,7 @@ export const useGame = create<GameStore>((set, get) => {
       set({ s: { ...s }, run: null, runResult: { ...res, grabbed: st.run.grabbed } });
       get().save();
     },
+    dismissPassRecap: () => { mutate((s) => { s.pendingPassRecap = null; }); get().save(); },
     dismissSeasonSplash: () => { mutate((s) => { if (s.season.id && !s.seasonSplashSeen.includes(s.season.id)) s.seasonSplashSeen.push(s.season.id); }); get().save(); },
     restockDismiss: () => {
       const st = get();

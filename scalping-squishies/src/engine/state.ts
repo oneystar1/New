@@ -28,6 +28,7 @@ export function initialState(now = Date.now()): GameState {
     lastDailyClaim: '',
     streakShieldUsedOn: '',
     pendingComeback: null,
+    pendingPassRecap: null,
     pass: { season: 1, xp: 0, premium: false, claimedFree: [], claimedPremium: [], premiumSeasons: [] },
     iap: { noAds: false, vipUntil: 0, adFreeUntil: 0, starterPackBought: false, purchases: {} },
     piggy: 0,
@@ -53,7 +54,7 @@ export function initialState(now = Date.now()): GameState {
     restockIntel: {},
     season: { id: null, tokens: 0, bought: [], missions: [], missionsDate: '' },
     seasonSplashSeen: [],
-    trades: { date: '', offers: [], done: [] },
+    trades: { date: '', offers: [], done: [], wanted: null },
     stats: {
       totalCashEarned: 0,
       lifetimeCashEarned: 0,
@@ -128,8 +129,9 @@ export function migrate(raw: unknown, now = Date.now()): GameState {
     season: { ...fresh.season, ...(s.season ?? {}), bought: Array.isArray(s.season?.bought) ? s.season!.bought : [], missions: Array.isArray(s.season?.missions) ? s.season!.missions : [] },
     seasonSplashSeen: Array.isArray(s.seasonSplashSeen) ? s.seasonSplashSeen : [],
     streakShieldUsedOn: typeof s.streakShieldUsedOn === 'string' ? s.streakShieldUsedOn : '',
-    trades: s.trades && Array.isArray(s.trades.offers) ? { date: String(s.trades.date ?? ''), offers: s.trades.offers, done: Array.isArray(s.trades.done) ? s.trades.done : [] } : fresh.trades,
+    trades: s.trades && Array.isArray(s.trades.offers) ? { date: String(s.trades.date ?? ''), offers: s.trades.offers, done: Array.isArray(s.trades.done) ? s.trades.done : [], wanted: s.trades.wanted ?? null } : fresh.trades,
     pendingComeback: s.pendingComeback ?? null,
+    pendingPassRecap: s.pendingPassRecap ?? null,
     version: SAVE_VERSION,
   };
   for (const st of STORES) if (!merged.stores[st.id]) merged.stores[st.id] = { units: 0, progress: 0, manager: false };

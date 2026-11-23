@@ -8,15 +8,18 @@ Mark done with the date. Add anything noticed during a cycle.
 
 | # | Area | Item | Size | Added |
 | --- | --- | --- | --- | --- |
-| 16 | retention | Trade board: a "wanted" post from the player (pick a missing piece; a collector shows up for it within a few days at a steeper price) | half day | 2026-11-21 |
-| 19 | content | Pass season "recap" card when a season rotates: tiers reached, what was claimed, what the new season's final item is | small | 2026-11-22 |
+| 22 | polish | Comeback crate: tap-through "what changed" lines into the relevant tab (season → Hunt, trades → Shelf) | small | 2026-11-23 |
+| 23 | retention | Weekly "collector digest" notification on iOS: trades waiting, season days left, streak shield state | small | 2026-11-23 |
 | 20 | launch | Preflight: verify the App Store Connect product list against shop.ts through the ASC API once the key exists | half day | 2026-11-22 |
-| 15 | retention | Comeback crate: scale the crate with lifetime progress (a relocated player should get more than 60 minutes) and mention what changed while away (season started, restocks ready) | small | 2026-11-20 |
 
 ## Done
 
 | # | Area | Item | Done |
 | --- | --- | --- | --- |
+| 21 | launch | iOS privacy manifest (PrivacyInfo.xcprivacy) added by the fastlane lane; declares AdMob tracking, collected data types, required-reason APIs | 2026-11-23 |
+| 19 | content | Pass season "recap" card when a season rotates: tiers reached, what was claimed, what the new season's final item is | 2026-11-23 |
+| 16 | retention | Trade board: a "wanted" post from the player (pick a missing piece; a collector shows up for it within a few days at a steeper price) | 2026-11-23 |
+| 15 | retention | Comeback crate: scale the crate with lifetime progress (a relocated player should get more than 60 minutes) and mention what changed while away (season started, restocks ready) | 2026-11-23 |
 | 18 | launch | Release preflight (`npm run preflight`): icons, legal pages, product ids documented, bundle id consistency, season windows, pass themes; CI reports it, `--strict` gates store builds | 2026-11-22 |
 | 17 | polish | Store shot 02 ("Flip the dohs") captures the pull-result modal; have the smoke test take the hunt capture before the first pull, or add a dedicated listing capture pass | 2026-11-22 |
 | 8 | content | Season 2 of the Hustle Pass rotating on the season calendar | 2026-11-22 |

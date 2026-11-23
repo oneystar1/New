@@ -358,7 +358,8 @@ export function applyOfflineOnLoad(s: GameState, now: number): void {
   const off = computeOffline(s, now);
   const awayDays = Math.floor((now - s.lastSeen) / 86_400_000);
   if (awayDays >= COMEBACK_AFTER_DAYS && s.stats.playSeconds >= 120 && !s.pendingComeback) {
-    s.pendingComeback = { days: awayDays, pulls: Math.min(5, 1 + Math.floor(awayDays / 2)), incomeMinutes: 60 };
+    // Scales with how far the player got: an hour of income per relocation on top of the base hour, capped at four.
+    s.pendingComeback = { days: awayDays, pulls: Math.min(5, 1 + Math.floor(awayDays / 2) + Math.min(2, s.stats.prestiges)), incomeMinutes: Math.min(240, 60 + 60 * s.stats.prestiges) };
   }
   if (off.seconds >= 60 && off.cash > 0) {
     s.pendingOffline = { cash: off.cash, seconds: off.cappedSeconds };
@@ -694,6 +695,10 @@ export function addBoost(s: GameState, id: string, label: string, mult: number, 
 export function tickPassSeason(s: GameState, now: number): boolean {
   const cur = currentPassSeason(now);
   if (s.pass.season === cur.season) return false;
+  // Only recap a season the player actually touched.
+  if (s.pass.xp > 0 || s.pass.claimedFree.length || s.pass.premium) {
+    s.pendingPassRecap = { season: s.pass.season, tier: passTierReached(s), claimedFree: s.pass.claimedFree.length, claimedPremium: s.pass.claimedPremium.length, premium: s.pass.premium, newSeason: cur.season };
+  }
   s.pass = { season: cur.season, xp: 0, premium: s.pass.premiumSeasons.includes(cur.season), claimedFree: [], claimedPremium: [], premiumSeasons: s.pass.premiumSeasons };
   return true;
 }

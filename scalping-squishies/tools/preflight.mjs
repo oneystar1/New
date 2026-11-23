@@ -40,6 +40,11 @@ let overlap = false;
 for (let md = 101; md <= 1231; md++) if (windows.filter((w) => covers(w, md)).length > 1) overlap = true;
 ok('seasonal windows do not overlap', !overlap, `${windows.length} seasons`);
 ok('pass themes defined', (read('src/engine/data/pass.ts').match(/finalItem: '/g) ?? []).length >= 6);
+// Privacy manifest for the iOS build (App Review requires it with AdMob and UserDefaults)
+const pm = existsSync(path.join(root, 'ios-assets/PrivacyInfo.xcprivacy')) ? read('ios-assets/PrivacyInfo.xcprivacy') : '';
+ok('iOS privacy manifest present', Boolean(pm));
+ok('privacy manifest declares tracking and UserDefaults reason', pm.includes('NSPrivacyTracking') && pm.includes('CA92.1'));
+ok('fastlane adds the privacy manifest', read('fastlane/Fastfile').includes('add_privacy_manifest'));
 // No leftover TODOs, no console.log in engine
 const srcFiles = ['src/engine/sim.ts', 'src/engine/store.ts', 'src/engine/restock.ts', 'src/engine/deals.ts', 'src/engine/season.ts', 'src/engine/trades.ts'];
 ok('no TODO/FIXME in engine', !srcFiles.some((f) => /TODO|FIXME/.test(read(f))));

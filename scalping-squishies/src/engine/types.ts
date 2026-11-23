@@ -357,6 +357,8 @@ export interface GameState {
   lastDailyClaim: string; // YYYY-MM-DD
   /** Day the streak shield last covered a missed day (one per 7 days). */
   streakShieldUsedOn: string;
+  /** Shown once when a Hustle Pass season rotates. */
+  pendingPassRecap: { season: number; tier: number; claimedFree: number; claimedPremium: number; premium: boolean; newSeason: number } | null;
   /** Welcome-back crate waiting to be claimed after 2+ days away. */
   pendingComeback: { days: number; pulls: number; incomeMinutes: number } | null;
   pass: PassState;
@@ -396,7 +398,7 @@ export interface GameState {
   /** Season ids whose "what's new" card has been shown. */
   seasonSplashSeen: string[];
   /** Today's trade board: NPC collectors swapping your dupes for missing pieces. */
-  trades: { date: string; offers: import('./trades').TradeOffer[]; done: number[] };
+  trades: { date: string; offers: import('./trades').TradeOffer[]; done: number[]; wanted: { itemId: string; postedOn: string } | null };
   stats: Stats;
   settings: { sfx: boolean; haptics: boolean; notation: 'short' | 'scientific' };
 }

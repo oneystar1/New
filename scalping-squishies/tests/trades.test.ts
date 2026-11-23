@@ -63,7 +63,33 @@ describe('trade board', () => {
     tick(s, 1, T0 + DAY, makeRng(2));
     expect(s.trades.done).toEqual([]);
     expect(typeof first).toBe('string');
-    expect(migrate({ cash: 1 }).trades).toEqual({ date: '', offers: [], done: [] });
+    expect(migrate({ cash: 1 }).trades).toEqual({ date: '', offers: [], done: [], wanted: null });
     expect(tradeableDupes(s).length).toBe(1);
+  });
+});
+
+describe('wanted post', () => {
+  it('only for core items you lack; a collector comes for it at one copy more, certain by day three', async () => {
+    const { postWanted } = await import('../src/engine/trades');
+    const s = initialState(T0);
+    s.shelf.doh_kube = 6; // uncommon dupes
+    expect(postWanted(s, 'doh_kube', T0)).toBe(false); // owned
+    expect(postWanted(s, 'xm_candycane', T0)).toBe(false); // seasonal
+    expect(postWanted(s, 'doh_cloud', T0)).toBe(true); // uncommon, same tier
+    expect(s.trades.wanted).toEqual({ itemId: 'doh_cloud', postedOn: '2023-11-14' });
+    // by the third day the offer is guaranteed
+    rollTrades(s, T0 + 3 * DAY, () => 0.99);
+    const w = s.trades.offers.find((o) => o.wanted)!;
+    expect(w).toBeTruthy();
+    expect(w.getItemId).toBe('doh_cloud');
+    expect(w.giveQty).toBe(3); // 2 + 1 for the post
+    expect(acceptTrade(s, w.id)!.item.id).toBe('doh_cloud');
+    expect(s.trades.wanted).toBeNull();
+    // taking it down, and clearing when you get it elsewhere
+    expect(postWanted(s, 'doh_gumdrop', T0)).toBe(true);
+    s.shelf.doh_gumdrop = 1;
+    rollTrades(s, T0 + 4 * DAY, makeRng(1));
+    expect(s.trades.wanted).toBeNull();
+    expect(postWanted(s, null, T0)).toBe(true);
   });
 });
