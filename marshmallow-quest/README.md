@@ -110,6 +110,13 @@ play the published page.
 First-contact tips explain Embers and knights, the frost sweep shows a charge
 ring, and the game pauses itself when the app goes to the background.
 
+Dialog shows a portrait of the speaker with a mood, and every boss gets an
+entrance: the camera pans to it, a name card drops, then it speaks (A skips).
+Areas have ambient sound beds: crickets at night, drips in the cave, bubbling
+in the grotto, wind on the Peaks, surf on the coast, a low rumble in the keep.
+FLASH on the title (Auto/Reduced/Normal) honors reduced-motion preferences.
+Credits skip after three seconds and New Game offers to skip a seen intro.
+
 Difficulty cycles Normal, Hard, Easy (70% heat, cooling never pauses, one
 free save from melting per area). Villagers comment on your latest milestone.
 

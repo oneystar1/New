@@ -32,16 +32,15 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 
 ### C. Presentation
 - [x] Auto-tiled terrain, outlined sprites, fire glow, room camera, reactive music, spatial sfx
-- [ ] Character portraits in dialog, expressions
-- [ ] Boss entrances (camera pan, name card), cutscene system for story beats
-- [ ] Ambient sound beds per area (crickets, drips, wind, bubbling)
+- [x] Character portraits in dialog, expressions (Nov 23)
+- [x] Boss entrances (camera pan, name card) via bossIntro(); a general cutscene step list is still open (Nov 23)
+- [x] Ambient sound beds per area (Nov 23)
 - [ ] Weather: rain days with puddles; snow in the Peaks
 - [ ] Larger sprite set: 8-direction Puff, enemy death animations per type
 - [ ] Title attract mode
 
 ### D. Structure and polish backlog (smaller items)
 - [ ] Key rebinding
-- [ ] Reduced-motion and flash safety
 - [ ] Sprinkle economy: raise drops or lower sharpen/glaze prices
 - [ ] Replace generated cliffs/water corner tiles with rounded corners
 
@@ -61,6 +60,7 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 - Bosses that must respawn on re-entry use a trigger with a `*Met` flag (taunt once) and are skipped in loadMap.
 
 ## Log
+- Nov 23: dialog portraits with moods; boss entrance cutscenes for all four bosses; ambient beds; FLASH option and reduced-motion handling; credits skip, remembered intro
 - Nov 22: Caramel Coast + Sugarplum wreck + Kraken, tide system, compass, Seal 6; Easy mode; villager progress lines; vent timing
 - Nov 21: quest log with map markers; light budget (16 lights, merged, small ones skip darkness holes); cooled keep after the boss; cornered-block auto reset
 - Nov 20 (pass 2): Toppings system with seven toppings, shops and crafting; first-contact tips; charge ring; auto-pause and haptics

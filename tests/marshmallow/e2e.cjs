@@ -35,7 +35,7 @@ await ev(()=>{P.toast=0;P.melting=0;loadMap('castle',8,25,2);});await wait(900);
 await ev(()=>{P.toast=0;P.melting=0;loadMap('castle',9,17,1);P.dir=1;});await key('KeyX',300);log.westDoor=await ev(()=>G.flags.westDoor);for(let i=0;i<3;i++)await key('KeyZ',200);
 // boss: taunt, phases, kill
 await ev(()=>{P.toast=0;P.melting=0;P.cap=3;G.freed={fluff:1,mallo:1,squish:1,dot:1,bibi:1};loadMap('castle',19,14,1);});await pg.keyboard.down('ArrowUp');await wait(900);await pg.keyboard.up('ArrowUp');await wait(300);
-log.taunt=await ev(()=>({msg:G.msg&&G.msg.who,trig:G.flags.trig_taunt}));for(let i=0;i<5;i++)await key('KeyZ',250);
+log.cut=await ev(()=>!!G.cut&&G.cut.card.name);await key('KeyZ',250);await wait(200);log.taunt=await ev(()=>({msg:G.msg&&G.msg.who,trig:G.flags.trig_taunt}));for(let i=0;i<5;i++)await key('KeyZ',250);
 log.bossFight=await ev(()=>({fight:G.flags.bossFight,boss:G.ents.some(e=>e.boss),music:audio.music.track}));await wait(1500);
 await ev(()=>{const bo=G.ents.find(e=>e.boss);bo.hp=4;});await wait(1500);await shot('boss2');
 log.phase2=await ev(()=>({phase:G.bossPhase,shots:G.shots.length}));
