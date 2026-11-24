@@ -117,6 +117,12 @@ in the grotto, wind on the Peaks, surf on the coast, a low rumble in the keep.
 FLASH on the title (Auto/Reduced/Normal) honors reduced-motion preferences.
 Credits skip after three seconds and New Game offers to skip a seen intro.
 
+The BADGE WALL in Puff's home tracks sixteen achievements (first buddy,
+each boss, all seals, every region, 100 monsters doused, 250 sprinkles,
+full toppings, a night's sleep, a no-melt clear, ten melts, the gauntlet,
+New Game+). Earning one shows a banner; face the wall to page through them.
+Badges carry into New Game+. Saves carry a version and migrate forward.
+
 Difficulty cycles Normal, Hard, Easy (70% heat, cooling never pauses, one
 free save from melting per area). Villagers comment on your latest milestone.
 

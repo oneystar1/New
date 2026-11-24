@@ -26,7 +26,7 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 - [x] Toast as health, soggy, steam, squeeze, vault, bat ride, followers, spear moves, frost jars, currency and shops, day/night, NG+, gauntlet
 - [x] Toppings: three equipment slots (crust, glaze, sprinkle) with stat charms bought, found and crafted at the Baker (Nov 20)
 - [x] Quest log on the pause screen with main and side quests, markers on the map (Nov 21)
-- [ ] Badges / achievements wall in Puff's home
+- [x] Badges wall in Puff's home: 16 badges, banner on earn, paged list, kept in NG+ (Nov 24)
 - [ ] Save slots (3) and a stats page per slot
 - [x] Easy mode (Nov 22); assist toggles still open
 
@@ -38,17 +38,19 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 - [ ] Weather: rain days with puddles; snow in the Peaks
 - [ ] Larger sprite set: 8-direction Puff, enemy death animations per type
 - [ ] Title attract mode
+- [ ] Badge rewards: a cosmetic topping or home decoration at 8 and 16 badges
+- [ ] Dialog skip hint moved above the box (Nov 24); a proper 'hold B' progress pip is still open
 
 ### D. Structure and polish backlog (smaller items)
 - [ ] Key rebinding
-- [ ] Sprinkle economy: raise drops or lower sharpen/glaze prices
+- [x] Sprinkle economy: monster coin chance 55/75% -> 60/80%, bush 40% -> 50% (Nov 24); watch for prices feeling cheap
 - [ ] Replace generated cliffs/water corner tiles with rounded corners
 
 ### E. Tech
 - [x] Headless Playwright suites in tests/marshmallow, npm run test:mq (Nov 19)
 - [ ] Split index.html into modules with a tiny concat build that still emits one file
 - [ ] Sprite sheet generator script instead of inline row strings
-- [ ] Save migration versioning
+- [x] Save migration versioning: SAVE_VER and migrateSave() fill new fields on old saves (Nov 24)
 
 ## Open bugs
 - none known
@@ -58,8 +60,12 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 - Peaks enemies use `cold` instead of `heat`; `chill()` is the cold counterpart of `hurtPlayer()`.
 - Tide objects sit on shallow tiles and become solid at high tide; refreshSolids runs on every tide change and Puff is hopped out if caught.
 - Bosses that must respawn on re-entry use a trigger with a `*Met` flag (taunt once) and are skipped in loadMap.
+- Counters live in G.stats via bump(k); badge conditions read them through stat(k). checkBadges() awards one badge per call so banners never pile up.
+- New save fields: add a default in migrateSave() and bump SAVE_VER.
+- In Puff's home, tile (8,1) faces the bed when looking down; tests must face up (dir 1) to hit the wall.
 
 ## Log
+- Nov 24: badge wall with 16 badges, kill/coin/sleep counters, save versioning + migration, sprinkle drop nudge, skip hint off the dialog border
 - Nov 23: dialog portraits with moods; boss entrance cutscenes for all four bosses; ambient beds; FLASH option and reduced-motion handling; credits skip, remembered intro
 - Nov 22: Caramel Coast + Sugarplum wreck + Kraken, tide system, compass, Seal 6; Easy mode; villager progress lines; vent timing
 - Nov 21: quest log with map markers; light budget (16 lights, merged, small ones skip darkness holes); cooled keep after the boss; cornered-block auto reset
