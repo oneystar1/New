@@ -620,6 +620,19 @@ export const DAILY_REWARDS: Reward[] = [
   { kind: 'clout', amount: 25 },
 ];
 
+/** One-line weekly digest for the iOS notification: what is waiting on the shelf. */
+export function collectorDigest(s: GameState, now: number, seasonDaysLeft: number | null): string {
+  const parts: string[] = [];
+  const trades = s.trades.offers.filter((o) => !s.trades.done.includes(o.id)).length;
+  if (trades) parts.push(`${trades} trade offer${trades > 1 ? 's' : ''} waiting`);
+  if (s.trades.wanted) parts.push('your wanted post is still up');
+  if (seasonDaysLeft !== null) parts.push(`${seasonDaysLeft} day${seasonDaysLeft === 1 ? '' : 's'} left in the season`);
+  parts.push(streakShieldReady(s, now) ? 'streak shield ready' : 'streak shield recharging');
+  const dupes = Object.values(s.shelf).filter((n) => n > 1).length;
+  if (dupes) parts.push(`${dupes} dupe${dupes > 1 ? 's' : ''} to flip`);
+  return parts.join(' · ') + '.';
+}
+
 export function dailyAvailable(s: GameState, now: number): boolean {
   return s.lastDailyClaim !== todayKey(now);
 }

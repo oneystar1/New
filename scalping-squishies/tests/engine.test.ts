@@ -333,3 +333,16 @@ describe('comeback crate scaling and pass recap', () => {
     expect(p.pendingPassRecap).toEqual({ season: 2, tier: 12, claimedFree: 3, claimedPremium: 0, premium: true, newSeason: 3 });
   });
 });
+
+describe('collector digest', () => {
+  it('summarizes what is waiting on the shelf in one line', async () => {
+    const { collectorDigest } = await import('../src/engine/sim');
+    const s = initialState(T0);
+    expect(collectorDigest(s, T0, null)).toBe('streak shield ready.');
+    s.trades.offers = [{ id: 1, collector: 'Nana Pat', icon: '👵', line: '', giveKey: 'doh_kube', giveQty: 2, getItemId: 'doh_cloud', getVariant: 'standard' }];
+    s.trades.wanted = { itemId: 'doh_glob', postedOn: '2023-11-14' };
+    s.shelf.doh_kube = 3;
+    s.streakShieldUsedOn = '2023-11-14';
+    expect(collectorDigest(s, T0, 12)).toBe('1 trade offer waiting · your wanted post is still up · 12 days left in the season · streak shield recharging · 1 dupe to flip.');
+  });
+});

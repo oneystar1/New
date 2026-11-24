@@ -114,3 +114,13 @@ the server's consumable rule, bundle id consistency across Capacitor,
 fastlane and docs, seasonal windows that do not overlap, pass themes,
 and leftover TODOs. CI prints it on every push (report only); run
 `npm run preflight -- --strict` before a store build to make it a gate.
+
+## 6. App Store Connect product check
+
+`npm run asc:products` lists the in-app purchases the game sells and, when
+`ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_KEY_CONTENT` are in the environment
+(the same secrets the iOS workflow uses), compares them with the products
+in App Store Connect: missing ids, wrong types (consumable vs
+non-consumable vs subscription) and products not yet approved. Without
+the key it only prints the expected table. `--strict` exits 1 on any gap;
+run it before each store submission.

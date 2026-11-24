@@ -19,7 +19,8 @@
     "dashboard": "node tools/dashboard.mjs",
     "icons": "node tools/icons.mjs",
     "shots:store": "node tools/store-shots.mjs",
-    "preflight": "node tools/preflight.mjs"
+    "preflight": "node tools/preflight.mjs",
+    "asc:products": "node tools/asc-products.mjs"
   },
   "license": "MIT",
   "dependencies": {

@@ -32,7 +32,7 @@ export const storage = {
   },
 };
 
-const NOTIF_IDS = { offlineCap: 1, restock: 2, piggy: 3, seasonStart: 4, seasonEnding: 5 };
+const NOTIF_IDS = { offlineCap: 1, restock: 2, piggy: 3, seasonStart: 4, seasonEnding: 5, digest: 6 };
 
 /** Schedule the "come back" notifications when the app goes to the background. */
 export interface ReturnNotificationOpts {
@@ -42,6 +42,8 @@ export interface ReturnNotificationOpts {
   seasonStart?: { at: number; name: string; icon: string } | null;
   /** Live season end (epoch ms), name, and how many set pieces are still missing. */
   seasonEnd?: { at: number; name: string; icon: string; missing: number } | null;
+  /** Weekly collector digest body (trades waiting, season days left, streak shield); empty skips it. */
+  digest?: string;
 }
 
 export async function scheduleReturnNotifications(opts: ReturnNotificationOpts): Promise<void> {
@@ -68,6 +70,8 @@ export async function scheduleReturnNotifications(opts: ReturnNotificationOpts):
       const warnAt = opts.seasonEnd.at - 48 * 3600_000;
       if (warnAt > now) list.push({ id: NOTIF_IDS.seasonEnding, title: `${opts.seasonEnd.icon} ${opts.seasonEnd.name} ends in two days`, body: `${opts.seasonEnd.missing} piece${opts.seasonEnd.missing === 1 ? '' : 's'} of the set still missing. Spend your tokens before they turn into Clout.`, schedule: { at: new Date(warnAt) } });
     }
+    // One weekly nudge for lapsed collectors, a week out, replaced on every backgrounding so it never stacks.
+    if (opts.digest) list.push({ id: NOTIF_IDS.digest, title: 'Your shelf this week', body: opts.digest, schedule: { at: new Date(now + 7 * 86_400_000) } });
     await LocalNotifications.schedule({ notifications: list });
   } catch {
     /* notifications are best effort */

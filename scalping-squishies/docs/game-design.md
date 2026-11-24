@@ -396,3 +396,10 @@ you were away: a live season, restock lines ready, trade offers waiting.
 **Pass recap.** When a Hustle Pass season rotates on a save that touched
 it, a one-time card shows the tier reached and rewards claimed, names
 the new season's final premium item, and opens the Shop.
+
+**Weekly collector digest (iOS).** On backgrounding, saves with ten
+minutes of play schedule one notification a week out, replaced on every
+backgrounding so it never stacks: trade offers waiting, a standing wanted
+post, days left in a live season, streak shield state, dupes to flip.
+The comeback card's "what changed" lines are buttons that claim the
+crate and open the relevant tab.

@@ -5,7 +5,7 @@ import { createAnalytics } from '../net/analytics';
 import { getDeviceId } from '../net/identity';
 import { authAnon, getToken, cloudEnabled } from '../net/api';
 import { isNative, platform, onAppStateChange, scheduleReturnNotifications } from '../platform/native';
-import { computeModifiers } from '../engine/sim';
+import { computeModifiers, collectorDigest } from '../engine/sim';
 import { STORES } from '../engine/data/stores';
 import { SEASON_BY_ID, nextSeasonStart, seasonEndsAt } from '../engine/data/seasons';
 import { seasonSets } from '../engine/season';
@@ -103,6 +103,7 @@ export function App() {
         nextRestockSeconds: next.length ? Math.min(...next) : null,
         seasonStart: upcoming ? { at: upcoming.at, name: upcoming.season.name, icon: upcoming.season.icon } : null,
         seasonEnd: live && set ? { at: seasonEndsAt(live, now), name: live.name, icon: live.icon, missing: set.total - set.have } : null,
+        digest: st.s.stats.playSeconds >= 600 ? collectorDigest(st.s, now, live ? Math.max(0, Math.ceil((seasonEndsAt(live, now) - now - 7 * 86_400_000) / 86_400_000)) : null) : '',
       });
     };
     const offState = onAppStateChange((active) => { if (!active) goBackground(); else frame(Date.now()); });

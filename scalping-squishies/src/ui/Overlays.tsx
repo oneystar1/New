@@ -54,14 +54,21 @@ export function Overlays() {
             <h2>{s.pendingComeback.days} days away. The lot missed you.</h2>
             <p className="sub">Brenda saved your spot in the group. Dalton did not. Here is a crate to get the routes moving again.</p>
             <div className="big">{s.pendingComeback.incomeMinutes >= 60 ? `${s.pendingComeback.incomeMinutes / 60}h` : `${s.pendingComeback.incomeMinutes}m`} of income + {s.pendingComeback.pulls} pull{s.pendingComeback.pulls > 1 ? 's' : ''}</div>
-            <div className="small" style={{ color: 'var(--muted)' }}>
-              {[
-                season ? `${season.icon} ${season.name} is on` : null,
-                STORES.filter((st) => (s.stores[st.id]?.units ?? 0) > 0 && restockReady(s, st.id, Date.now())).length ? `⛺ ${STORES.filter((st) => (s.stores[st.id]?.units ?? 0) > 0 && restockReady(s, st.id, Date.now())).length} restock line${STORES.filter((st) => (s.stores[st.id]?.units ?? 0) > 0 && restockReady(s, st.id, Date.now())).length > 1 ? 's' : ''} ready` : null,
-                s.trades.offers.filter((o) => !s.trades.done.includes(o.id)).length ? `🔄 ${s.trades.offers.filter((o) => !s.trades.done.includes(o.id)).length} trade offers waiting` : null,
-                s.stats.prestiges > 0 ? `⭐ ${s.stats.prestiges} relocation${s.stats.prestiges > 1 ? 's' : ''} of Street Cred intact` : null,
-              ].filter(Boolean).join(' · ') || 'Nothing changed. Brenda is still typing.'}
-            </div>
+            {(() => {
+              const ready = STORES.filter((st) => (s.stores[st.id]?.units ?? 0) > 0 && restockReady(s, st.id, Date.now())).length;
+              const open = s.trades.offers.filter((o) => !s.trades.done.includes(o.id)).length;
+              const lines: { text: string; tab: 'hunt' | 'shelf' | 'boost' }[] = [];
+              if (season) lines.push({ text: `${season.icon} ${season.name} is on`, tab: 'hunt' });
+              if (ready) lines.push({ text: `⛺ ${ready} restock line${ready > 1 ? 's' : ''} ready`, tab: 'hunt' });
+              if (open) lines.push({ text: `🔄 ${open} trade offer${open > 1 ? 's' : ''} waiting`, tab: 'shelf' });
+              if (s.stats.prestiges > 0) lines.push({ text: `⭐ ${s.stats.prestiges} relocation${s.stats.prestiges > 1 ? 's' : ''} of Street Cred intact`, tab: 'boost' });
+              return (
+                <div className="row mt" style={{ flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
+                  {lines.length === 0 && <span className="small" style={{ color: 'var(--muted)' }}>Nothing changed. Brenda is still typing.</span>}
+                  {lines.map((l) => <button key={l.text} className="btn sm ghost" onClick={() => { claimComebackCrate(); requestTab(l.tab); }}>{l.text} ›</button>)}
+                </div>
+              );
+            })()}
             <button className="btn primary block" onClick={claimComebackCrate}>Open the crate</button>
           </div>
         </div>

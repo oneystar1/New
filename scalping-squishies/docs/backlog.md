@@ -8,14 +8,18 @@ Mark done with the date. Add anything noticed during a cycle.
 
 | # | Area | Item | Size | Added |
 | --- | --- | --- | --- | --- |
-| 22 | polish | Comeback crate: tap-through "what changed" lines into the relevant tab (season → Hunt, trades → Shelf) | small | 2026-11-23 |
-| 23 | retention | Weekly "collector digest" notification on iOS: trades waiting, season days left, streak shield state | small | 2026-11-23 |
-| 20 | launch | Preflight: verify the App Store Connect product list against shop.ts through the ASC API once the key exists | half day | 2026-11-22 |
+
+| 24 | retention | Achievements for the new systems: first trade, wanted post fulfilled, full seasonal set, streak shield saved a streak | small | 2026-11-24 |
+| 25 | polish | Trade board: show the collector's portrait instead of an emoji, reuse the Portrait art | small | 2026-11-24 |
+| 26 | launch | Smoke test: cover the Shelf trades segment and the season splash under `?season=dohlidays` in a second short pass | small | 2026-11-24 |
 
 ## Done
 
 | # | Area | Item | Done |
 | --- | --- | --- | --- |
+| 20 | launch | Preflight: verify the App Store Connect product list against shop.ts through the ASC API once the key exists (script `npm run asc:products` ready; the live comparison runs once the ASC key secrets exist) | 2026-11-24 |
+| 23 | retention | Weekly "collector digest" notification on iOS: trades waiting, season days left, streak shield state | 2026-11-24 |
+| 22 | polish | Comeback crate: tap-through "what changed" lines into the relevant tab (season → Hunt, trades → Shelf) | 2026-11-24 |
 | 21 | launch | iOS privacy manifest (PrivacyInfo.xcprivacy) added by the fastlane lane; declares AdMob tracking, collected data types, required-reason APIs | 2026-11-23 |
 | 19 | content | Pass season "recap" card when a season rotates: tiers reached, what was claimed, what the new season's final item is | 2026-11-23 |
 | 16 | retention | Trade board: a "wanted" post from the player (pick a missing piece; a collector shows up for it within a few days at a steeper price) | 2026-11-23 |
