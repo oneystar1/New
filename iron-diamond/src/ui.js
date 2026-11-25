@@ -2,7 +2,7 @@
 'use strict';
 const Game = {
   scene: null, t: 0,
-  settings: Object.assign({ innings: 3, diff: 1, clash: true, music: true, fx: 'auto', haptics: true, field: 'assist', run: 'auto', meter: true, pitchView: 'pitcher', announcer: true }, store.get('ironDiamond.settings', {})),
+  settings: Object.assign({ innings: 3, diff: 1, clash: true, music: true, fx: 'auto', haptics: true, field: 'assist', run: 'auto', meter: true, pitchView: 'pitcher', announcer: true, models: '3d' }, store.get('ironDiamond.settings', {})),
   set(s) { this.scene = s; s.enter && s.enter(); },
   save() { store.set('ironDiamond.settings', this.settings); Sfx.musicOn = this.settings.music; applyFx(); },
 };
@@ -422,6 +422,7 @@ class SettingsScene {
       { label: 'PITCHING VIEW', value: s.pitchView === 'pitcher' ? 'BEHIND PITCHER' : 'BEHIND BATTER', ch: cyc('pitchView', ['pitcher', 'batter']), help: 'Camera angle while you pitch against the CPU' },
       { label: 'TIMING METER', value: s.meter ? 'ON' : 'OFF', ch: () => { s.meter = !s.meter; }, help: 'Shows the swing window while you bat' },
       { label: 'CLASHES', value: s.clash ? 'ON' : 'OFF', ch: () => { s.clash = !s.clash; } },
+      { label: 'ROBOT MODELS', value: (s.models || '3d').toUpperCase(), ch: () => { s.models = s.models === '2d' ? '3d' : '2d'; }, help: '3D models on the field; 2D is lighter for older devices' },
       { label: 'EFFECTS', value: s.fx.toUpperCase(), ch: cyc('fx', ['auto', 'high', 'low']), help: 'AUTO lowers glow and light effects on slow phones' },
       { label: 'SOUND', value: Sfx.muted ? 'OFF' : 'ON', ch: () => Sfx.toggleMute() },
       { label: 'ANNOUNCER', value: s.announcer ? 'ON' : 'OFF', ch: () => { s.announcer = !s.announcer; if (s.announcer) setTimeout(() => Sfx.say('Announcer on.'), 50); }, help: 'A stadium voice calls strikeouts, homers, steals and clashes' },

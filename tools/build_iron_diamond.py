@@ -6,7 +6,7 @@ root = pathlib.Path(__file__).resolve().parent.parent / 'iron-diamond'
 html = (root / 'index.html').read_text()
 def inline(m):
     return '<script>\n' + (root / m.group(1)).read_text() + '\n</script>'
-html = re.sub(r'<script src="([^"]+)"></script>', inline, html)
+html = re.sub(r'<script src="((?:src|vendor)/[^"]+)"></script>', inline, html)
 if '--fragment' in sys.argv:
     html = re.sub(r'<!doctype html>\s*', '', html, flags=re.I)
     html = re.sub(r'</?(html|body)[^>]*>\s*', '', html)

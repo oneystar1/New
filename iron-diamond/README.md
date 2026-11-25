@@ -126,6 +126,25 @@ replaced from the bench (or by a scrap drone).
 - **Mound visit**: once per game, from the pause menu, recharges your pitcher's
   battery by 25.
 
+## 3D robots
+
+Players on the field are real 3D models rendered with
+[three.js](https://threejs.org) (r149, bundled in `vendor/`, MIT) using the same
+camera as the stadium and composited into the picture. Each robot is a
+procedural rig: a pose function places hips, knees, shoulders and hands (arms
+solved with two-bone IK), then armour plates, gauntlets, thigh guards, helmets,
+visors, backpacks and thrusters are laid between those joints every frame.
+Poses: a side-on batting stance with a two-handed grip and a swing that follows
+the same bat path the hit detection uses, bunt, pitching windup and release,
+fielder throws, running, ready crouch, catcher squat and runners' leads. Menu
+portraits and the clash ring still use the 2D renderer. **Settings → Robot
+Models** switches the field back to 2D for older devices, and the game falls
+back to 2D on its own if WebGL isn't available.
+
+`iron-diamond/dev-models3d.html?pose=bat&view=back` previews the rigs (poses:
+`bat`, `bunt`, `pitch`, `run`, `ready`, `catcher`; views: `back`, `front`,
+`side`; `p` for swing/windup progress).
+
 ## Cameras and sound
 
 - **Pitching view**: when you pitch against the CPU the camera sits behind and

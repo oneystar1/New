@@ -82,6 +82,19 @@ function drawMatch(ctx, m) {
   if (ballW) { const q = cam.proj(ballW.x, ballW.y, 0); if (q) { ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.beginPath(); ctx.ellipse(q.x, q.y, Math.max(1.5, 0.5 * q.s * boost), Math.max(0.8, 0.2 * q.s * boost), 0, 0, TAU); ctx.fill(); } }
   // control ring
   for (const e of ents) if (e.ctrl && e.q) { const r = 2.6 * e.q.s * boost; ctx.strokeStyle = e.team.g; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(e.q.x, e.q.y, r, r * 0.4, 0, 0, TAU); ctx.stroke(); glow(ctx, e.q.x, e.q.y, r * 1.4, e.team.g, 0.35); }
+  // real 3D robots: posed rigs rendered with the same camera and composited here (2D fallback below)
+  const use3d = R3D.ok && Game.settings.models !== '2d';
+  if (use3d) {
+    R3D.begin();
+    for (const e of ents) {
+      if (!e.q || e.ump) continue; const hp = e.r.hp / maxHp(e.r, e.side), q = e.q;
+      const aura = (e.batter && m.odBat) || (m.odFld && e.r && e.r.pos === 'P' && pitchView);
+      if (aura) { const ac = e.team.g, hh = CLASSES[e.r.cls].h * q.s * boost; glow(ctx, q.x, q.y - hh * 0.5, hh * (0.9 + 0.1 * Math.sin(t * 8)), ac, 0.55); }
+      const ps = pose3d(m, e, pitchView, t); ps.hp = hp;
+      R3D.add(e.r, e.team, e.x, e.y, ps.yaw, boost * (e.sc || 1), ps, e.o.alpha != null && e.o.alpha < 0.8);
+    }
+    R3D.draw(ctx, cam, ctx.canvas);
+  }
   // entities sorted far → near; the ball is inserted by depth
   const list = ents.filter(e => e.q).map(e => ({ d: e.q.d, e }));
   if (ballW) { const q = cam.proj(ballW.x, ballW.y, ballW.z); if (q) list.push({ d: q.d - 0.5, ball: q, w: ballW }); }
@@ -90,6 +103,7 @@ function drawMatch(ctx, m) {
     if (it.ball) { drawBall(ctx, cam, it.ball, it.w, m, boost); continue; }
     const e = it.e, q = e.q;
     if (e.ump) { const z = 7.5 + Math.sin(t * 2) * 0.3, p = cam.proj(e.x, e.y, z); if (p) { ctx.fillStyle = '#1a1f2b'; ctx.beginPath(); ctx.arc(p.x, p.y, 0.6 * p.s, 0, TAU); ctx.fill(); glow(ctx, p.x, p.y, 1.2 * p.s, '#ff3d5a', 0.8); ctx.fillStyle = '#ff3d5a'; ctx.beginPath(); ctx.arc(p.x, p.y, 0.18 * p.s, 0, TAU); ctx.fill(); } continue; }
+    if (use3d) { if (e.ctrl) { const top = q.y - CLASSES[e.r.cls].h * q.s * boost - 10; ctx.fillStyle = e.team.g; ctx.beginPath(); ctx.moveTo(q.x - 6, top - 8); ctx.lineTo(q.x + 6, top - 8); ctx.lineTo(q.x, top); ctx.closePath(); ctx.fill(); } continue; }
     const hp = e.r.hp / maxHp(e.r, e.side);
     const aura = (e.batter && m.odBat) || (m.odFld && e.r && e.r.pos === 'P' && pitchView);
     if (aura) { const ac = e.team.g, hh = CLASSES[e.r.cls].h * q.s; glow(ctx, q.x, q.y - hh * 0.5, hh * (0.9 + 0.1 * Math.sin(t * 8)), ac, 0.55); for (let k = 0; k < 6; k++) { const ph = ((t * 0.8 + k / 6) % 1); glow(ctx, q.x + Math.sin(k * 2.1 + t) * hh * 0.3, q.y - ph * hh * 1.2, 6 + q.s * 0.5, ac, 1 - ph); } }
@@ -395,4 +409,37 @@ function drawSwingPanel(ctx, m, TL) {
   txt(ctx, 'TIMING', bx + bw / 2, by - 14, 9, '#9aa6c8', 'center', FONT_H, 900); if (!TL) txt(ctx, '←/→ SHIFT SO THE RINGS COVER THE PITCH', W / 2, H - 9, 10, '#8f9bc0', 'center', FONT_H, 700);
   if (pt.stage === 'flight') { const u = (pt.t - pt.t0) / pt.T, mx = X(u); ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(mx, by - 8); ctx.lineTo(mx + 5, by - 14); ctx.lineTo(mx - 5, by - 14); ctx.fill(); ctx.fillRect(mx - 1, by - 6, 2, 14); }
   if (pt.swingU != null) { const sx = X(pt.swingU); ctx.fillStyle = pt.hit ? '#3dffa0' : '#ff6a6a'; ctx.fillRect(sx - 2, by - 7, 4, 16); }
+}
+
+// batter's hands and bat direction in world space (shared by the 2D and 3D renderers and matching the hit model)
+function batGeom(m, e) {
+  const pt = m.pt, hand = pt.hand, X = e.x, sw = pt.swing; let p = null, kind = sw ? sw.kind : null;
+  if (!sw && pt.buntHold) kind = 'bunt'; if (sw) p = clamp((pt.t - sw.t0) / 0.3, 0, 1);
+  let hx = X + hand * 0.55, hy = 0.2, hz = 4.6;
+  if (kind === 'bunt') { hx = X + hand * 0.9; hy = 0.5; hz = 3.1; }
+  else if (p != null) { const k = p < 0.45 ? p / 0.45 : 1 - (p - 0.45) / 0.55 * 0.4; hx = X + hand * (0.55 + 0.7 * k); hy = 0.2 + 0.5 * k; hz = 4.6 - 1.3 * k; }
+  return { grip: [hx, hy, hz], dir: batSwingDir(p, hand, kind), p, kind };
+}
+const yawOf = (dx, dy) => Math.atan2(dx, -dy);
+function pose3d(m, e, pitchView, t) {
+  const o = e.o, r = e.r, f = m.fielders.find(x => x.r === r && x.x === e.x), pt = m.pt;
+  const ps = { t: o.t != null ? o.t : t, hand: r.hand || 1, ball: !!o.ball, kind: 'idle', yaw: yawOf(-e.x, -e.y) };
+  if (e.batter && pt) { const g = batGeom(m, e); ps.kind = g.kind === 'bunt' ? 'bunt' : 'bat'; ps.grip = g.grip; ps.dir = g.dir; ps.p = g.p; ps.hand = pt.hand; ps.yaw = yawOf(pt.hand, 0); return ps; }
+  if (f) {
+    const moving = hyp(f.vx, f.vy) > 1.5;
+    if (moving) ps.yaw = yawOf(f.vx, f.vy);
+    if (pitchView && f.pos === 'C') { ps.kind = 'catcher'; ps.yaw = yawOf(0, 1); return ps; }
+    if (pitchView && f.pos === 'P') { ps.yaw = yawOf(0, -1); if (o.throwArm != null) { ps.kind = 'pitch'; ps.p = o.throwArm; } else { ps.kind = 'idle'; ps.ball = true; } return ps; }
+    if (o.throwArm != null) { ps.kind = 'throw'; ps.p = o.throwArm; return ps; }
+    ps.kind = moving ? 'run' : 'ready'; ps.run = 1; return ps;
+  }
+  // runners
+  if (o.run) { ps.kind = 'run'; ps.run = 1; }
+  else if (o.crouch) ps.kind = 'lead';
+  const seg = basePosDir(e); if (seg) ps.yaw = o.run ? yawOf(seg[0], seg[1]) : yawOf(-e.x, 60.5 - e.y);
+  return ps;
+}
+function basePosDir(e) { // direction of travel along the base path nearest this point
+  let best = null, bd = 1e9; for (let i = 0; i < 4; i++) { const a = BASES[i], b = BASES[i + 1], dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy, u = clamp(((e.x - a.x) * dx + (e.y - a.y) * dy) / l2, 0, 1), px = a.x + dx * u, py = a.y + dy * u, d = hyp(e.x - px, e.y - py); if (d < bd) { bd = d; best = [dx, dy]; } }
+  return best;
 }
