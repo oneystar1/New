@@ -62,6 +62,10 @@ class Match {
     for (const b of this.banners) b.t += dt; this.banners = this.banners.filter(b => b.t < b.dur);
     // smoke from damaged bots
     if (Math.random() < 0.3) for (const e of this.visibleBots()) { const f = e.r.hp / maxHp(e.r, this.sideOf(e.r)); if (f < 0.35 && Math.random() < 0.08) this.parts.add({ x: e.x + rnd(-1, 1), y: e.y, z: 6, vz: 6, vx: rnd(-2, 2), vy: rnd(-2, 2), life: 1.4, size: 1.2, color: '#5a5f6e', kind: 'smoke' }); }
+    if (this.state === 'play' && Math.random() < 0.5) {
+      for (const f of this.fielders) if (hyp(f.vx, f.vy) > 12 && Math.random() < 0.25) this.parts.add({ x: f.x, y: f.y, z: 0.3, vx: -f.vx * 0.08 + rnd(-1, 1), vy: -f.vy * 0.08 + rnd(-1, 1), vz: rnd(1, 3), life: 0.7, size: 0.9, color: '#9a6a48', kind: 'smoke' });
+      for (const rn of this.runners) if (!rn.out && !rn.scored && rn.s !== rn.tgt && Math.random() < 0.35) { const p = basePos(rn.s); this.parts.add({ x: p.x, y: p.y, z: 0.3, vx: rnd(-2, 2), vy: rnd(-2, 2), vz: rnd(1, 3), life: 0.8, size: 1.0, color: '#a87450', kind: 'smoke' }); }
+    }
     switch (this.state) {
       case 'intro': this.timer -= dt; if (this.timer <= 0) this.startHalf(); break;
       case 'pitch': this.updatePitch(dt); break;
@@ -243,7 +247,7 @@ class Match {
   }
   contact(q, timing, dx, dz, kind) {
     const pt = this.pt, bt = this.batter(), hand = pt.hand, pow = this.st(bt, 'pow');
-    Sfx.play('bat'); this.shake = 0.25 + q * 0.3; pt.hit = true;
+    Sfx.play('bat'); this.shake = 0.25 + q * 0.3; pt.hit = true; pt.hitT = pt.t; this.hitStop = q > 0.55 && kind !== 'bunt' ? 0.05 + q * 0.06 : 0;
     let v, th, ph;
     if (kind === 'bunt') { v = rnd(26, 40); th = rnd(-14, 2); ph = rnd(-32, 32); }
     else {
@@ -341,7 +345,7 @@ class Match {
   }
   homeRun() {
     this.hr = true; this.events.hr++; Sfx.play('hr'); this.shake = 0.6;
-    const b = this.ball; for (let i = 0; i < 4; i++) setTimeout(() => this.parts.burst(b.x + rnd(-40, 40), b.y + rnd(0, 60), 60 + rnd(40), 40, pick([this.sides[this.bat].team.g, '#ffffff', this.sides[this.bat].team.p]), 50, { g: 12, size: 1.6, drag: 1.5 }), i * 250);
+    const b = this.ball, tm = this.sides[this.bat].team; this.fireworks = 2.4; for (let i = 0; i < 9; i++) setTimeout(() => { const x = rnd(-260, 260), y = rnd(330, 470), z = rnd(110, 190), c = pick([tm.g, '#ffffff', tm.p, tm.s]); this.parts.burst(x, y, z, 60, c, 55, { g: 9, size: 1.8, drag: 1.4, life: 1.6 }); this.parts.burst(x, y, z, 14, '#ffffff', 20, { g: 6, size: 1.2, drag: 2 }); Sfx.play('foul'); }, i * 260);
     this.banner('HOME RUN', '#ffffff', this.sides[this.bat].team.g, 2.4, 80, `${this.batter().name} GOES DEEP`);
     b.held = { x: b.x, y: b.y }; b.vx = b.vy = b.vz = 0;
     const scorers = this.runners.filter(r => !r.out && !r.scored).sort((a, c) => c.s - a.s);

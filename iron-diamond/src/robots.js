@@ -9,11 +9,15 @@ function drawRobot(ctx, x, y, s, r, team, o = {}) {
   if (o.alpha != null) ctx.globalAlpha = o.alpha;
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   const run = o.run || 0, ph = t * 12, crouch = o.crouch || 0;
-  const metal = (c) => { const g = ctx.createLinearGradient(-1.6, 0, 1.6, 0); g.addColorStop(0, shade(c, 0.35)); g.addColorStop(0.45, c); g.addColorStop(1, shade(c, -0.45)); return g; };
+  const metal = (c) => { const g = ctx.createLinearGradient(-1.6, -0.4, 1.6, 0.4); g.addColorStop(0, shade(c, 0.42)); g.addColorStop(0.2, shade(c, 0.12)); g.addColorStop(0.3, shade(c, 0.62)); g.addColorStop(0.38, shade(c, 0.08)); g.addColorStop(0.75, shade(c, -0.28)); g.addColorStop(1, shade(c, -0.58)); return g; };
+  // soft top-light highlight + seam line helpers
+  const spec = (cx, cy, rx, ry) => { ctx.save(); ctx.globalAlpha *= 0.55; const g = ctx.createRadialGradient(cx - rx * 0.3, cy - ry * 0.3, 0, cx - rx * 0.3, cy - ry * 0.3, Math.max(rx, ry)); g.addColorStop(0, 'rgba(255,255,255,0.9)'); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU); ctx.fill(); ctx.restore(); };
+  const seam = (x1, y1, x2, y2) => { ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 0.05; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.beginPath(); ctx.moveTo(x1 + 0.05, y1 + 0.05); ctx.lineTo(x2 + 0.05, y2 + 0.05); ctx.stroke(); };
+  const pulse = 0.75 + 0.25 * Math.sin(t * 3.1 + (r.num || 0));
   const cap = (x1, y1, x2, y2, w, col) => { ctx.strokeStyle = OUT; ctx.lineWidth = w + 0.16; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); };
   const poly = (pts, fill) => { ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 0.12; ctx.stroke(); };
   const ell = (cx, cy, rx, ry, fill, stroke = true) => { ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU); ctx.fillStyle = fill; ctx.fill(); if (stroke) { ctx.strokeStyle = OUT; ctx.lineWidth = 0.12; ctx.stroke(); } };
-  const lamp = (cx, cy, rr, col = G) => { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, rr * 0.55, 0, TAU); ctx.fill(); ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glowSprite(col), cx - rr * 3, cy - rr * 3, rr * 6, rr * 6); ctx.restore(); };
+  const lamp = (cx, cy, rr, col = G) => { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, rr * 0.55, 0, TAU); ctx.fill(); ctx.save(); ctx.globalCompositeOperation = 'lighter'; const k = rr * (2.6 + pulse * 0.8); ctx.drawImage(glowSprite(col), cx - k, cy - k, k * 2, k * 2); ctx.restore(); };
   const rr = (x0, y0, w, h, rad, fill) => { rrect(ctx, x0, y0, w, h, rad); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 0.12; ctx.stroke(); };
   // leg cycle
   const legL = Math.sin(ph) * run, legR = -legL;
@@ -58,13 +62,13 @@ function drawRobot(ctx, x, y, s, r, team, o = {}) {
     }
     ctx.save(); upper();
     for (const side of armSides) if (side === (back ? -1 : 1)) drawArm(side * 1.05, -5.45, side, 0.36, metal(P), 0.24);
-    poly([[-0.62, hipY], [0.62, hipY], [1.02, -5.65], [-1.02, -5.65]], metal(P));
+    poly([[-0.62, hipY], [0.62, hipY], [1.02, -5.65], [-1.02, -5.65]], metal(P)); seam(0, -3.8, 0, -4.6); seam(-0.7, -4.0, 0.7, -4.0); spec(-0.3, -5.2, 0.5, 0.3);
     rr(-0.55, -3.75, 1.1, 0.55, 0.15, '#1f2430');
     if (!back) { poly([[-0.8, -4.65], [0.8, -4.65], [0.92, -5.6], [-0.92, -5.6]], metal(S)); lamp(0, -4.95, 0.2); }
     else { rr(-0.62, -5.45, 1.24, 1.5, 0.2, metal(shade(P, -0.3))); backNum(-4.65, 0.75); lamp(-0.35, -3.85, 0.12, G); lamp(0.35, -3.85, 0.12, G); }
-    ell(-1.05, -5.5, 0.43, 0.38, metal(S)); ell(1.05, -5.5, 0.43, 0.38, metal(S));
+    ell(-1.05, -5.5, 0.43, 0.38, metal(S)); ell(1.05, -5.5, 0.43, 0.38, metal(S)); spec(-1.12, -5.62, 0.25, 0.16); spec(0.98, -5.62, 0.25, 0.16);
     rr(-0.18, -6.0, 0.36, 0.3, 0.06, '#2a303d');
-    rr(-0.46, -6.9, 0.92, 0.95, 0.32, metal(P));
+    rr(-0.46, -6.9, 0.92, 0.95, 0.32, metal(P)); spec(-0.12, -6.7, 0.3, 0.18);
     if (!back) { rr(-0.4, -6.55, 0.8, 0.24, 0.1, '#0a0e18'); ctx.fillStyle = G; ctx.fillRect(-0.36, -6.5, 0.72, 0.13); ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glowSprite(G), -1.1, -7.2, 2.2, 1.6); ctx.restore(); }
     else { cap(0, -6.85, 0, -7.25, 0.12, S); }
     for (const side of armSides) if (side === (back ? 1 : -1)) drawArm(side * 1.05, -5.45, side, 0.36, metal(P), 0.24);
@@ -80,11 +84,11 @@ function drawRobot(ctx, x, y, s, r, team, o = {}) {
     rr(-0.95, -2.05, 1.9, 0.9, 0.2, metal('#3c4352'));
     ctx.save(); upper();
     for (const side of armSides) if (side === (back ? -1 : 1)) drawArm(side * 1.95, -5.3, side, 0.62, metal(shade(P, -0.15)), 0.5, metal('#3a4150'));
-    poly([[-1.15, -1.95], [1.15, -1.95], [1.75, -5.9], [-1.75, -5.9]], metal(P));
+    poly([[-1.15, -1.95], [1.15, -1.95], [1.75, -5.9], [-1.75, -5.9]], metal(P)); seam(-1.3, -2.6, 1.3, -2.6); seam(-1.55, -5.2, 1.55, -5.2); spec(-0.6, -5.4, 0.9, 0.35);
     if (!back) { poly([[-0.9, -3.0], [0.9, -3.0], [1.1, -4.6], [-1.1, -4.6]], '#1d222c'); for (let i = 0; i < 4; i++) { ctx.fillStyle = hexA(G, 0.85); ctx.fillRect(-0.75, -3.25 - i * 0.35, 1.5, 0.12); } lamp(0, -5.15, 0.32); }
     else { rr(-1.2, -5.6, 2.4, 2.2, 0.3, metal(shade(P, -0.3))); backNum(-4.5, 1.0); lamp(-0.7, -3.2, 0.2, G); lamp(0.7, -3.2, 0.2, G); }
     for (const side of [-1, 1]) { rr(side * 1.95 - 0.6, -6.3, 1.2, 1.0, 0.25, metal(S)); lamp(side * 1.95, -6.05, 0.09, G); }
-    ell(0, -6.05, 0.55, 0.42, metal('#3c4352'));
+    ell(0, -6.05, 0.55, 0.42, metal('#3c4352')); spec(-0.15, -6.2, 0.3, 0.15);
     if (!back) { lamp(-0.2, -6.1, 0.1); lamp(0.2, -6.1, 0.1); }
     for (const side of armSides) if (side === (back ? 1 : -1)) drawArm(side * 1.95, -5.3, side, 0.62, metal(shade(P, -0.15)), 0.5, metal('#3a4150'));
     ctx.restore();
@@ -95,7 +99,7 @@ function drawRobot(ctx, x, y, s, r, team, o = {}) {
     lamp(0, -1.0, 0.22, G);
     ctx.save(); upper();
     for (const side of armSides) if (side === (back ? -1 : 1)) drawArm(side * 1.35, -3.7, side, 0.26, metal(S), 0.22, metal(P));
-    ell(0, -3.35, 1.05, 1.5, metal(P));
+    ell(0, -3.35, 1.05, 1.5, metal(P)); spec(-0.35, -4.2, 0.55, 0.5); seam(-0.95, -2.6, 0.95, -2.6);
     ctx.strokeStyle = OUT; ctx.lineWidth = 0.36; ctx.beginPath(); ctx.ellipse(0, -3.1, 1.22, 0.32, 0, 0, TAU); ctx.stroke();
     ctx.strokeStyle = S; ctx.lineWidth = 0.22; ctx.beginPath(); ctx.ellipse(0, -3.1, 1.22, 0.32, 0, 0, TAU); ctx.stroke();
     if (!back) { ell(0, -3.95, 0.42, 0.42, '#0b0f19'); lamp(0, -3.95, 0.24); }
@@ -116,11 +120,11 @@ function drawRobot(ctx, x, y, s, r, team, o = {}) {
     }
     ctx.save(); upper();
     for (const side of armSides) if (side === (back ? -1 : 1)) drawArm(side * 0.95, -5.0, side, 0.3, metal(S), 0.2, G);
-    poly([[-0.7, hipY], [0.7, hipY], [1.0, -5.25], [0, -5.6], [-1.0, -5.25]], metal(P));
+    poly([[-0.7, hipY], [0.7, hipY], [1.0, -5.25], [0, -5.6], [-1.0, -5.25]], metal(P)); seam(0, -3.4, 0, -3.9); spec(-0.3, -5.0, 0.45, 0.25);
     if (!back) { poly([[-0.45, -3.9], [0.45, -3.9], [0.6, -4.9], [0, -5.15], [-0.6, -4.9]], metal(S)); lamp(0, -4.45, 0.16); }
     else { backNum(-4.4, 0.7); }
     for (const side of [-1, 1]) poly([[side * 0.55, -5.2], [side * 1.55, -6.15], [side * 1.05, -5.0]], metal(S));
-    rr(-0.5, -6.35, 1.0, 0.72, 0.18, metal(P));
+    rr(-0.5, -6.35, 1.0, 0.72, 0.18, metal(P)); spec(-0.15, -6.2, 0.3, 0.15);
     poly([[-0.25, -6.35], [0.25, -6.35], [0, -6.95]], metal(S));
     if (!back) { ctx.fillStyle = '#0a0e18'; ctx.fillRect(-0.42, -6.05, 0.84, 0.2); ctx.fillStyle = G; ctx.fillRect(-0.36, -6.0, 0.72, 0.1); lamp(0.15 * Math.sin(t * 2), -5.95, 0.14); }
     if (back) { ctx.strokeStyle = OUT; ctx.lineWidth = 0.34; ctx.beginPath(); ctx.moveTo(0, -3.3); ctx.quadraticCurveTo(1.4 * tailSide, -2.2 + Math.sin(t * 4) * 0.2, 1.7 * tailSide, -3.3); ctx.stroke(); ctx.strokeStyle = S; ctx.lineWidth = 0.2; ctx.stroke(); }

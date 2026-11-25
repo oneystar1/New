@@ -7,13 +7,15 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#05070f">
 <title>Iron Diamond</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap">
 <style>
   :root { --bg: #05070f; --panel: #0f1528; --line: #26305a; --fg: #e8ecff; --muted: #8f97b8; --accent: #46e0ff; --pink: #ff3d8a; color-scheme: dark; }
   html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); overflow-x: hidden; max-width: 100vw; }
   body { font-family: Rajdhani, system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; box-sizing: border-box;
-    padding: calc(10px + env(safe-area-inset-top, 0px)) 16px calc(10px + env(safe-area-inset-bottom, 0px)); gap: 10px; }
+    padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); gap: 10px;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
   #stage { position: relative; width: min(100%, calc((100dvh - 90px) * 16 / 9)); max-width: 1280px; aspect-ratio: 16 / 9; }
   #game { width: 100%; height: 100%; display: block; background: #000; border-radius: 10px; outline: none; box-shadow: 0 0 0 1px var(--line), 0 20px 60px rgba(0,0,0,.6), 0 0 80px rgba(70,224,255,.08); touch-action: none; }
   #game:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
@@ -34,17 +36,25 @@
   .mid { display: flex; flex-direction: column; gap: 10px; align-items: center; }
   .btns { position: relative; width: 160px; height: 140px; }
   #touch button { font-family: Orbitron, sans-serif; font-weight: 900; color: #fff; background: #141b36; border: 2px solid var(--line); touch-action: none; }
-  #touch button.on { background: #26305a; }
+  #touch button.on { background: #26305a; transform: scale(.94); }
+  #rotate { display: none; font-weight: 700; font-size: 14px; color: var(--muted); text-align: center; }
+  @media (orientation: portrait) { body.touch #rotate { display: block; } }
+  body.touch #touch { max-width: 520px; }
   .btns button { position: absolute; width: 66px; height: 66px; border-radius: 50%; font-size: 20px; }
   .btns .a { right: 0; top: 10px; border-color: var(--accent) !important; box-shadow: 0 0 16px rgba(70,224,255,.3); }
   .btns .b { left: 0; top: 64px; border-color: var(--pink) !important; box-shadow: 0 0 16px rgba(255,61,138,.3); }
-  .mid button { border-radius: 14px; padding: 8px 14px; font-size: 11px; letter-spacing: .1em; }
+  .mid button { border-radius: 14px; padding: 8px 14px; font-size: 11px; letter-spacing: .1em; white-space: nowrap; }
   @media (orientation: landscape) and (pointer: coarse) {
     body.touch { padding: 4px; }
     body.touch #stage { width: min(100%, calc((100dvh - 8px) * 16 / 9)); }
-    body.touch #touch { position: fixed; inset: auto 0 0 0; max-width: none; padding: 0 max(12px, env(safe-area-inset-left)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right)); box-sizing: border-box; pointer-events: none; opacity: .5; }
+    body.touch #touch { position: fixed; inset: auto 0 0 0; max-width: none; padding: 0 max(12px, env(safe-area-inset-left)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right)); box-sizing: border-box; pointer-events: none; opacity: .55; }
+    body.touch #dpad { width: 128px; height: 128px; }
+    body.touch .btns { width: 140px; height: 118px; }
+    body.touch .btns button { width: 58px; height: 58px; font-size: 18px; }
+    body.touch .btns .b { top: 56px; }
+    body.touch .mid button { padding: 6px 10px; font-size: 10px; }
     body.touch #touch > * { pointer-events: auto; }
-    body.touch .mid { position: fixed; top: max(8px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); flex-direction: row; }
+    body.touch .mid { position: fixed; bottom: max(8px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); flex-direction: row; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -59,9 +69,10 @@
   <span><b>P2</b> arrows · <kbd>,</kbd> A · <kbd>.</kbd> B · <kbd>Backspace</kbd> start</span>
   <span><b>Gamepads</b> supported · <kbd>M</kbd> mute</span>
 </div>
+<div id="rotate">Turn your phone sideways for the big-screen view</div>
 <div id="touch">
   <div id="dpad" aria-label="Direction pad"><span class="u">▲</span><span class="d">▼</span><span class="l">◀</span><span class="r">▶</span></div>
-  <div class="mid"><button data-k="start" aria-label="Start">START</button></div>
+  <div class="mid"><button data-k="start" aria-label="Start">START</button><button id="fs" aria-label="Full screen">⤢ FULL</button></div>
   <div class="btns"><button class="b" data-k="b" aria-label="B button">B</button><button class="a" data-k="a" aria-label="A button">A</button></div>
 </div>
 <script src="src/core.js"></script>

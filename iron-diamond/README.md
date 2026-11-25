@@ -13,6 +13,21 @@ npm start      # then http://localhost:8080/iron-diamond/
 ![batting](../docs/screenshots/iron-diamond/batting.png)
 ![clash](../docs/screenshots/iron-diamond/clash.png)
 
+## On a phone
+
+Hold the phone sideways for the full-screen view; the d-pad, A, B and Start
+appear as translucent touch buttons and the HUD moves to the top of the screen.
+Hits, clash blows and explosions vibrate on phones that support it, and Android
+gets a FULL button for true fullscreen. **Settings → Effects** chooses AUTO
+(the default, which drops the glow and light effects if the phone can't keep
+60 fps), HIGH or LOW.
+
+To publish a single-file copy (for hosting anywhere):
+
+```sh
+python3 tools/build_iron_diamond.py iron-diamond-single.html
+```
+
 ## Modes
 
 - **Exhibition**: 1 player vs CPU, 2 players head to head, or CPU vs CPU to watch.

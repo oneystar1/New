@@ -24,7 +24,7 @@ function drawMatch(ctx, m) {
   Park.draw(ctx, cam, home, t, (c, w, h, tt) => drawBigBoard(c, w, h, m, tt));
   const ents = [];
   const fieldSide = m.sides[m.fld], batSide = m.sides[m.bat];
-  const boost = lerp(1, 1.7, ease(m.camK));
+  const boost = lerp(1, 1.9, ease(m.camK));
   const pitchView = m.state === 'pitch' || (m.state === 'wait' && m.view === 'bat') || m.state === 'intro';
   const pt = m.pt;
   // fielders
@@ -76,8 +76,11 @@ function drawMatch(ctx, m) {
   }
   m.parts.drawWorld(ctx, cam);
   Park.drawBackstop(ctx, cam);
+  // contact flash + shockwave ring
+  if (pitchView && pt && pt.hitT != null && pt.cross) { const k = (pt.t - pt.hitT) / 0.35; if (k >= 0 && k < 1) { const q = cam.proj(pt.cross.x, 0, pt.cross.z); if (q) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(200,250,255,${1 - k})`; ctx.lineWidth = 6 * (1 - k) + 1; ctx.beginPath(); ctx.ellipse(q.x, q.y, 20 + k * 180, (20 + k * 180) * 0.6, 0, 0, TAU); ctx.stroke(); ctx.restore(); glow(ctx, q.x, q.y, 120 * (1 - k) + 20, '#ffffff', 1 - k); } if (k < 0.25) { ctx.fillStyle = `rgba(255,255,255,${0.35 * (1 - k * 4)})`; ctx.fillRect(0, 0, W, H); } } }
   // strike zone & aim reticle (batting view)
   if (pitchView && pt && m.camK < 0.2) drawZone(ctx, cam, m);
+  Game.bloom && Game.bloom();
   // vignette
   const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.85); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.5)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
   drawHUD(ctx, m, pitchView);
@@ -180,26 +183,26 @@ function drawHUD(ctx, m, pitchView) {
   if (pitchView && m.pt && m.state !== 'intro') {
     // batter card
     const bt = m.batter(), bs = m.sides[m.bat];
-    robotCard(ctx, 14, H - 98, bt, bs, 'AT BAT', `${bs.batIdx + 1}. ${bt.pos}`, [['POW', m.st(bt, 'pow')], ['CON', m.st(bt, 'con')], ['SPD', m.st(bt, 'spd')]]);
+    const TL = Game.touchLand; robotCard(ctx, TL ? W - 354 : 14, TL ? 12 : H - 98, bt, bs, 'AT BAT', `${bs.batIdx + 1}. ${bt.pos}`, [['POW', m.st(bt, 'pow')], ['CON', m.st(bt, 'con')], ['SPD', m.st(bt, 'spd')]]);
     const pr = m.pitcher(), ps = m.sides[m.fld];
-    robotCard(ctx, W - 354, H - 98, pr, ps, 'PITCHING', `VEL ${m.st(pr, 'vel')} · BRK ${m.st(pr, 'brk')}`, null, pr.battery / 100);
+    robotCard(ctx, W - 354, TL ? 102 : H - 98, pr, ps, 'PITCHING', `VEL ${m.st(pr, 'vel')} · BRK ${m.st(pr, 'brk')}`, null, pr.battery / 100);
     // pitch selector
     if (humanFld) {
-      const pt = m.pt; panel(ctx, W - 164, H - 268, 150, 162, ps.team.g, 0.75);
-      txt(ctx, 'PITCH  [B]', W - 152, H - 252, 13, '#9aa6c8', 'left', FONT_H, 700);
-      PITCHES.forEach((p, i) => { const yy = H - 230 + i * 25, sel = i === pt.type, can = p.cost <= pr.battery; if (sel) { ctx.fillStyle = hexA(p.col, 0.18); ctx.fillRect(W - 158, yy - 11, 138, 22); } ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(W - 146, yy, 4, 0, TAU); ctx.fill(); txt(ctx, p.name, W - 136, yy, 15, can ? (sel ? '#ffffff' : '#aab4d6') : '#5a6280', 'left', FONT_H, sel ? 900 : 700); if (p.cost > 3) txt(ctx, `⚡${p.cost}`, W - 26, yy, 13, '#d06bff', 'right', FONT_B, 700); });
+      const pt = m.pt, oy = TL ? 194 - (H - 268) : 0; panel(ctx, TL ? W - 504 : W - 164, H - 268 + oy, 150, 162, ps.team.g, 0.75); const ox = TL ? -340 : 0;
+      txt(ctx, 'PITCH  [B]', W - 152 + ox, H - 252 + oy, 13, '#9aa6c8', 'left', FONT_H, 700);
+      PITCHES.forEach((p, i) => { const yy = H - 230 + i * 25 + oy, sel = i === pt.type, can = p.cost <= pr.battery; if (sel) { ctx.fillStyle = hexA(p.col, 0.18); ctx.fillRect(W - 158 + ox, yy - 11, 138, 22); } ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(W - 146 + ox, yy, 4, 0, TAU); ctx.fill(); txt(ctx, p.name, W - 136 + ox, yy, 15, can ? (sel ? '#ffffff' : '#aab4d6') : '#5a6280', 'left', FONT_H, sel ? 900 : 700); if (p.cost > 3) txt(ctx, `⚡${p.cost}`, W - 26 + ox, yy, 13, '#d06bff', 'right', FONT_B, 700); });
     }
     let hint = '';
     if (humanBat && humanFld) hint = 'BATTER: ←/→ shift · A swing · B power · ↓+A bunt     PITCHER: aim, B pitch, A throw, steer ←/→';
     else if (humanBat) hint = '←/→ SHIFT   A SWING   B POWER SWING   ↓+A BUNT';
     else if (humanFld) hint = m.pt.stage === 'aim' ? 'D-PAD AIM   B PITCH TYPE   A THROW' : 'HOLD ←/→ TO STEER THE PITCH';
-    if (hint) txt(ctx, hint, W / 2, H - 14, 15, '#c8d2f0', 'center', FONT_B, 700);
+    if (hint) txt(ctx, hint, W / 2, Game.touchLand ? H - 58 : H - 14, 15, '#c8d2f0', 'center', FONT_B, 700);
   } else if (m.state === 'play' || m.state === 'wait') {
     drawMinimap(ctx, m);
     let hint = '';
     if (humanFld && m.ball) hint = m.ball.held && m.ball.held.f ? 'HOLD DIRECTION + A TO THROW:  → 1ST   ↑ 2ND   ← 3RD   ↓ HOME' : 'RUN TO THE BALL — YELLOW RING MARKS THE LANDING SPOT';
     if (humanBat && m.state === 'play') hint = (hint ? hint + '     ' : '') + 'A ADVANCE RUNNERS   B RETREAT';
-    if (hint) txt(ctx, hint, W / 2, H - 14, 15, '#c8d2f0', 'center', FONT_B, 700);
+    if (hint) txt(ctx, hint, W / 2, Game.touchLand ? H - 58 : H - 14, 15, '#c8d2f0', 'center', FONT_B, 700);
   }
 }
 function robotCard(ctx, x, y, r, sd, label, sub, stats, battery) {
@@ -215,8 +218,9 @@ function robotCard(ctx, x, y, r, sd, label, sub, stats, battery) {
   if (stats) stats.forEach(([k, v], i) => { txt(ctx, k, x + 266 + i * 26, y + 14, 9, '#9aa6c8', 'center', FONT_H, 700); txt(ctx, String(v), x + 266 + i * 26, y + 30, 15, '#ffffff', 'center', FONT_H, 900); });
 }
 function drawMinimap(ctx, m) {
-  const cx = W - 92, cy = H - 40, k = 0.32;
-  panel(ctx, W - 188, H - 172, 176, 150, '#46e0ff', 0.7);
+  const oy = Game.touchLand ? 12 - (H - 172) : 0;
+  const cx = W - 92, cy = H - 40 + oy, k = 0.32;
+  panel(ctx, W - 188, H - 172 + oy, 176, 150, '#46e0ff', 0.7);
   const P = (x, y) => [cx + x * k, cy - y * k];
   ctx.fillStyle = 'rgba(40,140,80,0.35)'; ctx.beginPath(); ctx.moveTo(...P(0, 0)); for (let i = 0; i <= 20; i++) { const th = -P_ + 2 * P_ * i / 20; ctx.lineTo(...P(...polar(fenceR(th), th))); } ctx.closePath(); ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1; ctx.beginPath(); for (let b = 0; b <= 4; b++) { const B = BASES[b]; b ? ctx.lineTo(...P(B.x, B.y)) : ctx.moveTo(...P(B.x, B.y)); } ctx.stroke();

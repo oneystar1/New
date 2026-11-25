@@ -16,6 +16,8 @@ function shade(hex, f) { // f<0 darker, f>0 lighter
   if (f < 0) { r *= 1 + f; g *= 1 + f; b *= 1 + f; } else { r += (255 - r) * f; g += (255 - g) * f; b += (255 - b) * f; }
   return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
 }
+// visual quality: 'high' adds bloom, light beams, flares and grain; dropped automatically on slow devices
+const FX = { high: true, auto: true };
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } },
@@ -96,7 +98,9 @@ const Sfx = {
     const g = this.ac.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
     s.connect(f); f.connect(g); g.connect(dest || this.master); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
   },
+  buzz(ms) { try { if (navigator.vibrate && FX.haptics !== false) navigator.vibrate(ms); } catch (e) { } },
   play(name) {
+    const hap = { bat: 18, hit: 25, heavy: 45, boom: [60, 40, 90], clash: 30, hr: [30, 40, 30, 40, 60] }[name]; if (hap) this.buzz(hap);
     if (!this.ac) return;
     switch (name) {
       case 'move': this.tone(660, 0.05, 'square', 0.06); break;

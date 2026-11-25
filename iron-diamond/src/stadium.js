@@ -66,10 +66,12 @@ const Park = {
     for (const { s } of st) { if (cam.fillPoly(ctx, s.pts, s.pts[0][2] > 30 ? '#161b33' : '#1c2240')) { ctx.strokeStyle = 'rgba(120,140,220,0.08)'; ctx.lineWidth = 1; ctx.stroke(); } }
     // crowd dots
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const flash = Math.floor(t * 6) * 131; let ci = 0;
     for (const c of this.crowd) {
-      const q = cam.proj(c.p[0], c.p[1], c.p[2]); if (!q || q.x < -5 || q.x > W + 5 || q.y < -5 || q.y > H + 5) continue;
+      ci++; const q = cam.proj(c.p[0], c.p[1], c.p[2]); if (!q || q.x < -5 || q.x > W + 5 || q.y < -5 || q.y > H + 5) continue;
       const sz = clamp(q.s * 1.6, 0.8, 4); const tw = 0.5 + 0.5 * Math.sin(t * 3 + c.ph);
       ctx.fillStyle = c.c ? hexA(homeTeam.g, 0.5 + 0.4 * tw) : `rgba(${150 + tw * 60 | 0},${160 + tw * 50 | 0},220,0.35)`; ctx.fillRect(q.x, q.y, sz, sz);
+      if (FX.high && (flash + ci * 977) % 1800 === 0) { ctx.fillStyle = '#ffffff'; ctx.fillRect(q.x - 1, q.y - 1, sz + 2, sz + 2); ctx.drawImage(glowSprite('#ffffff'), q.x - 9, q.y - 9, 18, 18); }
     }
     ctx.restore();
     // neon rim on top of stands
@@ -98,6 +100,8 @@ const Park = {
     const track = []; for (let i = 0; i <= 40; i++) { const th = -P_ + 2 * P_ * i / 40; track.push([...polar(fenceR(th) - 0.5, th), 0]); }
     for (let i = 40; i >= 0; i--) { const th = -P_ + 2 * P_ * i / 40; track.push([...polar(fenceR(th) - 14, th), 0]); }
     cam.fillPoly(ctx, track, '#5c3a2a');
+    if (FX.high) { ctx.save(); ctx.globalAlpha = 0.09; ctx.fillStyle = Park._pat || (Park._pat = ctx.createPattern(grainTex(), 'repeat')); ctx.fillRect(0, 0, W, H); ctx.restore(); }
+    const pool = cam.proj(0, 150, 0); if (pool) glow(ctx, pool.x, pool.y, Math.min(900, 330 * pool.s + 60), '#cfe2ff', 0.1);
     ctx.restore();
     // foul lines + boxes (neon)
     const fl = fenceR(P_) + 2;
@@ -124,6 +128,26 @@ const Park = {
       cam.line(ctx, [a[0], a[1], h], [b[0], b[1], h], hexA(homeTeam.g, 0.9), 2);
     }
     this.drawDistances(ctx, cam);
+    if (FX.high) this.drawBeams(ctx, cam, t);
+  },
+  drawBeams(ctx, cam, t) {
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (const tw of this.towers) {
+      const q = cam.proj(tw.x, tw.y, tw.z); if (!q) continue;
+      const gx = lerp(tw.x, 0, 0.72), gy = lerp(tw.y, 170, 0.72), dx = gx - tw.x, dy = gy - tw.y, l = hyp(dx, dy), nx = -dy / l * 85, ny = dx / l * 85;
+      const a = cam.proj(gx + nx, gy + ny, 0), b = cam.proj(gx - nx, gy - ny, 0); if (!a || !b) continue;
+      const g = ctx.createLinearGradient(q.x, q.y, (a.x + b.x) / 2, (a.y + b.y) / 2); g.addColorStop(0, 'rgba(190,215,255,0.16)'); g.addColorStop(1, 'rgba(190,215,255,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.closePath(); ctx.fill();
+      // lens flare ghosts toward the screen centre
+      if (q.x > -40 && q.x < W + 40 && q.y > -40 && q.y < H) {
+        const vx = W / 2 - q.x, vy = H / 2 - q.y;
+        [[0.3, 12, '#7fd8ff', 0.12], [0.55, 22, '#b48cff', 0.07]].forEach(([k, r, c, al]) => glow(ctx, q.x + vx * k, q.y + vy * k, r, c, al));
+        ctx.globalAlpha = 0.35; ctx.fillStyle = 'rgba(220,235,255,0.5)'; ctx.fillRect(q.x - 60, q.y - 0.75, 120, 1.5); ctx.globalAlpha = 1;
+      }
+    }
+    // dust motes drifting through the light
+    for (let i = 0; i < 40; i++) { const x = ((i * 73.3 + t * (6 + i % 5)) % 520) - 260, y = 60 + (i * 41.7) % 300, z = 20 + ((i * 17.1 + t * 3) % 70); const q = cam.proj(x, y, z); if (q) { ctx.fillStyle = 'rgba(220,235,255,0.35)'; const r = Math.max(1, q.s * 0.6); ctx.fillRect(q.x, q.y, r, r); } }
+    ctx.restore();
   },
   drawDistances(ctx, cam) {
     for (const [deg, label] of [[-45, '335'], [-22, '375'], [0, '402'], [22, '375'], [45, '335']]) {
@@ -152,3 +176,10 @@ const Park = {
   },
 };
 const P_ = 45 * DEG;
+
+let _grain = null;
+function grainTex() {
+  if (_grain) return _grain; const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); const d = g.createImageData(128, 128);
+  const rng = mulberry(9); for (let i = 0; i < d.data.length; i += 4) { const v = rng() < 0.5 ? 0 : 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = rng() * 120; }
+  g.putImageData(d, 0, 0); return _grain = c;
+}

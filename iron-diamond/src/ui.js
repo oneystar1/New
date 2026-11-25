@@ -2,11 +2,12 @@
 'use strict';
 const Game = {
   scene: null, t: 0,
-  settings: Object.assign({ innings: 3, diff: 1, clash: true, music: true }, store.get('ironDiamond.settings', {})),
+  settings: Object.assign({ innings: 3, diff: 1, clash: true, music: true, fx: 'auto', haptics: true }, store.get('ironDiamond.settings', {})),
   set(s) { this.scene = s; s.enter && s.enter(); },
-  save() { store.set('ironDiamond.settings', this.settings); Sfx.musicOn = this.settings.music; },
+  save() { store.set('ironDiamond.settings', this.settings); Sfx.musicOn = this.settings.music; applyFx(); },
 };
-Sfx.musicOn = Game.settings.music;
+function applyFx() { const f = Game.settings.fx; FX.high = f !== 'low'; FX.auto = f === 'auto'; FX.haptics = Game.settings.haptics; }
+Sfx.musicOn = Game.settings.music; applyFx();
 const DIFF_NAMES = ['ROOKIE', 'PRO', 'LEGEND'];
 
 // ---------- shared backdrop: orbiting stadium flyover
@@ -14,6 +15,7 @@ const bgCam = new Cam();
 function drawBackdrop(ctx, t, team, dim = 0.55) {
   const a = t * 0.06; bgCam.set(Math.sin(a) * 260, 140 - Math.cos(a) * 260, 140, 0, 170, 0, 600);
   Park.draw(ctx, bgCam, team || TEAMS[(Math.floor(t / 12)) % TEAMS.length], t, null);
+  Game.bloom && Game.bloom();
   ctx.fillStyle = `rgba(4,6,16,${dim})`; ctx.fillRect(0, 0, W, H);
 }
 function menuList(ctx, items, sel, x, y, opts = {}) {
@@ -213,6 +215,7 @@ class GameScene {
       return;
     }
     if (Input.anyHit('start') && m.state !== 'over') { this.paused = true; this.sel = 0; Sfx.play('ok'); return; }
+    if (m.hitStop > 0) { m.hitStop -= dt; m.update(dt * 0.12); return; }
     for (let i = 0; i < this.speed; i++) m.update(dt);
     if (m.over) { this.overT += dt; if (this.overT > 3.2 || (this.overT > 1 && (Input.anyHit('a') || Input.anyHit('start')))) this.onEnd(m); }
   }
@@ -396,11 +399,11 @@ class HowToScene {
 }
 class SettingsScene {
   constructor() { this.t = 0; this.sel = 0; }
-  items() { const s = Game.settings; return [{ label: 'INNINGS', value: String(s.innings) }, { label: 'DIFFICULTY', value: DIFF_NAMES[s.diff] }, { label: 'CLASHES', value: s.clash ? 'ON' : 'OFF' }, { label: 'SOUND', value: Sfx.muted ? 'OFF' : 'ON' }, { label: 'MUSIC', value: s.music ? 'ON' : 'OFF' }, { label: 'BACK' }]; }
+  items() { const s = Game.settings; return [{ label: 'INNINGS', value: String(s.innings) }, { label: 'DIFFICULTY', value: DIFF_NAMES[s.diff] }, { label: 'CLASHES', value: s.clash ? 'ON' : 'OFF' }, { label: 'SOUND', value: Sfx.muted ? 'OFF' : 'ON' }, { label: 'MUSIC', value: s.music ? 'ON' : 'OFF' }, { label: 'EFFECTS', value: s.fx.toUpperCase() }, { label: 'VIBRATION', value: s.haptics ? 'ON' : 'OFF' }, { label: 'BACK' }]; }
   update(dt) {
-    this.t += dt; const s = Game.settings; this.sel = navList(this.sel, 6);
+    this.t += dt; const s = Game.settings; this.sel = navList(this.sel, 8);
     const d = Input.anyHit('right') || Input.anyHit('a') ? 1 : Input.anyHit('left') ? -1 : 0;
-    if (Input.anyHit('b') || (this.sel === 5 && Input.anyHit('a'))) { Game.save(); Game.set(new TitleScene()); Game.scene.pressed = true; return; }
+    if (Input.anyHit('b') || (this.sel === 7 && Input.anyHit('a'))) { Game.save(); Game.set(new TitleScene()); Game.scene.pressed = true; return; }
     if (d) {
       Sfx.play('move');
       if (this.sel === 0) { const o = [3, 5, 7, 9]; s.innings = o[(o.indexOf(s.innings) + d + 4) % 4]; }
@@ -408,8 +411,10 @@ class SettingsScene {
       if (this.sel === 2) s.clash = !s.clash;
       if (this.sel === 3) Sfx.toggleMute();
       if (this.sel === 4) s.music = !s.music;
+      if (this.sel === 5) { const o = ['auto', 'high', 'low']; s.fx = o[(o.indexOf(s.fx) + d + 3) % 3]; }
+      if (this.sel === 6) s.haptics = !s.haptics;
       Game.save();
     }
   }
-  draw(ctx) { drawBackdrop(ctx, this.t + 300, null, 0.7); glowTxt(ctx, 'SETTINGS', W / 2, 70, 40, '#ffffff', '#46e0ff'); menuList(ctx, this.items(), this.sel, W / 2, 120, { w: 440 }); footer(ctx, '←/→ CHANGE   B BACK'); }
+  draw(ctx) { drawBackdrop(ctx, this.t + 300, null, 0.7); glowTxt(ctx, 'SETTINGS', W / 2, 70, 40, '#ffffff', '#46e0ff'); menuList(ctx, this.items(), this.sel, W / 2, 96, { w: 440, h: 40 }); footer(ctx, '←/→ CHANGE   B BACK   ·   EFFECTS AUTO LOWERS GLOW ON SLOW PHONES'); }
 }
