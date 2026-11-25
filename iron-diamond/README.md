@@ -155,8 +155,11 @@ back to 2D on its own if WebGL isn't available.
 - **Sound**: all synthesized, with a stadium reverb: a layered bat crack that
   gets louder and brighter the better you square it up, a mitt pop, a pitch
   whoosh timed to the flight, metallic FM clangs in clashes, explosions, a
-  formant crowd with whistles, and brass fanfares on homers. The **announcer** (on by default; Settings) calls strikeouts, walks, homers, steals, clashes and
-  the final out using the browser's speech voice.
+  formant crowd with whistles, and brass fanfares on homers. The **announcer** (on by default; Settings) is a set of recorded lines (rendered
+  offline with the espeak-ng voice, stored as small MP3s in `src/voice.js`) played
+  through Web Audio with a PA-style echo, so it works wherever the sound effects
+  do; it calls strikeouts, walks, homers, steals, clashes, walk-offs and the final
+  out, and ducks the music while it talks.
 
 ## Broadcast touches
 

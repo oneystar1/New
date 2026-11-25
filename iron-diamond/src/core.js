@@ -86,10 +86,9 @@ const Sfx = {
     this.rev.buffer = ir; const rg = ac.createGain(); rg.gain.value = 0.55; this.rev.connect(rg); rg.connect(this.master);
     const len = ac.sampleRate * 2; this.noiseBuf = ac.createBuffer(1, len, ac.sampleRate);
     const d = this.noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-    this.startMusic(); this.unlockSpeech();
+    this.startMusic(); this.loadVoice();
   },
-  unlockSpeech() { try { if (!window.speechSynthesis || this._spk) return; this._spk = true; const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); speechSynthesis.getVoices(); } catch (e) { } },
-  toggleMute() { this.muted = !this.muted; store.set('ironDiamond.muted', this.muted); if (this.master) this.master.gain.value = this.muted ? 0 : 0.7; if (this.muted) try { speechSynthesis.cancel(); } catch (e) { } },
+  toggleMute() { this.muted = !this.muted; store.set('ironDiamond.muted', this.muted); if (this.master) this.master.gain.value = this.muted ? 0 : 0.7; },
   out(node, wet) { node.connect(this.sfx); if (wet) { const g = this.ac.createGain(); g.gain.value = wet; node.connect(g); g.connect(this.rev); } },
   env(g, t, a, peak, d) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); },
   // oscillator voice with optional pitch glide
@@ -141,13 +140,25 @@ const Sfx = {
     for (const f of [380, 900]) { const src = ac.createBufferSource(); src.buffer = this.noiseBuf; src.loop = true; const fl = ac.createBiquadFilter(); fl.type = 'bandpass'; fl.frequency.value = f; fl.Q.value = 0.8; src.connect(fl); fl.connect(g); src.start(); }
     const lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = 0.13; lg.gain.value = 0.018; lfo.connect(lg); lg.connect(g.gain); lfo.start(); this._bed = g;
   },
-  // stadium announcer through the browser's speech engine, pitched down and robotic
+  // stadium announcer: recorded lines (voice.js) through a PA chain with slap-back echo and the stadium reverb
+  VOICE_KEYS: { 'Play ball!': 'playball', 'Strike three!': 'strike3', 'Ball four.': 'ball4', 'Home run!': 'homerun', 'Grand slam!': 'grandslam', 'Stolen base!': 'stolen', 'Caught stealing!': 'caught', 'Picked off!': 'pickoff', 'Clash!': 'clash', 'Destroyed!': 'destroyed', 'Ballgame!': 'ballgame', 'It is a draw.': 'draw', 'Overdrive!': 'overdrive', 'Home run derby!': 'derby', 'Welcome to training.': 'training', 'Announcer on.': 'annon', 'Walk off!': 'walkoff', 'Double play!': 'doubleplay' },
+  loadVoice() {
+    if (this.voice || typeof VOICE_CLIPS === 'undefined' || !this.ac) return; this.voice = {};
+    for (const k in VOICE_CLIPS) { try { const bin = atob(VOICE_CLIPS[k]), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); this.ac.decodeAudioData(u.buffer, b => { this.voice[k] = b; }, () => { }); } catch (e) { } }
+  },
   say(text) {
+    if (this.muted || !this.ac || (typeof Game !== 'undefined' && Game.settings && Game.settings.announcer === false)) return;
+    this.loadVoice(); const key = this.VOICE_KEYS[text] || (/feet/i.test(text) ? 'gone' : null), buf = key && this.voice && this.voice[key]; if (!buf) return;
     try {
-      if (this.muted || (typeof Game !== 'undefined' && Game.settings && Game.settings.announcer === false) || !window.speechSynthesis) return;
-      if (speechSynthesis.speaking) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.pitch = 0.35; u.rate = 1.02; u.volume = 0.9;
-      const vs = speechSynthesis.getVoices(), v = vs.find(x => /en(-|_)US/i.test(x.lang) && /male|david|alex|daniel|fred/i.test(x.name)) || vs.find(x => /^en/i.test(x.lang)); if (v) u.voice = v;
-      speechSynthesis.speak(u);
+      const ac = this.ac, t = ac.currentTime; if (this._vsrc) try { this._vsrc.stop(); } catch (e) { }
+      const src = ac.createBufferSource(); src.buffer = buf; src.playbackRate.value = 0.94; this._vsrc = src;
+      const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 200; const pk = ac.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = 2600; pk.gain.value = 5; pk.Q.value = 0.9;
+      const g = ac.createGain(); g.gain.value = 1.5; src.connect(hp); hp.connect(pk); pk.connect(g); this.out(g, 0.55);
+      const dl = ac.createDelay(1); dl.delayTime.value = 0.17; const fb = ac.createGain(); fb.gain.value = 0.28; const eg = ac.createGain(); eg.gain.value = 0.33;
+      g.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(eg); eg.connect(this.sfx);
+      if (this.music) { this.music.gain.cancelScheduledValues(t); this.music.gain.setTargetAtTime(0.06, t, 0.05); this.music.gain.setTargetAtTime(0.16, t + buf.duration / 0.94 + 0.2, 0.3); }
+      src.start(t); src.stop(t + buf.duration / 0.94 + 0.05);
+      setTimeout(() => { try { dl.disconnect(); fb.disconnect(); } catch (e) { } }, (buf.duration + 2) * 1000);
     } catch (e) { }
   },
   play(name, o = {}) {

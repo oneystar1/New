@@ -65,7 +65,7 @@ const R3D = { ok: false, frame: 0, rigs: new Map() };
     if (r.cls === 'STRIKER' || r.cls === 'VECTOR') { P.head.geometry = GEO.sph; add('earL', GEO.cyl, M.s); add('earR', GEO.cyl, M.s); add('ant', GEO.cyl, M.steel); add('antT', GEO.sph, M.glow); }
     add('bat', GEO.limb, M.bat); add('batGrip', GEO.cyl, M.batGrip); add('ball', GEO.sph, M.white);
     root.traverse(o => { o.frustumCulled = false; });
-    scene.add(root); return { root, P, D, M, r, team, ghost, seen: 0 };
+    scene.add(root); return { root, P, D, M, r, team, ghost, seen: 0, snap: true };
   }
   // ---------------------------------------------------------------- math helpers
   const V = (x = 0, y = 0, z = 0) => new T.Vector3(x, y, z), UP = V(0, 1, 0), tv = V(), tq = new T.Quaternion(), tq2 = new T.Quaternion();
@@ -109,6 +109,12 @@ const R3D = { ok: false, frame: 0, rigs: new Map() };
         else { const q = (p - 0.6) / 0.4; (gl > 0 ? footL : footR).z = 1.9; crouch = 0.45; bend = 0.15 + 0.55 * Math.min(1, q * 1.6); twist = hand * lerp(0.6, -0.7, Math.min(1, q * 1.5)); if (gl > 0) liftR = q * 0.8; else liftL = q * 0.8; }
       } else { crouch = 0.2; bend = 0.25 * p; twist = hand * lerp(0.5, -0.6, p); }
     }
+    // smoothing: blend toward the new pose so transitions flow instead of popping
+    const sm = rig.sm || (rig.sm = {}), now = performance.now(), sdt = Math.min(0.1, rig.lastNow ? (now - rig.lastNow) / 1000 : 0.016); rig.lastNow = now;
+    const rate = (k === 'pitch' || k === 'throw' || k === 'bat') ? 24 : 13, kS = rig.snap ? 1 : 1 - Math.exp(-sdt * rate);
+    const S1 = (n, v) => (sm[n] = sm[n] == null || rig.snap ? v : sm[n] + (v - sm[n]) * kS);
+    const SV = (n, v) => { const pv = sm[n]; if (!pv || rig.snap) { sm[n] = v.clone(); return v; } pv.lerp(v, kS); return pv.clone(); };
+    crouch = S1('cr', crouch); bend = S1('be', bend); if (!(k === 'bat' && o.p != null)) twist = S1('tw', twist); else sm.tw = twist;
     // body points
     const hipY = (D.legs === 'hover' ? D.hip + Math.sin(t * 3.3) * 0.15 : D.hip) - crouch * (D.legs === 'tread' ? 0.2 : 1) - bob;
     const pel = V(0, hipY, 0).add(hipShift);
@@ -130,6 +136,7 @@ const R3D = { ok: false, frame: 0, rigs: new Map() };
     }
     if (bat) { const g2 = bat.grip.clone().addScaledVector(bat.dir, 0.38); if (hand > 0) { handR = bat.grip; handL = g2; } else { handL = bat.grip; handR = g2; } }
     if (!handL) handL = relax(shL, sL); if (!handR) handR = relax(shR, sR);
+    if (!bat) { handL = SV('hL', handL); handR = SV('hR', handR); } else { sm.hL = handL.clone(); sm.hR = handR.clone(); }
     if (holdBall && !bat && !(k === 'pitch' || k === 'throw')) { handR = chest.clone().add(V(-0.4, -0.8, 0.8)); }
     // ---- lay the armour
     const yawT = twist;
@@ -166,7 +173,7 @@ const R3D = { ok: false, frame: 0, rigs: new Map() };
     // legs
     if (D.legs === 'biped' || D.legs === 'digi') {
       for (const [s, F, lift] of [['L', footL, liftL], ['R', footR, liftR]]) {
-        const side = s === 'L' ? sL : sR, hipP = pel.clone().add(rotY(V(side * 0.4, -0.1, 0), twist * 0.3)), foot = F.clone().add(V(0, lift, lift * 0.35));
+        const side = s === 'L' ? sL : sR, hipP = pel.clone().add(rotY(V(side * 0.4, -0.1, 0), twist * 0.3)), foot = SV('f' + s, F.clone().add(V(0, lift, lift * 0.35)));
         if (D.legs === 'biped') {
           const sol = ik(hipP, foot.clone().add(V(0, 0.3, 0)), D.th, D.sh, V(side * 0.15, 0, 1)); seg(P['th' + s], hipP, sol.E, D.limb * 1.35); seg(P['sn' + s], sol.E, sol.Tg, D.limb * 1.15); put(P['kn' + s], sol.E, 0.2, 0.2, 0.2);
           { const fo = V(0, 0, D.limb * 0.75); seg(P['thG' + s], hipP.clone().lerp(sol.E, 0.12).add(fo), hipP.clone().lerp(sol.E, 0.88).add(fo), D.limb * 1.9, D.limb * 0.9); seg(P['thS' + s], hipP.clone().lerp(sol.E, 0.2).add(fo).add(V(side * D.limb * 0.95, 0, 0.05)), hipP.clone().lerp(sol.E, 0.8).add(fo).add(V(side * D.limb * 0.95, 0, 0.05)), 0.04, 0.1);
@@ -201,8 +208,10 @@ const R3D = { ok: false, frame: 0, rigs: new Map() };
     const key = r; let rig = R3D.rigs.get(key);
     if (!rig || rig.team !== team || rig.ghost !== !!ghost || rig.r.cls !== r.cls) { if (rig) scene.remove(rig.root); rig = buildRig(r, team, !!ghost); R3D.rigs.set(key, rig); }
     rig.seen = R3D.frame; rig.root.visible = true;
-    rig.root.position.set(x, 0, -y); rig.root.rotation.set(0, yaw, 0); rig.root.scale.setScalar(scale || 1);
-    pose(rig, o || {});
+    const nowY = performance.now(), ydt = Math.min(0.1, rig.lastY ? (nowY - rig.lastY) / 1000 : 0); rig.lastY = nowY;
+    if (rig.yawS == null || rig.snap) rig.yawS = yaw; else { const d = Math.atan2(Math.sin(yaw - rig.yawS), Math.cos(yaw - rig.yawS)); rig.yawS += d * (1 - Math.exp(-ydt * 11)); }
+    rig.root.position.set(x, 0, -y); rig.root.rotation.set(0, rig.yawS, 0); rig.root.scale.setScalar(scale || 1);
+    pose(rig, o || {}); rig.snap = false;
   };
   R3D.draw = function (ctx, cam, cv) {
     for (const [k, rig] of R3D.rigs) if (rig.seen !== R3D.frame) { rig.root.visible = false; if (R3D.frame - rig.seen > 600) { scene.remove(rig.root); R3D.rigs.delete(k); } }

@@ -59,7 +59,7 @@ function drawMatch(ctx, m) {
       else if (pt.stage === 'aim') o.ball = true;
     }
     if (m.ball && m.ball.held && m.ball.held.f === f) o.ball = true;
-    if (f.throwAnim > 0) { o.throwArm = 1 - f.throwAnim / 0.3; f.throwAnim -= 1 / 60; }
+    if (f.throwAnim > 0) o.throwArm = 1 - f.throwAnim / 0.3;
     ents.push({ x, y, z: 0, r: f.r, team: fieldSide.team, o, ctrl: m.ctrlF === f, side: fieldSide, sc });
   }
   // batter, runners

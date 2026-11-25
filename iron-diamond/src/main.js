@@ -103,7 +103,7 @@
   window.ID = { Game, Input, TEAMS, buildRoster, Match, GameScene, Park, get scene() { return Game.scene; }, errors: [] };
   addEventListener('error', e => window.ID.errors.push(String(e.message)));
 
-  let last = performance.now(), acc = 0; const STEP = 1 / 60;
+  let last = performance.now(), frameDt = 1 / 60; const STEP = 1 / 60;
   // bloom: highlights extracted by squaring the image twice at low resolution, then added back blurred
   const bA = document.createElement('canvas'), bB = document.createElement('canvas'), bC = document.createElement('canvas');
   const xA = bA.getContext('2d'), xB = bB.getContext('2d'), xC = bC.getContext('2d');
@@ -123,19 +123,19 @@
     if (FX.high && FX.auto && document.visibilityState === 'visible' && now > 4000) { slowT = ema > 24 ? slowT + raw / 1000 : 0; if (slowT > 3) { FX.high = false; toast = 'EFFECTS LOWERED FOR SMOOTHER PLAY'; toastT = 3; } }
     Game.touchLand = document.body.classList.contains('overlay');
     touchLabels();
-    acc += Math.min(0.1, (now - last) / 1000); last = now;
-    let n = 0;
-    while (acc >= STEP && n < 5) {
+    const fdt = Math.min(0.1, Math.max(0, (now - last) / 1000)); last = now; frameDt = fdt;
+    // variable step: one update per displayed frame (smooth on 120 Hz screens), sub-stepped so no step exceeds 1/60 s
+    const steps = Math.max(1, Math.ceil(fdt / STEP - 1e-6)), h = fdt / steps;
+    for (let n = 0; n < steps && fdt > 0; n++) {
       Input.poll();
-      try { Game.scene.update(STEP); } catch (e) { console.error(e); { const m = String(e && e.stack || e); if (!window.ID.errors.includes(m) && window.ID.errors.length < 20) window.ID.errors.push(m); } }
-      acc -= STEP; n++;
+      try { Game.scene.update(h); } catch (e) { console.error(e); { const m = String(e && e.stack || e); if (!window.ID.errors.includes(m) && window.ID.errors.length < 20) window.ID.errors.push(m); } }
     }
     resize();
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
     Game.taps = [];
     try { Game.scene.draw(ctx); } catch (e) { const m = String(e && e.stack || e); if (!window.ID.errors.includes(m) && window.ID.errors.length < 20) { console.error(e); window.ID.errors.push(m); } }
     if (Sfx.muted) { txt(ctx, '🔇', W - 18, 18, 14, '#8f9bc0', 'center'); }
-    if (toastT > 0) { toastT -= 1 / 60; ctx.globalAlpha = Math.min(1, toastT); txt(ctx, toast, W / 2, 16, 13, '#9fdcff', 'center', FONT_H, 700); ctx.globalAlpha = 1; }
+    if (toastT > 0) { toastT -= frameDt; ctx.globalAlpha = Math.min(1, toastT); txt(ctx, toast, W / 2, 16, 13, '#9fdcff', 'center', FONT_H, 700); ctx.globalAlpha = 1; }
     requestAnimationFrame(frame);
   }
   // wait for webfonts so canvas text uses them

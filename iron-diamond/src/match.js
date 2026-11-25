@@ -10,7 +10,7 @@ const PITCHES = [
 const BAT_Z = 2.55, IDEAL = 0.13, ZONE_X = 0.95, ZONE_Z0 = 1.5, ZONE_Z1 = 3.7;
 const FIELD_HOME = { P: [0, 60.5], C: [0, -3.5], '1B': [66, 86], '2B': [30, 126], SS: [-32, 124], '3B': [-66, 86], LF: [-128, 238], CF: [0, 288], RF: [128, 238] };
 const SKILL = [0.62, 0.86, 1.06];
-const CLOSE_FT = 24;
+const CLOSE_FT = 16;
 const OD_DESC = { 'LOCK-ON': 'SWEET SPOTS +35%', 'OVERDRIVE SWING': 'POWER ZONE +25% · HITS 18% HARDER', BLINK: 'RUNS 45% FASTER · STEALS ARE AUTOMATIC', POUNCE: 'NEXT CLASH DEALS 60% MORE DAMAGE', SHUTDOWN: 'PITCHES 12% FASTER · BREAK 25% SHARPER' };
 
 class Match {
@@ -64,7 +64,7 @@ class Match {
 
   // ------------------------------------------------------------ flow
   update(dt) {
-    this.time += dt; this.parts.update(dt); this.shake = Math.max(0, this.shake - dt * 2);
+    this.time += dt; this.parts.update(dt); for (const f of this.fielders) if (f.throwAnim > 0) f.throwAnim -= dt; this.shake = Math.max(0, this.shake - dt * 2);
     for (const b of this.banners) b.t += dt; this.banners = this.banners.filter(b => b.t < b.dur);
     // smoke from damaged bots
     if (Math.random() < 0.3) for (const e of this.visibleBots()) { const f = e.r.hp / maxHp(e.r, this.sideOf(e.r)); if (f < 0.35 && Math.random() < 0.08) this.parts.add({ x: e.x + rnd(-1, 1), y: e.y, z: 6, vz: 6, vx: rnd(-2, 2), vy: rnd(-2, 2), life: 1.4, size: 1.2, color: '#5a5f6e', kind: 'smoke' }); }
@@ -336,7 +336,7 @@ class Match {
     let v, th, ph;
     if (kind === 'bunt') { v = rnd(26, 40); th = rnd(-14, 2); ph = rnd(-32, 32); }
     else {
-      v = (77 + 98 * q) * (0.8 + 0.045 * pow) * (kind === 'power' ? 1.17 : 1) * (this.odBat === 'OVERDRIVE SWING' ? 1.18 : 1);
+      v = (83 + 104 * q) * (0.8 + 0.045 * pow) * (kind === 'power' ? 1.17 : 1) * (this.odBat === 'OVERDRIVE SWING' ? 1.18 : 1);
       th = 14 + dz * 26 + (kind === 'power' ? 6 : 0) + gauss() * 6 + (1 - q) * gauss() * 14;
       ph = -hand * timing * 42 + hand * dx * 12 + gauss() * 6;
       if (q < 0.14) { ph = pick([-1, 1]) * rnd(60, 110); th = rnd(20, 60); }
@@ -371,6 +371,7 @@ class Match {
     this.state = 'play'; this.view = 'field'; this.maxDist = 0; this.playT = 0; this.stillT = 0; this.playRuns = []; this.thirdOutKind = null; this.hr = false; this.foul = false;
     this.ball = { x: b.x, y: b.y, z: b.z, vx: b.vx, vy: b.vy, vz: b.vz, held: null, batted: true, bounced: false, thrown: false, thrower: null, cool: 0, trail: [], rest: false };
     this.launch = theta < 12 ? 'ground' : theta < 24 ? 'liner' : 'fly';
+    const FS = this.fstat = this.fstat || { plays: 0, ground: 0, liner: 0, fly: 0, groundOut: 0, flyCaught: 0, linerCaught: 0, landed: 0, flips: 0, throwMiss: 0, bobbles: 0, looseT: 0, firstT: 0, firstN: 0, throws: 0 }; FS.plays++; FS[this.launch]++; this.firstPick = false;
     this.focus = { x: b.x, y: 20 };
     // runners
     this.runners = [];
@@ -399,7 +400,7 @@ class Match {
       b.z = 0.15;
       if (!sim && !b.bounced) { b.bounced = true; this.onFirstBounce(); }
       if (sim) b.bounced = true;
-      if (b.thrown) { b.thrown = false; }
+      if (b.thrown) { b.thrown = false; if (!sim && this.fstat) this.fstat.throwMiss++; }
       if (Math.abs(b.vz) > 5) { b.vz = -b.vz * 0.4; b.vx *= 0.68; b.vy *= 0.68; if (!sim && Math.abs(b.vz) > 8) this.parts.burst(b.x, b.y, 0.2, 5, '#c08a5a', 8, { g: 40, size: 0.25 }); }
       else { b.vz = 0; const h = hyp(b.vx, b.vy); if (h > 0) { const nh = Math.max(0, h - (hyp(b.x, b.y) > 150 ? 26 : 18) * dt); b.vx *= nh / h; b.vy *= nh / h; } }
     }
@@ -425,6 +426,7 @@ class Match {
     if (b.batted) {
       const th = Math.atan2(b.x, b.y);
       if (Math.abs(th) > P_ + 0.01 && hyp(b.x, b.y) > 3) { this.foulBall(); return; }
+      if (this.fstat && this.launch !== 'ground') this.fstat.landed++;
       for (const rn of this.runners) if (!rn.out && !rn.scored && rn.tgt % 1 !== 0) rn.tgt = Math.ceil(rn.tgt);
     }
   }
@@ -456,10 +458,10 @@ class Match {
     let best = null;
     for (const f of this.fielders) {
       const sp = this.fspeed(f), re = this.reach(f);
-      for (const p of path) { if (p.z > 7.5) continue; const d = hyp(p.x - f.x, p.y - f.y) - re; if (d <= sp * Math.max(0, p.t - Math.max(0, f.react))) { if (!best || p.t < best.t - 0.05 || (Math.abs(p.t - best.t) < 0.05 && d < best.d)) best = { f, t: p.t, x: p.x, y: p.y, d }; break; } }
+      for (const p of path) { if (p.z > 7.5) continue; const d = hyp(p.x - f.x, p.y - f.y) - re; if (d <= sp * Math.max(0, p.t - Math.max(0, f.react) - 0.15)) { if (!best || p.t < best.t - 0.05 || (Math.abs(p.t - best.t) < 0.05 && d < best.d)) best = { f, t: p.t, x: p.x, y: p.y, d }; break; } }
     }
     if (!best) { const e = path[path.length - 1]; let bf = null, bd = 1e9; for (const f of this.fielders) { const d = hyp(e.x - f.x, e.y - f.y) / this.fspeed(f); if (d < bd) { bd = d; bf = f; } } best = { f: bf, t: path[path.length - 1].t + bd, x: e.x, y: e.y }; }
-    const prev = this.chaser; this.chaser = best.f; this.icpt = best; this.predStamp = this.playT;
+    const prev = this.chaser; this.chaser = best.f; this.icpt = best; this.predStamp = this.playT; if (prev && prev !== best.f && !b.thrown && this.fstat) this.fstat.flips++;
     if (prev !== this.chaser) this.assignCovers();
   }
   assignCovers() {
@@ -479,6 +481,7 @@ class Match {
     if (b.batted) this.maxDist = Math.max(this.maxDist || 0, hyp(b.x, b.y));
     if (this.hr || this.foul) return;
     b.cool -= dt;
+    if (!b.held && b.bounced && hyp(b.vx, b.vy) < 4 && this.fstat) this.fstat.looseT += dt;
     if (!b.held) { b.trail.push([b.x, b.y, b.z]); if (b.trail.length > 10) b.trail.shift(); } else b.trail.length = 0;
     this.predT = (this.predT || 0) - dt; if (!b.held && this.predT <= 0) { this.predT = 0.2; this.predict(); }
     // fielders
@@ -491,7 +494,7 @@ class Match {
     if (!b.held) for (const f of this.fielders) {
       if (b.cool > 0 && f === b.thrower) continue;
       if (f.react > 0 && b.batted) continue;
-      const d = hyp(b.x - f.x, b.y - f.y); if (d <= this.reach(f) && b.z <= 7.5) { this.catchBall(f); break; }
+      const d = hyp(b.x - f.x, b.y - f.y); if (d <= this.reach(f) + (b.thrown ? 1.3 : 0) && b.z <= (b.thrown ? 8.5 : 7.5)) { this.catchBall(f); break; }
     }
     // runners
     this.updateRunners(dt);
@@ -513,22 +516,26 @@ class Match {
   }
   idleFielders(dt) { for (const f of this.fielders) { f.vx *= 0.8; f.vy *= 0.8; f.anim = 0; } }
   moveToward(f, tx, ty, dt, spdMul = 1) {
-    const dx = tx - f.x, dy = ty - f.y, d = hyp(dx, dy), sp = this.fspeed(f) * spdMul;
-    if (d < 0.4) { f.vx = 0; f.vy = 0; return true; }
-    const m = Math.min(d, sp * dt); f.vx = dx / d * sp; f.vy = dy / d * sp; f.x += dx / d * m; f.y += dy / d * m; return false;
+    // accelerate and ease into the spot instead of snapping to full speed
+    const dx = tx - f.x, dy = ty - f.y, d = hyp(dx, dy), sp = this.fspeed(f) * spdMul, want = d < 0.25 ? 0 : Math.min(sp, d * 5);
+    const wx = d > 0 ? dx / d * want : 0, wy = d > 0 ? dy / d * want : 0, ax = wx - f.vx, ay = wy - f.vy, al = hyp(ax, ay), acc = 95 * dt;
+    if (al > acc) { f.vx += ax / al * acc; f.vy += ay / al * acc; } else { f.vx = wx; f.vy = wy; }
+    f.x += f.vx * dt; f.y += f.vy * dt; return d < 0.6;
   }
+
   updateFielder(f, dt, hum) {
     const b = this.ball; f.react -= dt;
     if (hum != null && !((this.cfg.assist || this.cfg.autoField) && !Input.axis(hum).x && !Input.axis(hum).y && !(b.held && b.held.f === f && !this.cfg.autoField))) { // human-controlled (assist lets the AI steer when idle)
       const a = Input.axis(hum); const sp = this.fspeed(f) * 1.05; const l = hyp(a.x, a.y) || 1;
-      f.vx = a.x / l * sp * (a.x || a.y ? 1 : 0); f.vy = a.y / l * sp * (a.x || a.y ? 1 : 0); f.x += f.vx * dt; f.y += f.vy * dt;
+      const on = a.x || a.y ? 1 : 0, wx = a.x / l * sp * on, wy = a.y / l * sp * on, ax = wx - f.vx, ay = wy - f.vy, al = hyp(ax, ay), acc = 170 * dt; if (al > acc) { f.vx += ax / al * acc; f.vy += ay / al * acc; } else { f.vx = wx; f.vy = wy; } f.x += f.vx * dt; f.y += f.vy * dt;
       f.x = clamp(f.x, -300, 300); f.y = clamp(f.y, -40, 420); return;
     }
     if (f.react > 0 && b.batted) return;
     if (b.held && b.held.f === f) return; // holder handled separately
     let tx = f.hx, ty = f.hy, mul = 1;
     const coverBase = [1, 2, 3, 4].find(k => this.cover && this.cover[k] === f.pos);
-    if (!b.held && f === this.chaser && this.icpt) { tx = this.icpt.x; ty = this.icpt.y; if (this.icpt.t < 0.3 || b.thrown) { tx = b.x; ty = b.y; } }
+    if (b.thrown && f === this.throwRecv && this.throwPt) { this.moveToward(f, this.throwPt.x, this.throwPt.y, dt); return; }
+    if (!b.held && !b.thrown && f === this.chaser && this.icpt) { tx = this.icpt.x; ty = this.icpt.y; if (this.icpt.t < 0.3 || b.thrown) { tx = b.x; ty = b.y; } }
     else if (coverBase) { const B = BASES[coverBase]; const off = coverBase === 4 ? [0, 1.5] : [0, 0]; tx = B.x + off[0]; ty = B.y + off[1]; }
     else if (/LF|CF|RF/.test(f.pos) && !b.held) { tx = lerp(f.hx, b.x, 0.3); ty = lerp(f.hy, b.y, 0.3); mul = 0.7; }
     else if (f.pos === 'P') { tx = f.hx; ty = f.hy - 6; mul = 0.6; }
@@ -537,7 +544,8 @@ class Match {
   catchBall(f) {
     const b = this.ball, wasFly = b.batted && !b.bounced;
     // bobble chance on hard batted balls for CPU fielders
-    if (b.batted && this.human(this.fld) == null && Math.random() < 0.035 / this.sk - this.st(f.r, 'fld') * 0.002) { b.vx *= -0.3; b.vy *= -0.3; b.vz = 6; b.batted = false; b.cool = 0.4; b.thrower = f; Sfx.play('foul'); this.banner('BOBBLED', '#ffffff', '#ff7a2a', 0.8, 36); return; }
+    if (b.batted && this.human(this.fld) == null && Math.random() < 0.035 / this.sk - this.st(f.r, 'fld') * 0.002) { b.vx *= -0.3; b.vy *= -0.3; b.vz = 6; b.batted = false; b.cool = 0.4; b.thrower = f; if (this.fstat) this.fstat.bobbles++; Sfx.play('foul'); this.banner('BOBBLED', '#ffffff', '#ff7a2a', 0.8, 36); return; }
+    if (this.fstat && !this.firstPick) { this.firstPick = true; this.fstat.firstT += this.playT; this.fstat.firstN++; } if (this.fstat && wasFly) this.fstat[this.launch === 'liner' ? 'linerCaught' : 'flyCaught']++;
     b.held = { f }; b.vx = b.vy = b.vz = 0; b.thrown = false; b.batted = false; f.gather = 0.18 / this.sk; f.decided = null; this.landing = null;
     Sfx.play('catch'); this.throwRecv = null;
     if (wasFly && this.playT > 2.2 && hyp(f.x - f.hx, f.y - f.hy) > 65) this.replayWorthy = 'WHAT A CATCH';
@@ -551,10 +559,13 @@ class Match {
   throwTo(f, base) {
     const b = this.ball, B = BASES[base]; let recv = this.coverOf(base);
     if (!recv || recv === f) { let bd = 1e9; for (const g of this.fielders) if (g !== f) { const d = hyp(g.x - B.x, g.y - B.y); if (d < bd) { bd = d; recv = g; } } this.cover[base] = recv.pos; }
-    const tx = recv && hyp(recv.x - B.x, recv.y - B.y) < 6 ? recv.x : B.x, ty = recv && hyp(recv.x - B.x, recv.y - B.y) < 6 ? recv.y : B.y;
-    const d = hyp(tx - f.x, ty - f.y), sp = this.armSpd(f), T = Math.max(0.15, d / sp);
+    const sp = this.armSpd(f), dB = hyp(B.x - f.x, B.y - f.y), T0 = dB / sp, rd = recv ? hyp(recv.x - B.x, recv.y - B.y) : 0, rEta = recv ? rd / this.fspeed(recv) : 0;
+    let tx = B.x, ty = B.y; // on the bag if he'll be there in time, otherwise lead him along his run
+    if (recv && rEta > T0 && rd > 0.5) { const k = Math.min(1, (this.fspeed(recv) * T0) / rd); tx = lerp(recv.x, B.x, k); ty = lerp(recv.y, B.y, k); }
+    this.throwPt = { x: tx, y: ty };
+    const d = hyp(tx - f.x, ty - f.y), T = Math.max(0.15, d / sp);
     b.held = null; b.x = f.x; b.y = f.y; b.z = 5; b.vx = (tx - f.x) / T; b.vy = (ty - f.y) / T; b.vz = (4.5 - 5 + 16 * T * T) / T; b.thrown = true; b.batted = false; b.thrower = f; b.cool = 0.3;
-    this.throwRecv = recv; f.throwAnim = 0.3; Sfx.play('throw'); this.predT = 0;
+    this.throwRecv = recv; f.waitT = 0; f.throwAnim = 0.3; if (this.fstat) this.fstat.throws++; Sfx.play('throw'); this.predT = 0;
   }
   // ------------------------------------------------------------ outs
   runnerPos(rn) { return basePos(rn.s); }
@@ -669,7 +680,7 @@ class Match {
       if (i > 0 && !live[i - 1].out) { const lead = live[i - 1]; if (rn.s > lead.s - 0.04 && lead.s < 4) { rn.s = Math.max(rn.s - v, lead.s - 0.04); if (rn.tgt > lead.tgt) rn.tgt = Math.max(Math.floor(rn.s), lead.tgt - 1 > rn.minBase ? lead.tgt - 1 : rn.minBase); } }
       if (rn.force != null && rn.s >= rn.force) rn.force = null;
       if (rn.needTag && rn.s <= rn.start + 1e-6) { rn.needTag = false; }
-      if (rn.s >= 4 && !rn.scored) { rn.scored = true; this.scoreRun(rn.r); this.banner('RUN SCORES', '#ffffff', this.sides[this.bat].team.g, 0.9, 34); if (this.checkWalkoff()) { this.record(); this.wait(1.2, () => this.startReplay('WALK-OFF', () => this.endGame())); return; } }
+      if (rn.s >= 4 && !rn.scored) { rn.scored = true; this.scoreRun(rn.r); this.banner('RUN SCORES', '#ffffff', this.sides[this.bat].team.g, 0.9, 34); if (this.checkWalkoff()) { this.record(); Sfx.say('Walk off!'); this.wait(1.2, () => this.startReplay('WALK-OFF', () => this.endGame())); return; } }
     }
   }
   defenseETA(base) {
@@ -680,7 +691,7 @@ class Match {
   }
   cpuRunners(dt) {
     this.runT = (this.runT || 0) - dt; if (this.runT > 0) return; this.runT = 0.15;
-    const b = this.ball, margin = 0.3 / (this.human(this.fld) != null ? this.sk : 0.9);
+    const b = this.ball, margin = 0.22 / (this.human(this.fld) != null ? this.sk : 0.9);
     const live = this.runners.filter(r => !r.out && !r.scored).sort((a, c) => c.s - a.s);
     for (let i = 0; i < live.length; i++) {
       const rn = live[i], lead = i > 0 ? live[i - 1] : null;
@@ -689,7 +700,7 @@ class Match {
       // push on to the next base?
       if (tg < 4 && rn.s > tg - 0.3 && !(lead && Math.ceil(lead.tgt) <= tg + 1)) {
         const tRun = (tg + 1 - rn.s) * 90 / sp, tDef = this.defenseETA(tg + 1);
-        if (tDef > tRun + margin + (tg + 1 === 4 ? 0.45 : tg + 1 === 3 ? 0.15 : 0)) rn.tgt = tg + 1;
+        if (tDef > tRun + margin + (tg + 1 === 4 ? 0.3 : tg + 1 === 3 ? 0.1 : 0)) rn.tgt = tg + 1;
       }
       // abort a hopeless advance if not forced
       if (rn.force == null && rn.s < rn.tgt && rn.s % 1 > 0.05 && rn.s % 1 < 0.45) {
@@ -704,7 +715,11 @@ class Match {
   cpuHolder(f, dt) {
     if (f.gather > 0) { f.gather -= dt; return; }
     const plan = this.choosePlay(f);
-    if (plan.type === 'throw') { this.throwTo(f, plan.base); return; }
+    if (plan.type === 'throw') {
+      const B = BASES[plan.base], recv = this.coverOf(plan.base); f.waitT = f.waitT || 0;
+      if (recv && recv !== f) { const rEta = hyp(recv.x - B.x, recv.y - B.y) / this.fspeed(recv), tFly = hyp(B.x - f.x, B.y - f.y) / this.armSpd(f); if (rEta > tFly + 0.2 && f.waitT < 0.7 && plan.score < 1.2) { f.waitT += dt; return; } }
+      this.throwTo(f, plan.base); return;
+    }
     if (plan.type === 'run') { const B = BASES[plan.base]; this.moveToward(f, B.x, B.y, dt); return; }
     if (plan.type === 'chase') { const p = this.runnerPos(plan.rn); this.moveToward(f, p.x, p.y, dt); return; }
     // nothing: walk toward the infield
@@ -748,6 +763,7 @@ class Match {
     const nb = [null, null, null];
     for (const rn of live.sort((a, c) => c.s - a.s)) { let s = Math.round(rn.s); if (rn.s % 1 !== 0) s = rn.tgt > rn.s ? Math.ceil(rn.s) : Math.floor(rn.s); s = clamp(s, 1, 3); while (s > 1 && nb[s - 1]) s--; while (nb[s - 1] && s < 3) s++; if (!nb[s - 1]) nb[s - 1] = rn.r; }
     if (this.outs >= 3) { this.bases = [null, null, null]; } else this.bases = nb;
+    if (bat && bat.out && this.launch === 'ground' && this.fstat) this.fstat.groundOut++;
     if (bat) { const st = this.bs(bat.r); st.ab++; if (!bat.out) st.h++; st.rbi += (this.playRuns || []).length; }
     if (bat && this.lastLaunch) { const dir = this.lastLaunch.ph < -15 ? ' TO LEFT' : this.lastLaunch.ph > 15 ? ' TO RIGHT' : ' UP THE MIDDLE', runs = (this.playRuns || []).length, rs = runs ? ` · ${runs} RUN${runs > 1 ? 'S' : ''} SCORE${runs > 1 ? '' : 'S'}` : '';
       if (!bat.out) { this.odGain(this.bat, 12); const s2 = clamp(Math.round(bat.s), 1, 4); this.tick(`${bat.r.name} ${['', 'SINGLES', 'DOUBLES', 'TRIPLES', 'LEGS OUT AN INSIDE-THE-PARK HR'][s2]}${s2 < 4 ? dir : ''}${rs}`); Sfx.play('cheer'); }
