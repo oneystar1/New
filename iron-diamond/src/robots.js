@@ -131,6 +131,16 @@ function drawRobot(ctx, x, y, s, r, team, o = {}) {
     for (const side of armSides) if (side === (back ? 1 : -1)) drawArm(side * 0.95, -5.0, side, 0.3, metal(S), 0.2, G);
     ctx.restore();
   }
+  // battle damage: scorch marks below 65% armor, cracks and shorting sparks below 40%
+  if (dmg < 0.65 && !back || dmg < 0.65 && back) {
+    const cy = { STRIKER: -4.6, TITAN: -4.2, VECTOR: -3.4, RAPTOR: -4.4 }[cls], sd = (r.num || 7) * 1.37;
+    for (let k = 0; k < (dmg < 0.4 ? 3 : 2); k++) { const ox = Math.sin(sd + k * 2.1) * 0.6, oy = cy + Math.cos(sd * 1.3 + k) * 0.6, rr2 = 0.32 + 0.12 * k; const sg = ctx.createRadialGradient(ox, oy, 0, ox, oy, rr2); sg.addColorStop(0, 'rgba(10,8,6,0.75)'); sg.addColorStop(0.6, 'rgba(40,25,10,0.35)'); sg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(ox, oy, rr2, 0, TAU); ctx.fill(); }
+    if (dmg < 0.4) {
+      ctx.strokeStyle = 'rgba(5,5,8,0.85)'; ctx.lineWidth = 0.07; ctx.beginPath(); let px = Math.sin(sd) * 0.5, py = cy - 0.7; ctx.moveTo(px, py); for (let k = 0; k < 5; k++) { px += (k % 2 ? 0.22 : -0.18); py += 0.28; ctx.lineTo(px, py); } ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,170,90,0.5)'; ctx.lineWidth = 0.03; ctx.stroke();
+      if (Math.sin(t * 19 + sd) > 0.86) { const sx = Math.sin(sd * 2) * 0.7, sy = cy - 0.4; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = '#ffe9a0'; ctx.lineWidth = 0.06; for (let k = 0; k < 5; k++) { const an = k * 1.26 + t * 9; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + Math.cos(an) * 0.45, sy + Math.sin(an) * 0.45); ctx.stroke(); } ctx.drawImage(glowSprite('#ffb347'), sx - 0.8, sy - 0.8, 1.6, 1.6); ctx.restore(); }
+    }
+  }
   // damage tint / hit flash
   if (dmg < 0.35 && Math.sin(t * 25) > 0.6) { ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glowSprite('#ff7a2a'), -1, -6, 2, 2); }
   ctx.restore();

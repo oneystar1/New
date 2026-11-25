@@ -37,6 +37,7 @@ class Match {
   pitcher() { return this.sides[this.fld].ro.lineup.find(r => r.pos === 'P'); }
   st(r, k) { const sd = this.sides.find(s => s.team.id === r.team) || this.sides[0]; return stat(r, k, sd); }
   sideOf(r) { return this.sides.find(s => s.team.id === r.team) || this.sides[0]; }
+  bs(r) { this.bstat = this.bstat || new Map(); if (!this.bstat.has(r)) this.bstat.set(r, { ab: 0, h: 0, hr: 0, rbi: 0, k: 0 }); return this.bstat.get(r); }
   tick(text) { this.ticker = { text, t: this.time }; (this.tickLog = this.tickLog || []).push(text); }
   feedback(text, color) { this.fb = { text, color, t: this.time }; }
   banner(text, color = '#ffffff', glowc = '#46e0ff', dur = 1.4, size = 64, sub = '') { this.banners.push({ text, color, glow: glowc, t: 0, dur, size, sub }); }
@@ -74,6 +75,7 @@ class Match {
       case 'play': this.updatePlay(dt); break;
       case 'clash': this.clash.update(dt); if (this.clash.done) this.resolveClash(); break;
       case 'wait': this.timer -= dt; if (this.state === 'wait' && this.view === 'field' && this.fielders.length) this.idleFielders(dt); if (this.timer <= 0) { const f = this.next; this.next = null; f && f(); } break;
+      case 'replay': this.updateReplay(dt); break;
       case 'over': break;
     }
     // camera blend
@@ -113,7 +115,7 @@ class Match {
 
   // ------------------------------------------------------------ pitching & batting
   newPitch(newBatter) {
-    if (newBatter) { this.balls = 0; this.strikes = 0; }
+    if (newBatter) { this.balls = 0; this.strikes = 0; this.walkup = { r: this.batter(), t: this.time }; }
     const prev = this.pt; const b = this.batter();
     this.pt = { stage: 'aim', t: 0, type: prev && this.human(this.fld) != null ? prev.type : 0, aimX: 0, aimZ: 2.6, steer: 0, swing: null, shift: newBatter || !prev ? 0 : prev.shift, cpuT: rnd(0.6, 1.2) / (this.cfg.fast ? 4 : 1), result: null, cross: null, hand: b.hand, plan: null, bx: 0, by: 0, bz: 0, catcher: false, hit: false };
     this.view = 'bat'; this.state = 'pitch'; this.buildFielders();
@@ -145,6 +147,7 @@ class Match {
       const u = (pt.t - pt.t0) / pt.T;
       if (P != null && u < 0.8) { const ax = Input.axis(P).x; const ns = clamp(pt.steer + ax * dt * 2.4, -1.5, 1.5); pt.aimX += ns - pt.steer; pt.steer = ns; }
       this.ballAt(Math.min(u, 1));
+      (pt.trail = pt.trail || []).push([pt.bx, pt.by, pt.bz]); if (pt.trail.length > 9) pt.trail.shift();
       if (u >= 1 && !pt.cross) this.crossPlate();
     } else if (pt.stage === 'post') {
       // ball carries to the mitt, or hit ball leaves
@@ -206,8 +209,8 @@ class Match {
     const bxp = this.batterX();
     if (sw && sw.t0 <= pt.t + 0.001) {
       const age = pt.t - sw.t0, con = this.st(bt, 'con'), pow = this.st(bt, 'pow');
-      const assist = humanBat && this.human(this.fld) == null ? [1.25, 1.06, 0.95][this.diff] : 1;
-      const K = { contact: [1.05, 1.15, 0.11], power: [0.8, 0.85, 0.075], bunt: [1.35, 1.0, 0.6] }[sw.kind];
+      const assist = humanBat && this.human(this.fld) == null ? [1.2, 0.92, 0.78][this.diff] : 1;
+      const K = { contact: [0.9, 1.0, 0.085], power: [0.72, 0.78, 0.058], bunt: [1.3, 1.0, 0.6] }[sw.kind];
       const cm = (0.82 + con * 0.035) * assist;
       const reach = K[0] * cm, vtol = K[1] * cm, win = K[2] * (0.85 + con * 0.03) * assist;
       const timing = sw.kind === 'bunt' ? 0 : (age - IDEAL) / win, dx = x - pt.shift, dz = z - BAT_Z;
@@ -229,7 +232,7 @@ class Match {
   strike(swinging) {
     const pt = this.pt; this.strikes++;
     if (this.strikes >= 3) {
-      this.banner('STRIKEOUT', '#ffffff', '#ff4a5a', 1.3, 60); this.sides[this.fld].k++; this.tick(`${this.batter().name} STRIKES OUT ${swinging ? 'SWINGING' : 'LOOKING'}`);
+      this.banner('STRIKEOUT', '#ffffff', '#ff4a5a', 1.3, 60); this.sides[this.fld].k++; { const st = this.bs(this.batter()); st.ab++; st.k++; } this.tick(`${this.batter().name} STRIKES OUT ${swinging ? 'SWINGING' : 'LOOKING'}`);
       pt.after = () => { this.outs++; Sfx.play('out'); this.nextBatter(); };
     } else { this.banner(swinging ? 'SWING & MISS' : 'STRIKE', '#ffffff', '#ffd23d', 0.9, 44); pt.after = () => this.newPitch(false); }
   }
@@ -262,7 +265,7 @@ class Match {
     let v, th, ph;
     if (kind === 'bunt') { v = rnd(26, 40); th = rnd(-14, 2); ph = rnd(-32, 32); }
     else {
-      v = (72 + 96 * q) * (0.8 + 0.045 * pow) * (kind === 'power' ? 1.17 : 1);
+      v = (77 + 98 * q) * (0.8 + 0.045 * pow) * (kind === 'power' ? 1.17 : 1);
       th = 14 + dz * 26 + (kind === 'power' ? 6 : 0) + gauss() * 6 + (1 - q) * gauss() * 14;
       ph = -hand * timing * 42 + hand * dx * 12 + gauss() * 6;
       if (q < 0.14) { ph = pick([-1, 1]) * rnd(60, 110); th = rnd(20, 60); }
@@ -311,6 +314,7 @@ class Match {
     // fielders react
     for (const f of this.fielders) { f.react = (0.12 + rnd(0.2)) / (this.human(this.fld) != null ? 1 : this.sk); f.task = 'home'; }
     this.chaser = null; this.predict(); this.assignCovers();
+    this.rec = { frames: [], runners: this.runners.slice(), fielders: this.fielders.slice() }; this.replayWorthy = null;
     this.ctrlF = null;
   }
   physBall(b, dt, sim) {
@@ -362,8 +366,10 @@ class Match {
     { const n = this.runners.filter(r => !r.out && !r.scored).length; this.tick(`${this.batter().name} ${['', 'SOLO HOMER', 'TWO-RUN HOMER', 'THREE-RUN HOMER', 'GRAND SLAM'][n] || 'HOMERS'} · ${Math.round(hyp(this.ball.x, this.ball.y))} FT`); }
     b.held = { x: b.x, y: b.y }; b.vx = b.vy = b.vz = 0;
     const scorers = this.runners.filter(r => !r.out && !r.scored).sort((a, c) => c.s - a.s);
+    { const st = this.bs(this.batter()); st.ab++; st.h++; st.hr++; st.rbi += scorers.length; }
     this.sides[this.bat].hits++;
-    this.wait(2.6, () => { for (const r of scorers) this.scoreRun(r.r); this.bases = [null, null, null]; this.playRuns = null; this.nextBatter(); });
+    this.record();
+    this.wait(1.9, () => this.startReplay('HOME RUN', () => { for (const r of scorers) this.scoreRun(r.r); this.bases = [null, null, null]; this.playRuns = null; this.nextBatter(); }));
   }
   predict() {
     const b = this.ball; if (b.held) { this.path = null; return; }
@@ -422,11 +428,12 @@ class Match {
     if (this.state !== 'play') return;
     // CPU holder decisions
     if (b.held && b.held.f && hum == null) this.cpuHolder(b.held.f, dt);
-    if (b.held && b.held.f && hum != null) this.humanHolder(b.held.f, hum);
+    if (b.held && b.held.f && hum != null) this.humanHolder(b.held.f, hum, dt);
     // end of play
     const moving = this.runners.some(r => !r.out && !r.scored && (r.s !== r.tgt || r.tgt % 1 !== 0 || r.delay > 0));
     if (b.held && !moving) { this.stillT += dt; if (this.stillT > (hum != null ? 0.7 : 0.45)) this.endPlay(); } else this.stillT = 0;
     if (this.playT > 40) this.endPlay();
+    this.record();
     // camera focus
     const fx = b.held && b.held.f ? b.held.f.x : b.x, fy = b.held && b.held.f ? b.held.f.y : b.y;
     this.focus.x = lerp(this.focus.x, fx, Math.min(1, dt * 3)); this.focus.y = lerp(this.focus.y, fy, Math.min(1, dt * 3));
@@ -439,7 +446,7 @@ class Match {
   }
   updateFielder(f, dt, hum) {
     const b = this.ball; f.react -= dt;
-    if (hum != null) { // human-controlled
+    if (hum != null && !(this.cfg.assist && !Input.axis(hum).x && !Input.axis(hum).y && !(b.held && b.held.f === f))) { // human-controlled (assist lets the AI steer when idle)
       const a = Input.axis(hum); const sp = this.fspeed(f) * 1.05; const l = hyp(a.x, a.y) || 1;
       f.vx = a.x / l * sp * (a.x || a.y ? 1 : 0); f.vy = a.y / l * sp * (a.x || a.y ? 1 : 0); f.x += f.vx * dt; f.y += f.vy * dt;
       f.x = clamp(f.x, -300, 300); f.y = clamp(f.y, -40, 420); return;
@@ -460,6 +467,7 @@ class Match {
     if (b.batted && this.human(this.fld) == null && Math.random() < 0.035 / this.sk - this.st(f.r, 'fld') * 0.002) { b.vx *= -0.3; b.vy *= -0.3; b.vz = 6; b.batted = false; b.cool = 0.4; b.thrower = f; Sfx.play('foul'); this.banner('BOBBLED', '#ffffff', '#ff7a2a', 0.8, 36); return; }
     b.held = { f }; b.vx = b.vy = b.vz = 0; b.thrown = false; b.batted = false; f.gather = 0.18 / this.sk; f.decided = null; this.landing = null;
     Sfx.play('catch'); this.throwRecv = null;
+    if (wasFly && this.playT > 2.2 && hyp(f.x - f.hx, f.y - f.hy) > 65) this.replayWorthy = 'WHAT A CATCH';
     if (wasFly) {
       const bat = this.runners.find(r => r.isBatter); this.banner('CAUGHT', '#ffffff', '#ff4a5a', 1.0, 48);
       this.markOut(bat, 'fly');
@@ -536,11 +544,12 @@ class Match {
     for (let i = 0; i < live.length; i++) {
       const rn = live[i]; if (rn.delay > 0) { rn.delay -= dt; continue; }
       const v = this.rspeed(rn.r) / 90 * dt;
-      if (rn.tgt > rn.s) rn.s = Math.min(rn.tgt, rn.s + v); else if (rn.tgt < rn.s) rn.s = Math.max(rn.tgt, rn.s - v);
+      const was = rn.s; if (rn.tgt > rn.s) rn.s = Math.min(rn.tgt, rn.s + v); else if (rn.tgt < rn.s) rn.s = Math.max(rn.tgt, rn.s - v);
+      if (rn.s !== was && rn.s === rn.tgt && rn.tgt % 1 === 0 && rn.tgt < 4 && rn.tgt > was) { const bp = BASES[rn.tgt]; this.parts.burst(bp.x, bp.y, 0.3, 12, '#b07a52', 9, { g: 4, size: 1.1, drag: 3, life: 0.9, kind: 'smoke' }); }
       if (i > 0 && !live[i - 1].out) { const lead = live[i - 1]; if (rn.s > lead.s - 0.04 && lead.s < 4) { rn.s = Math.max(rn.s - v, lead.s - 0.04); if (rn.tgt > lead.tgt) rn.tgt = Math.max(Math.floor(rn.s), lead.tgt - 1 > rn.minBase ? lead.tgt - 1 : rn.minBase); } }
       if (rn.force != null && rn.s >= rn.force) rn.force = null;
       if (rn.needTag && rn.s <= rn.start + 1e-6) { rn.needTag = false; }
-      if (rn.s >= 4 && !rn.scored) { rn.scored = true; this.scoreRun(rn.r); this.banner('RUN SCORES', '#ffffff', this.sides[this.bat].team.g, 0.9, 34); if (this.checkWalkoff()) { this.wait(1.4, () => this.endGame()); return; } }
+      if (rn.s >= 4 && !rn.scored) { rn.scored = true; this.scoreRun(rn.r); this.banner('RUN SCORES', '#ffffff', this.sides[this.bat].team.g, 0.9, 34); if (this.checkWalkoff()) { this.record(); this.wait(1.2, () => this.startReplay('WALK-OFF', () => this.endGame())); return; } }
     }
   }
   defenseETA(base) {
@@ -601,7 +610,9 @@ class Match {
     }
     return best || { type: 'hold' };
   }
-  humanHolder(f, pad) {
+  humanHolder(f, pad, dt) {
+    const ax = Input.axis(pad); f.holdT = (f.holdT || 0) + dt; if (ax.x || ax.y) f.holdT = 0;
+    if (this.cfg.assist && f.holdT > 1.3 && !Input.held(pad, 'a')) { this.cpuHolder(f, dt); return; }
     if (Input.hit(pad, 'a')) {
       const a = Input.axis(pad); let base = null;
       if (a.y > 0) base = 2; else if (a.x < 0) base = 3; else if (a.x > 0) base = 1; else if (a.y < 0) base = 4;
@@ -616,14 +627,33 @@ class Match {
     const nb = [null, null, null];
     for (const rn of live.sort((a, c) => c.s - a.s)) { let s = Math.round(rn.s); if (rn.s % 1 !== 0) s = rn.tgt > rn.s ? Math.ceil(rn.s) : Math.floor(rn.s); s = clamp(s, 1, 3); while (s > 1 && nb[s - 1]) s--; while (nb[s - 1] && s < 3) s++; if (!nb[s - 1]) nb[s - 1] = rn.r; }
     if (this.outs >= 3) { this.bases = [null, null, null]; } else this.bases = nb;
+    if (bat) { const st = this.bs(bat.r); st.ab++; if (!bat.out) st.h++; st.rbi += (this.playRuns || []).length; }
     if (bat && this.lastLaunch) { const dir = this.lastLaunch.ph < -15 ? ' TO LEFT' : this.lastLaunch.ph > 15 ? ' TO RIGHT' : ' UP THE MIDDLE', runs = (this.playRuns || []).length, rs = runs ? ` · ${runs} RUN${runs > 1 ? 'S' : ''} SCORE${runs > 1 ? '' : 'S'}` : '';
       if (!bat.out) { const s2 = clamp(Math.round(bat.s), 1, 4); this.tick(`${bat.r.name} ${['', 'SINGLES', 'DOUBLES', 'TRIPLES', 'LEGS OUT AN INSIDE-THE-PARK HR'][s2]}${s2 < 4 ? dir : ''}${rs}`); Sfx.play('cheer'); }
       else this.tick(`${bat.r.name} ${this.launch === 'fly' ? 'FLIES OUT' : this.launch === 'liner' ? 'LINES OUT' : 'GROUNDS OUT'}${dir}${rs}`); }
     if (bat && !bat.out && !this.hr) { this.sides[this.bat].hits++; const s = Math.round(bat.s); if (!fromOut) this.banner(['', 'SINGLE', 'DOUBLE', 'TRIPLE', 'INSIDE-THE-PARK'][clamp(s, 1, 4)], '#ffffff', this.sides[this.bat].team.g, 1.0, 46); }
     if (this.playLog && this.playLog.length) { const L = this.playLog[this.playLog.length - 1]; L.res = bat ? (bat.out ? 'out' : 'b' + Math.round(bat.s)) : '?'; L.outs = this.outs; L.runs = (this.playRuns || []).length; L.dist = Math.round(this.maxDist || 0); }
     this.playRuns = null; this.runners = []; this.ball = null; this.landing = null;
-    if (this.checkWalkoff()) return this.endGame();
+    if (this.checkWalkoff()) return this.startReplay('WALK-OFF', () => this.endGame());
+    if (this.replayWorthy && this.state !== 'over') { const lbl = this.replayWorthy; this.replayWorthy = null; return this.wait(0.8, () => this.startReplay(lbl, () => this.nextBatter())); }
     this.wait(1.0, () => this.nextBatter());
+  }
+  // ------------------------------------------------------------ instant replay
+  record() {
+    const R = this.rec, b = this.ball; if (!R || !b || R.frames.length > 900) return;
+    R.frames.push({ b: [b.x, b.y, b.z], h: b.held && b.held.f ? R.fielders.indexOf(b.held.f) : -1, f: R.fielders.map(f => [f.x, f.y, f.vx, f.vy, f.r]), r: R.runners.map(rn => [rn.s, rn.tgt, rn.out ? 1 : rn.scored ? 2 : 0, rn.r]) });
+  }
+  startReplay(label, then) {
+    const R = this.rec; if (!R || R.frames.length < 20 || this.cfg.noReplay) { then(); return; }
+    const fr = R.frames.slice(-Math.min(R.frames.length, 480));
+    this.replay = { label, then, frames: fr, i: 0, speed: 0.55, hold: 0.8, cam: null };
+    this.state = 'replay'; this.view = 'field'; Sfx.play('servo');
+  }
+  updateReplay(dt) {
+    const rp = this.replay; rp.i += 60 * dt * rp.speed;
+    const skip = [0, 1].some(i => this.ctrl[i] != null && (Input.hit(this.ctrl[i], 'a') || Input.hit(this.ctrl[i], 'start')));
+    if (rp.i >= rp.frames.length - 1) { rp.i = rp.frames.length - 1; rp.hold -= dt; }
+    if (skip || rp.hold <= 0) { this.replay = null; this.rec = null; this.state = 'wait'; this.timer = 0.01; this.next = rp.then; }
   }
   visibleBots() { const out = []; for (const f of this.fielders) out.push(f); if (this.state === 'play' || (this.state === 'wait' && this.view === 'field')) for (const rn of this.runners) if (!rn.out && !rn.scored) { const p = basePos(rn.s); out.push({ r: rn.r, x: p.x, y: p.y }); } return out; }
 }

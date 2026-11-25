@@ -100,6 +100,11 @@ class Clash {
     for (let i = -10; i <= 10; i++) { ctx.beginPath(); ctx.moveTo(cx + i * 30, fy - 40); ctx.lineTo(cx + i * 42, fy + 60); ctx.stroke(); }
     for (let k = 0; k < 6; k++) { const yy = fy - 40 + Math.pow(k / 5, 1.6) * 100; ctx.beginPath(); ctx.moveTo(cx - 420, yy); ctx.lineTo(cx + 420, yy); ctx.stroke(); }
     ctx.restore();
+    // silhouetted crowd behind the ring, phone lights flickering
+    ctx.fillStyle = 'rgba(4,6,14,0.9)';
+    for (let i = 0; i < 46; i++) { const x = cx - 470 + i * 21 + (i % 3) * 4, y = fy - 185 + Math.sin(i * 1.7) * 6 + Math.abs(Math.sin(this.t * 6 + i)) * (this.result ? 6 : 2); ctx.beginPath(); ctx.arc(x, y, 9, 0, TAU); ctx.fill(); ctx.fillRect(x - 11, y + 6, 22, 40); if ((i * 7 + Math.floor(this.t * 5)) % 11 === 0) glow(ctx, x + 6, y + 14, 8, i % 2 ? ta.g : tb.g, 0.8); }
+    // holo pillars at the corners
+    for (const [k, col] of [[-1, ta.g], [1, tb.g]]) { const px = cx + k * 310; const pg = ctx.createLinearGradient(0, fy - 200, 0, fy + 40); pg.addColorStop(0, hexA(col, 0)); pg.addColorStop(0.5, hexA(col, 0.55)); pg.addColorStop(1, hexA(col, 0.1)); ctx.fillStyle = pg; ctx.fillRect(px - 5, fy - 200, 10, 240); glow(ctx, px, fy - 60 - (this.t * 60 % 140), 18, col, 0.8); }
     // ropes in team colours
     for (const [k, col] of [[0, ta.g], [1, tb.g]]) { const x0 = k ? cx + 300 : cx - 300; ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.shadowColor = col; ctx.shadowBlur = 12; for (let j = 0; j < 3; j++) { ctx.beginPath(); ctx.moveTo(x0, fy - 60 - j * 45); ctx.lineTo(cx, fy - 60 - j * 45 - 6); ctx.stroke(); } ctx.shadowBlur = 0; }
     // fighters

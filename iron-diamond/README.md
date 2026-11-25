@@ -34,6 +34,11 @@ python3 tools/build_iron_diamond.py iron-diamond-single.html
 ## Modes
 
 - **Exhibition**: 1 player vs CPU, 2 players head to head, or CPU vs CPU to watch.
+- **Season**: play an 11-round round robin against every other club while
+  the rest of the league plays its own games. Standings track W-L, games back and
+  run differential; the top 4 make the playoffs (semifinal, then the Iron
+  Diamond Series final). You can play each game or sim it. Damage, credits and
+  the garage work as in the Gauntlet.
 - **Gauntlet**: pick a club and beat 5 opponents plus a final, with 3 continues.
   Armor damage carries over between matches. Earn credits for wins, runs,
   strikeouts and destroyed bots, then spend them in the **Garage** on repairs,
@@ -63,7 +68,9 @@ Plasma, A throws. Hold left/right to steer the ball in flight. Every pitch drain
 pitcher's power cell (Plasma drains 14). From the pause menu you can bring in your
 reliever.
 
-**Fielding.** You run the fielder nearest the ball. A yellow ring marks where a fly
+**Fielding.** You run the fielder nearest the ball. With **Field Assist** on
+(Settings; AUTO turns it on for Rookie and touch screens) the fielder chases the
+ball whenever you let go of the d-pad and makes the throw if you hesitate. A yellow ring marks where a fly
 ball will land. With the ball, hold a direction and press A to throw (→ 1st, ↑ 2nd,
 ← 3rd, ↓ home; no direction picks the smart play), or run onto the base or into
 the runner yourself.
@@ -76,6 +83,24 @@ move, A strike, B heavy (breaks guard), Down guards. If the runner wins, they're
 safe; if the fielder wins, the runner is out. When time runs out, whoever dealt more
 damage wins. Damage is permanent, and a bot that hits 0 armor is **destroyed** and
 replaced from the bench (or by a scrap drone).
+
+## Broadcast touches
+
+- **Instant replay**: home runs, walk-offs and long running catches replay at
+  half speed from low broadcast angles, letterboxed. A skips.
+- **Walk-up intros**: every new batter gets a lower-third card with today's
+  line (H-for-AB, HR, RBI, K).
+- **Play-by-play** ticker, swing feedback, crowd cheers, and a jumbotron in
+  centre field showing the batter.
+
+## Home parks
+
+Each club's stadium has its own sky, skyline, weather and light: rain over the
+neon district in Neo Tokyo, smokestacks and embers in Detroit, Earth rising over
+the Moon, red dust and two moons on Mars, bubbles and caustics under Atlantis,
+aurora and snow in the Arctic, pyramids under a gold moon in Cairo, a sunset
+harbour in Sydney, and more. Stadium dirt, grass and colour grading change with
+the park.
 
 ## The league
 

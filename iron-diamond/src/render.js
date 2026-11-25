@@ -19,8 +19,28 @@ function batSwingDir(p, hand, kind) {
   if (hand < 0) psi = 180 - psi;
   psi *= DEG; el *= DEG; return [Math.cos(el) * Math.cos(psi), Math.cos(el) * Math.sin(psi), Math.sin(el)];
 }
+function replayView(m) {
+  // a stand-in match object whose positions come from the recorded frame
+  const rp = m.replay, i = Math.floor(rp.i), k = rp.i - i, A = rp.frames[i], B = rp.frames[Math.min(i + 1, rp.frames.length - 1)];
+  const L = (a, b) => a + (b - a) * k, vm = Object.create(m);
+  vm.fielders = m.rec ? m.rec.fielders.map((f, j) => ({ r: A.f[j][4], pos: f.pos, x: L(A.f[j][0], B.f[j][0]), y: L(A.f[j][1], B.f[j][1]), vx: A.f[j][2], vy: A.f[j][3], hx: f.hx, hy: f.hy })) : [];
+  vm.runners = m.rec ? m.rec.runners.map((rn, j) => ({ r: A.r[j][3], s: L(A.r[j][0], B.r[j][0]), tgt: A.r[j][1], out: A.r[j][2] === 1, scored: A.r[j][2] === 2, start: rn.start })) : [];
+  const trail = []; for (let t = Math.max(0, i - 10); t <= i; t++) trail.push(rp.frames[t].b);
+  vm.ball = { x: L(A.b[0], B.b[0]), y: L(A.b[1], B.b[1]), z: L(A.b[2], B.b[2]), held: A.h >= 0 ? { f: vm.fielders[A.h] } : null, trail };
+  vm.state = 'play'; vm.view = 'field'; vm.camK = 1; vm.ctrlF = null; vm.landing = null; vm.banners = []; vm.isReplay = true; vm.ticker = null;
+  return vm;
+}
+function replayCamera(vm, rp) {
+  const b = vm.ball.held && vm.ball.held.f ? { x: vm.ball.held.f.x, y: vm.ball.held.f.y, z: 4 } : vm.ball;
+  const fin = rp.frames[rp.frames.length - 1].b, aim = { x: lerp(b.x, fin[0], 0.4), y: lerp(b.y, fin[1], 0.4), z: Math.min(b.z, 40) * 0.5 + 3 };
+  const want = { x: aim.x * 0.6 - 50, y: aim.y * 0.6 - 75, z: 14 + aim.z * 0.5 };
+  if (!rp.cam) rp.cam = { x: -38, y: -40, z: 9, tx: 0, ty: 30, tz: 4 };
+  const c = rp.cam, k = 0.08; c.x = lerp(c.x, want.x, k); c.y = lerp(c.y, want.y, k); c.z = lerp(c.z, want.z, k); c.tx = lerp(c.tx, aim.x, 0.15); c.ty = lerp(c.ty, aim.y, 0.15); c.tz = lerp(c.tz, aim.z, 0.15);
+  vm.cam.set(c.x, c.y, c.z, c.tx, c.ty, c.tz, 720); return vm.cam;
+}
 function drawMatch(ctx, m) {
-  const cam = matchCamera(m), home = m.sides[1].team, t = m.time;
+  if (m.state === 'replay' && m.replay) return drawReplay(ctx, m);
+  const cam = m.isReplay ? replayCameraCached : matchCamera(m), home = m.sides[1].team, t = m.time;
   Park.draw(ctx, cam, home, t, (c, w, h, tt) => drawBigBoard(c, w, h, m, tt));
   const ents = [];
   const fieldSide = m.sides[m.fld], batSide = m.sides[m.bat];
@@ -47,7 +67,7 @@ function drawMatch(ctx, m) {
     ents.push({ x: bx, y: 0, z: 0, r: bt, team: batSide.team, o: { t, back: true }, batter: true, side: batSide });
     for (let i = 0; i < 3; i++) if (m.bases[i]) { const B = BASES[i + 1], N = BASES[(i + 2) % 4]; const d = hyp(N.x - B.x, N.y - B.y); ents.push({ x: B.x + (N.x - B.x) / d * 4, y: B.y + (N.y - B.y) / d * 4, z: 0, r: m.bases[i], team: batSide.team, o: { t, back: false, crouch: 0.2 }, side: batSide }); }
   } else if (m.runners) {
-    for (const rn of m.runners) { if (rn.out || rn.scored) continue; const p = basePos(rn.s); const dir = rn.tgt >= rn.s ? 1 : -1; const seg = Math.min(3, Math.floor(rn.s)); const a = BASES[seg], b = BASES[seg + 1]; const vy = (b.y - a.y) * dir, vx = (b.x - a.x) * dir; const moving = rn.s !== rn.tgt; ents.push({ x: p.x, y: p.y, z: 0, r: rn.r, team: batSide.team, o: { t: t + rn.start, run: moving ? 1 : 0, back: moving ? vy > 0 : false, lean: moving ? clamp(vx / 80, -1, 1) : 0 }, side: batSide }); }
+    for (const rn of m.runners) { if (rn.out || rn.scored) continue; const p = basePos(rn.s); const dir = rn.tgt >= rn.s ? 1 : -1; const seg = Math.min(3, Math.floor(rn.s)); const a = BASES[seg], b = BASES[seg + 1]; const vy = (b.y - a.y) * dir, vx = (b.x - a.x) * dir; const moving = rn.s !== rn.tgt, slide = moving && rn.tgt % 1 === 0 && Math.abs(rn.tgt - rn.s) * 90 < 7 && rn.tgt > rn.s; ents.push({ x: p.x, y: p.y, z: 0, r: rn.r, team: batSide.team, o: { t: t + rn.start, run: moving && !slide ? 1 : 0, crouch: slide ? 0.7 : 0, back: moving ? vy > 0 : false, lean: slide ? clamp(vx / 40, -1, 1) * 1.2 + 0.3 : moving ? clamp(vx / 80, -1, 1) : 0 }, side: batSide }); }
   }
   // umpire drone
   for (const e of ents) { e.q = cam.proj(e.x, e.y, 0); }
@@ -86,11 +106,12 @@ function drawMatch(ctx, m) {
   }
   // swing feedback
   if (m.fb && m.time - m.fb.t < 1.1 && pitchView) { const k = (m.time - m.fb.t) / 1.1, q = cam.proj(0, 0, 4.6); if (q) { ctx.globalAlpha = 1 - k * k; glowTxt(ctx, m.fb.text, q.x, q.y - k * 30, 26, '#ffffff', m.fb.color); ctx.globalAlpha = 1; } }
+  drawThemeFx(ctx, home, t, cam);
   Game.bloom && Game.bloom();
   // vignette
   const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.85); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.5)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
-  drawHUD(ctx, m, pitchView);
-  drawTicker(ctx, m);
+  if (!m.isReplay) { drawHUD(ctx, m, pitchView); drawTicker(ctx, m); }
+  if (pitchView && m.walkup && m.state !== 'intro') drawWalkup(ctx, m);
   if (m.state === 'clash' && m.clash) m.clash.draw(ctx);
   drawBanners(ctx, m);
 }
@@ -108,6 +129,13 @@ function drawBall(ctx, cam, q, w, m, boost) {
   if (w.pitch && m.pt) col = PITCHES[m.pt.type].col;
   // trail
   if (m.ball && m.ball.trail && !w.pitch) { ctx.strokeStyle = 'rgba(200,240,255,0.35)'; ctx.lineWidth = r; ctx.beginPath(); let first = true; for (const p of m.ball.trail) { const tq = cam.proj(p[0], p[1], p[2]); if (!tq) continue; if (first) { ctx.moveTo(tq.x, tq.y); first = false; } else ctx.lineTo(tq.x, tq.y); } ctx.lineTo(q.x, q.y); ctx.stroke(); }
+  // pitch motion streak + plasma lightning
+  if (w.pitch && m.pt && m.pt.trail && m.pt.stage === 'flight') {
+    const tr = m.pt.trail; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+    for (let i = 1; i < tr.length; i++) { const a = cam.proj(...tr[i - 1]), b = cam.proj(...tr[i]); if (!a || !b) continue; ctx.strokeStyle = hexA(col, 0.12 + 0.5 * i / tr.length); ctx.lineWidth = r * 1.6 * i / tr.length; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+    if (PITCHES[m.pt.type].wobble) { ctx.strokeStyle = 'rgba(220,160,255,0.85)'; ctx.lineWidth = 1.3; for (let k = 0; k < 3; k++) { ctx.beginPath(); let px = q.x, py = q.y; ctx.moveTo(px, py); const an = m.time * 30 + k * 2.1; for (let j = 1; j <= 4; j++) { px = q.x + Math.cos(an) * r * 1.6 * j + rnd(-r, r); py = q.y + Math.sin(an) * r * 1.6 * j + rnd(-r, r); ctx.lineTo(px, py); } ctx.stroke(); } }
+    ctx.restore();
+  }
   glow(ctx, q.x, q.y, r * 4, col, 0.8);
   ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, TAU); ctx.fill();
   if (w.pitch && m.pt && PITCHES[m.pt.type].wobble) glow(ctx, q.x, q.y, r * 7, '#b14bff', 0.6 + 0.4 * Math.sin(m.time * 40));
@@ -149,7 +177,15 @@ function drawZone(ctx, cam, m) {
     const q = cam.proj(pt.aimX, 0, pt.aimZ); if (q) { const r = 0.32 * q.s, col = PITCHES[pt.type].col; ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, TAU); ctx.moveTo(q.x - r * 1.7, q.y); ctx.lineTo(q.x - r * 0.6, q.y); ctx.moveTo(q.x + r * 0.6, q.y); ctx.lineTo(q.x + r * 1.7, q.y); ctx.moveTo(q.x, q.y - r * 1.7); ctx.lineTo(q.x, q.y - r * 0.6); ctx.moveTo(q.x, q.y + r * 0.6); ctx.lineTo(q.x, q.y + r * 1.7); ctx.stroke(); glow(ctx, q.x, q.y, r * 2, col, 0.4); }
   }
 }
-function drawBigBoard(ctx, w, h, m, t) {
+function drawBigBoard(ctx, w0, h, m, t) {
+  // right-hand jumbotron: live portrait of the batter (or the home emblem)
+  const jx = 404, w = 400; ctx.save(); ctx.beginPath(); ctx.rect(jx, 0, 116, 160); ctx.clip();
+  const bs = m.sides[m.bat], bt = m.batter && m.batter();
+  const jg = ctx.createLinearGradient(0, 0, 0, 160); jg.addColorStop(0, shade(bs.team.p, -0.3)); jg.addColorStop(1, '#05070f'); ctx.fillStyle = jg; ctx.fillRect(jx, 0, 116, 160);
+  if (bt && (m.state === 'pitch' || m.state === 'wait')) { drawRobot(ctx, jx + 58, 230, 26, bt, bs.team, { t, hp: 1 }); ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(jx, 132, 116, 28); txt(ctx, bt.name, jx + 58, 146, 15, '#ffffff', 'center', FONT_H, 900); }
+  else drawEmblem(ctx, jx + 58, 80, 40, m.sides[1].team);
+  ctx.fillStyle = 'rgba(0,0,0,0.18)'; for (let y = 0; y < 160; y += 4) ctx.fillRect(jx, y, 116, 1.5);
+  ctx.restore(); ctx.fillStyle = m.sides[1].team.g; ctx.fillRect(jx - 4, 0, 2, 160);
   const n = Math.max(m.innings, m.inning);
   txt(ctx, 'IRON DIAMOND', 12, 20, 22, m.sides[1].team.g, 'left', FONT_H, 900);
   txt(ctx, `INN ${m.inning}`, w - 12, 20, 20, '#ffffff', 'right', FONT_H, 900);
@@ -257,4 +293,41 @@ function drawTicker(ctx, m) {
   const g = ctx.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, 'rgba(8,12,28,0.88)'); g.addColorStop(1, 'rgba(8,12,28,0.55)');
   ctx.fillStyle = g; rrect(ctx, x, y, w, 26, 6); ctx.fill(); ctx.fillStyle = m.sides[m.bat].team.g; ctx.fillRect(x, y, 3, 26);
   txt(ctx, tk.text, x + 14, y + 13.5, 14, '#e8ecff', 'left', FONT_H, 700); ctx.restore();
+}
+
+let replayCameraCached = null;
+function drawReplay(ctx, m) {
+  const vm = replayView(m), rp = m.replay; replayCameraCached = replayCamera(vm, rp);
+  drawMatch(ctx, vm);
+  // broadcast treatment: letterbox, scanlines, REPLAY bug
+  ctx.fillStyle = 'rgba(0,0,0,0.12)'; for (let y = 0; y < H; y += 3) ctx.fillRect(0, y, W, 1);
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, 46); ctx.fillRect(0, H - 46, W, 46);
+  const tm = m.sides[m.bat].team;
+  if (Math.sin(m.time * 6) > -0.2) { ctx.fillStyle = '#ff3d3d'; ctx.beginPath(); ctx.arc(30, 23, 7, 0, TAU); ctx.fill(); glow(ctx, 30, 23, 16, '#ff3d3d', 0.6); }
+  txt(ctx, 'REPLAY', 46, 24, 20, '#ffffff', 'left', FONT_H, 900);
+  txt(ctx, rp.label, W / 2, 24, 20, tm.g, 'center', FONT_H, 900);
+  txt(ctx, '½ SPEED', W - 20, 24, 14, '#9aa6c8', 'right', FONT_H, 700);
+  const humans = m.ctrl.some(c => c != null); if (humans) txt(ctx, 'A  SKIP', W - 20, H - 23, 14, '#9aa6c8', 'right', FONT_H, 700);
+  ctx.fillStyle = tm.g; ctx.fillRect(0, H - 46, W * (rp.i / Math.max(1, rp.frames.length - 1)), 3);
+}
+
+function drawWalkup(ctx, m) {
+  const wu = m.walkup, age = m.time - wu.t; if (age > 2.6 || age < 0) return;
+  const r = wu.r, sd = m.sideOf(r), tm = sd.team, k = ease(clamp(age / 0.35, 0, 1)), out = ease(clamp((age - 2.2) / 0.4, 0, 1));
+  const x = -440 + 454 * k - 470 * out, y = 136, w = 420, h = 104;
+  ctx.save(); ctx.translate(x, y);
+  // angled team-colour plate
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, 0); ctx.lineTo(w - 26, h); ctx.lineTo(0, h); ctx.closePath();
+  const g = ctx.createLinearGradient(0, 0, w, 0); g.addColorStop(0, hexA(tm.p, 0.95)); g.addColorStop(0.55, 'rgba(8,11,24,0.92)'); g.addColorStop(1, 'rgba(8,11,24,0.75)'); ctx.fillStyle = g; ctx.fill();
+  ctx.save(); ctx.clip(); drawEmblem(ctx, 70, 52, 70, tm, 0.18); drawRobot(ctx, 70, h + 40, 17, r, tm, { t: m.time, hp: r.hp / maxHp(r, sd) }); ctx.restore();
+  ctx.fillStyle = tm.g; ctx.fillRect(0, h - 3, w - 25, 3);
+  txt(ctx, 'NOW BATTING', 150, 20, 12, tm.g, 'left', FONT_H, 900);
+  txt(ctx, `#${r.num}`, 150, 50, 30, 'rgba(255,255,255,0.55)', 'left', FONT_H, 900);
+  ctx.font = `900 30px ${FONT_H}`; const nw = ctx.measureText(`#${r.num} `).width;
+  txt(ctx, r.name, 150 + nw, 50, 30, '#ffffff', 'left', FONT_H, 900);
+  const st = m.bstat && m.bstat.get(r);
+  const line = !st || (!st.ab && !st.h) ? 'FIRST AT-BAT TODAY' : `TODAY  ${st.h}-FOR-${st.ab}${st.hr ? ` · ${st.hr} HR` : ''}${st.rbi ? ` · ${st.rbi} RBI` : ''}${st.k ? ` · ${st.k} K` : ''}`;
+  txt(ctx, `${CLASSES[r.cls].name} · POW ${m.st(r, 'pow')} · CON ${m.st(r, 'con')} · SPD ${m.st(r, 'spd')}`, 150, 74, 13, '#c8d2f0', 'left', FONT_B, 700);
+  txt(ctx, line, 150, 92, 13, '#ffd84a', 'left', FONT_H, 700);
+  ctx.restore();
 }

@@ -30,7 +30,7 @@ const Park = {
     const outer = [[lp[0], lp[1] - 60, 0], ...arc, [rp[0], rp[1] - 60, 0]];
     // walk clockwise: left side wall (going away from home), arc, right side wall (coming back)
     const ring = [[-62, -10, 0], [lp[0], lp[1] - 60, 0], ...arc, [rp[0], rp[1] - 60, 0], [62, -10, 0]];
-    for (let i = 0; i < ring.length - 1; i++) { tier(ring[i], ring[i + 1], FENCE_H, 34, 4, 60); tier(ring[i], ring[i + 1], 40, 78, 66, 130); }
+    for (let i = 0; i < ring.length - 1; i++) { tier(ring[i], ring[i + 1], FENCE_H, 30, 4, 56); tier(ring[i], ring[i + 1], 34, 54, 62, 118); }
     this.ring = ring;
     // crowd lights: random dots on the stand slopes
     const rng = mulberry(77); this.crowd = [];
@@ -41,6 +41,7 @@ const Park = {
     }
     // light towers
     this.towers = [[-300, 330], [300, 330], [-250, 40], [250, 40]].map(([x, y]) => ({ x, y, z: 150 }));
+    this.bands = []; for (let j = -3; j < 16; j += 2) this.bands.push([[-500, j * 30, 0], [500, j * 30, 0], [500, j * 30 + 30, 0], [-500, j * 30 + 30, 0]]);
     this.stripes = [];
     for (let i = -14; i < 14; i++) this.stripes.push([[i * 30, -80, 0], [i * 30 + 30, -80, 0], [i * 30 + 30, 470, 0], [i * 30, 470, 0], i & 1]);
     this.skyStars = []; for (let i = 0; i < 90; i++) this.skyStars.push([rng() * W, rng() * H * 0.5, rng()]);
@@ -48,22 +49,15 @@ const Park = {
   },
   draw(ctx, cam, homeTeam, t, sb) {
     this.build();
-    // sky
-    const sky = ctx.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#04060f'); sky.addColorStop(0.45, '#0d1330'); sky.addColorStop(1, '#1b1240');
-    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
-    // horizon estimate for parallax skyline
     const hz = cam.proj(cam.pos.x + cam.F[0] * 5000, cam.pos.y + cam.F[1] * 5000, 0);
-    const hy = hz ? clamp(hz.y, -200, H + 200) : H / 2;
-    ctx.fillStyle = '#ffffff'; for (const [sx, sy, b] of this.skyStars) { if (sy > hy - 40) continue; ctx.globalAlpha = 0.3 + 0.5 * b * (0.6 + 0.4 * Math.sin(t * 2 + sx)); ctx.fillRect(sx, sy, 1.4, 1.4); } ctx.globalAlpha = 1;
-    // city skyline silhouette
-    ctx.fillStyle = '#0a0d1f'; const off = (cam.pos.x * 0.3) % 60;
-    for (const [sx, w, h, r] of this.skyline) { ctx.fillRect(sx - off, hy - h - 30, w, h + 400); }
-    ctx.fillStyle = hexA(homeTeam.g, 0.5); for (const [sx, w, h, r] of this.skyline) if (r > 0.55) for (let k = 0; k < h / 12; k++) if (((k * 7 + sx) | 0) % 3 === 0) ctx.fillRect(sx - off + 4, hy - h - 26 + k * 12, w - 8, 2);
+    const hy = hz ? clamp(hz.y, -200, H + 200) : H / 2, th = themeOf(homeTeam);
+    drawThemeSky(ctx, cam, homeTeam, t, hy, this.skyStars);
     // concourse plane under everything
     cam.fillPoly(ctx, [[-700, -400, -0.5], [700, -400, -0.5], [700, 800, -0.5], [-700, 800, -0.5]], '#0c1020');
     // stands (painter sorted)
     const st = this.stands.map(s => ({ s, d: cam.toCam(...s.mid)[2] })).sort((a, b) => b.d - a.d);
-    for (const { s } of st) { if (cam.fillPoly(ctx, s.pts, s.pts[0][2] > 30 ? '#161b33' : '#1c2240')) { ctx.strokeStyle = 'rgba(120,140,220,0.08)'; ctx.lineWidth = 1; ctx.stroke(); } }
+    const standLo = mixHex('#1c2240', th.sky[1], 0.35), standHi = mixHex('#161b33', th.sky[1], 0.35);
+    for (const { s } of st) { if (cam.fillPoly(ctx, s.pts, s.pts[0][2] > 30 ? standHi : standLo)) { ctx.strokeStyle = 'rgba(120,140,220,0.08)'; ctx.lineWidth = 1; ctx.stroke(); } }
     // crowd dots
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     const flash = Math.floor(t * 6) * 131; let ci = 0;
@@ -76,6 +70,15 @@ const Park = {
     ctx.restore();
     // neon rim on top of stands
     for (let i = 0; i < this.ring.length - 1; i++) { const a = this.stands[i * 2 + 1].pts; cam.line(ctx, a[3], a[2], hexA(homeTeam.g, 0.75), 2); }
+    // cantilevered roof canopy with an LED underside and truss struts
+    for (let i = 0; i < this.ring.length - 1; i++) {
+      const a = this.stands[i * 2 + 1].pts, dxa = a[3][0] - a[0][0], dya = a[3][1] - a[0][1], dxb = a[2][0] - a[1][0], dyb = a[2][1] - a[1][1];
+      const ia = [a[3][0] - dxa * 0.45, a[3][1] - dya * 0.45, 66], ib = [a[2][0] - dxb * 0.45, a[2][1] - dyb * 0.45, 66];
+      const oa = [a[3][0], a[3][1], 60], ob = [a[2][0], a[2][1], 60];
+      if (cam.fillPoly(ctx, [oa, ob, ib, ia], '#0b0f22')) { ctx.strokeStyle = 'rgba(140,160,230,0.12)'; ctx.lineWidth = 1; ctx.stroke(); }
+      cam.line(ctx, ia, ib, hexA(homeTeam.g, 0.55), 1.5);
+      if (i % 3 === 0) cam.line(ctx, [a[3][0], a[3][1], a[3][2]], ia, 'rgba(90,100,140,0.5)', 1.5);
+    }
     // scoreboard in deep centre
     if (sb) this.drawBoard(ctx, cam, homeTeam, sb, t);
     // light towers
@@ -84,22 +87,23 @@ const Park = {
       const q = cam.proj(tw.x, tw.y, tw.z); if (q) { const lw = clamp(48 * q.s, 3, 28); ctx.fillStyle = '#e8f0ff'; ctx.fillRect(q.x - lw / 2, q.y - lw / 4, lw, lw / 2); glow(ctx, q.x, q.y, Math.min(320, 260 * q.s + 30), '#bcd4ff', 0.55); }
     }
     // ----- ground
-    cam.fillPoly(ctx, this.boundary, '#16502b');
+    cam.fillPoly(ctx, this.boundary, th.grass || '#16502b');
     ctx.save(); if (cam.fillPoly(ctx, this.boundary, null)) ctx.clip();
     for (const s of this.stripes) if (s[4]) cam.fillPoly(ctx, s.slice(0, 4), 'rgba(80,180,100,0.12)');
+    if (FX.high) for (const s of this.bands) cam.fillPoly(ctx, s, 'rgba(0,30,10,0.09)');
     // infield dirt fan + base path arc
     const fan = [[0, 0, 0]]; for (let i = 0; i <= 24; i++) { const th = -P_ + 2 * P_ * i / 24; fan.push([...polar(158, th), 0]); }
-    cam.fillPoly(ctx, fan, '#7a4a30');
+    const dirt = th.dirt || '#7a4a30'; cam.fillPoly(ctx, fan, dirt);
     // infield grass
-    cam.fillPoly(ctx, [[0, 8, 0], [56, 63.6, 0], [0, 119, 0], [-56, 63.6, 0]], '#1b5e33');
+    cam.fillPoly(ctx, [[0, 8, 0], [56, 63.6, 0], [0, 119, 0], [-56, 63.6, 0]], th.grass ? shade(th.grass, 0.06) : '#1b5e33');
     for (const s of this.stripes) if (s[4]) { /* subtle checker on infield */ }
-    cam.fillPoly(ctx, circlePts(0, 0, 14, 24), '#7a4a30');
-    cam.fillPoly(ctx, circlePts(MOUND.x, MOUND.y, 9, 24), '#85543a');
-    for (let b = 1; b <= 3; b++) cam.fillPoly(ctx, circlePts(BASES[b].x, BASES[b].y, 7, 16), '#7a4a30');
+    cam.fillPoly(ctx, circlePts(0, 0, 14, 24), dirt);
+    cam.fillPoly(ctx, circlePts(MOUND.x, MOUND.y, 9, 24), shade(dirt, 0.08));
+    for (let b = 1; b <= 3; b++) cam.fillPoly(ctx, circlePts(BASES[b].x, BASES[b].y, 7, 16), dirt);
     // warning track
     const track = []; for (let i = 0; i <= 40; i++) { const th = -P_ + 2 * P_ * i / 40; track.push([...polar(fenceR(th) - 0.5, th), 0]); }
     for (let i = 40; i >= 0; i--) { const th = -P_ + 2 * P_ * i / 40; track.push([...polar(fenceR(th) - 14, th), 0]); }
-    cam.fillPoly(ctx, track, '#5c3a2a');
+    cam.fillPoly(ctx, track, shade(dirt, -0.25));
     if (FX.high) { ctx.save(); ctx.globalAlpha = 0.09; ctx.fillStyle = Park._pat || (Park._pat = ctx.createPattern(grainTex(), 'repeat')); ctx.fillRect(0, 0, W, H); ctx.restore(); }
     const pool = cam.proj(0, 150, 0); if (pool) glow(ctx, pool.x, pool.y, Math.min(900, 330 * pool.s + 60), '#cfe2ff', 0.1);
     ctx.restore();
@@ -164,14 +168,14 @@ const Park = {
   },
   drawBoard(ctx, cam, team, sb, t) {
     // affine map of a canvas panel onto the big board
-    const y = 480, z0 = 40, z1 = 90, w = 80;
-    const tl = cam.proj(-w, y, z1), tr = cam.proj(w, y, z1), bl = cam.proj(-w, y, z0); if (!tl || !tr || !bl) return;
-    cam.line(ctx, [-60, y, 0], [-60, y, z0], '#1a2040', 6); cam.line(ctx, [60, y, 0], [60, y, z0], '#1a2040', 6);
+    const y = 480, z0 = 40, z1 = 88, w = 92, cx = 22;
+    const tl = cam.proj(cx - w, y, z1), tr = cam.proj(cx + w, y, z1), bl = cam.proj(cx - w, y, z0); if (!tl || !tr || !bl) return;
+    cam.line(ctx, [cx - 70, y, 0], [cx - 70, y, z0], '#1a2040', 6); cam.line(ctx, [cx + 70, y, 0], [cx + 70, y, z0], '#1a2040', 6);
     ctx.save();
-    const ax = (tr.x - tl.x) / 400, ay = (tr.y - tl.y) / 400, bx = (bl.x - tl.x) / 160, by = (bl.y - tl.y) / 160;
+    const ax = (tr.x - tl.x) / 520, ay = (tr.y - tl.y) / 520, bx = (bl.x - tl.x) / 160, by = (bl.y - tl.y) / 160;
     ctx.transform(ax, ay, bx, by, tl.x, tl.y);
-    ctx.fillStyle = '#05070f'; ctx.fillRect(-6, -6, 412, 172); ctx.strokeStyle = team.g; ctx.lineWidth = 3; ctx.strokeRect(-6, -6, 412, 172);
-    sb(ctx, 400, 160, t);
+    ctx.fillStyle = '#05070f'; ctx.fillRect(-6, -6, 532, 172); ctx.strokeStyle = team.g; ctx.lineWidth = 3; ctx.strokeRect(-6, -6, 532, 172);
+    sb(ctx, 520, 160, t);
     ctx.restore();
   },
 };
@@ -183,3 +187,5 @@ function grainTex() {
   const rng = mulberry(9); for (let i = 0; i < d.data.length; i += 4) { const v = rng() < 0.5 ? 0 : 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = rng() * 120; }
   g.putImageData(d, 0, 0); return _grain = c;
 }
+
+function mixHex(a, b, k) { const A = parseInt(a.slice(1), 16), B = parseInt(b.slice(1), 16); const c = i => Math.round(lerp(A >> i & 255, B >> i & 255, k)); return '#' + ((1 << 24) | (c(16) << 16) | (c(8) << 8) | c(0)).toString(16).slice(1); }

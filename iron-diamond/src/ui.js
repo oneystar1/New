@@ -2,7 +2,7 @@
 'use strict';
 const Game = {
   scene: null, t: 0,
-  settings: Object.assign({ innings: 3, diff: 1, clash: true, music: true, fx: 'auto', haptics: true }, store.get('ironDiamond.settings', {})),
+  settings: Object.assign({ innings: 3, diff: 1, clash: true, music: true, fx: 'auto', haptics: true, assist: 'auto' }, store.get('ironDiamond.settings', {})),
   set(s) { this.scene = s; s.enter && s.enter(); },
   save() { store.set('ironDiamond.settings', this.settings); Sfx.musicOn = this.settings.music; applyFx(); },
 };
@@ -16,6 +16,7 @@ const bgCam = new Cam();
 function drawBackdrop(ctx, t, team, dim = 0.55) {
   const a = t * 0.06; bgCam.set(Math.sin(a) * 260, 140 - Math.cos(a) * 260, 140, 0, 170, 0, 600);
   Park.draw(ctx, bgCam, team || TEAMS[(Math.floor(t / 12)) % TEAMS.length], t, null);
+  drawThemeFx(ctx, team || TEAMS[(Math.floor(t / 12)) % TEAMS.length], t, bgCam);
   Game.bloom && Game.bloom();
   ctx.fillStyle = `rgba(4,6,16,${dim})`; ctx.fillRect(0, 0, W, H);
 }
@@ -49,7 +50,7 @@ function logo(ctx, x, y, sc, t) {
 // ---------- TITLE
 class TitleScene {
   constructor() { this.sel = 0; this.t = 0; this.pressed = false; }
-  items() { const g = store.get(SAVE_KEY, null); return ['EXHIBITION', g && !g.done ? 'GAUNTLET · CONTINUE' : 'GAUNTLET', 'HOW TO PLAY', 'SETTINGS']; }
+  items() { const g = store.get(SAVE_KEY, null), se = store.get(SEASON_KEY, null); return ['EXHIBITION', se && !se.done ? 'SEASON · CONTINUE' : 'SEASON', g && !g.done ? 'GAUNTLET · CONTINUE' : 'GAUNTLET', 'HOW TO PLAY', 'SETTINGS']; }
   update(dt) {
     this.t += dt;
     if (!this.pressed) { if (Input.anyHit('start') || Input.anyHit('a')) { this.pressed = true; Sfx.play('ok'); } return; }
@@ -57,20 +58,22 @@ class TitleScene {
     if (Input.anyHit('a') || Input.anyHit('start')) {
       Sfx.play('ok');
       if (this.sel === 0) Game.set(new ModeScene());
-      if (this.sel === 1) Game.set(new GauntletHub());
-      if (this.sel === 2) Game.set(new HowToScene());
-      if (this.sel === 3) Game.set(new SettingsScene());
+      if (this.sel === 1) Game.set(new SeasonHub());
+      if (this.sel === 2) Game.set(new GauntletHub());
+      if (this.sel === 3) Game.set(new HowToScene());
+      if (this.sel === 4) Game.set(new SettingsScene());
     }
   }
   draw(ctx) {
     drawBackdrop(ctx, this.t + 3, null, 0.45);
+    { const pt = TEAMS[(Math.floor((this.t + 3) / 12)) % TEAMS.length]; txt(ctx, `${themeOf(pt).name} · HOME OF THE ${pt.name}`, 20, 20, 12, hexA(pt.g, 0.85), 'left', FONT_H, 700); }
     // robot showcase
     const show = [['STRIKER', 0], ['TITAN', 1], ['VECTOR', 2], ['RAPTOR', 8]];
     show.forEach(([cls, ti], i) => { const r = { cls, num: [7, 44, 3, 21][i], name: '', hand: 1 }; const x = [110, 235, 725, 850][i], y = 480; const ell = ctx.createRadialGradient(x, y, 0, x, y, 60); ell.addColorStop(0, 'rgba(0,0,0,0.55)'); ell.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = ell; ctx.fillRect(x - 60, y - 14, 120, 28); drawRobot(ctx, x, y, 17, r, TEAMS[ti], { t: this.t + i, lean: Math.sin(this.t + i) * 0.1 }); });
     logo(ctx, W / 2, 110, 1, this.t);
     txt(ctx, 'ROBOT BASEBALL LEAGUE · 2087 SEASON', W / 2, 160, 18, '#9fdcff', 'center', FONT_H, 700);
     if (!this.pressed) { if (Math.sin(this.t * 4) > -0.3) glowTxt(ctx, 'PRESS START', W / 2, 290, 30, '#ffffff', '#46e0ff'); footer(ctx, 'ENTER / SPACE / TAP · M TO MUTE'); return; }
-    menuList(ctx, this.items(), this.sel, W / 2, 196);
+    menuList(ctx, this.items(), this.sel, W / 2, 190, { h: 42 });
     footer(ctx, '↑↓ SELECT   A / ENTER CONFIRM   M MUTE');
   }
 }
@@ -168,20 +171,22 @@ class VsScene {
     this.mode = mode; this.t = 0; this.extra = extra;
     // human team bats first in 1P (away)
     this.teams = teams; this.rosters = extra.rosters || teams.map(i => buildRoster(i));
-    this.ctrl = mode === '1p' ? [0, null] : mode === '2p' ? [0, 1] : [null, null];
+    this.ctrl = extra.ctrl || (mode === '1p' ? [0, null] : mode === '2p' ? [0, 1] : [null, null]);
     Input.twoPlayer = mode === '2p';
   }
   update(dt) {
     this.t += dt;
     if (this.t > 0.6 && (Input.anyHit('start') || Input.anyHit('a'))) {
       Sfx.play('ok'); const s = Game.settings;
-      const cfg = { teams: this.teams, rosters: this.rosters, ctrl: this.ctrl, innings: s.innings, diff: s.diff, clash: s.clash, up: this.extra.up };
+      const assist = s.assist === 'on' || (s.assist === 'auto' && (s.diff === 0 || document.body.classList.contains('touch')));
+      const cfg = { teams: this.teams, rosters: this.rosters, ctrl: this.ctrl, innings: s.innings, diff: s.diff, clash: s.clash, up: this.extra.up, assist };
       const gs = new GameScene(cfg, this.extra.onEnd || (m => Game.set(new ResultScene(m, null)))); gs.onQuit = this.extra.onQuit; Game.set(gs);
     }
     if (Input.anyHit('b') && !this.extra.onEnd) { Sfx.play('back'); Game.set(new ModeScene()); }
   }
   draw(ctx) {
     drawBackdrop(ctx, this.t + 90, TEAMS[this.teams[1]], 0.7);
+    txt(ctx, `TONIGHT AT ${themeOf(TEAMS[this.teams[1]]).name}`, W / 2, 63, 12, TEAMS[this.teams[1]].g, 'center', FONT_H, 900);
     for (let s = 0; s < 2; s++) {
       const tm = TEAMS[this.teams[s]], ro = this.rosters[s], x0 = s ? W / 2 + 12 : 20, w = W / 2 - 32, k = Math.min(1, this.t * 3);
       ctx.save(); ctx.translate((s ? 1 : -1) * (1 - k) * 300, 0); ctx.globalAlpha = k;
@@ -335,7 +340,7 @@ class GauntletEnd {
   }
 }
 class GarageScene {
-  constructor(g) { this.g = g; this.t = 0; this.sel = 0; this.msg = ''; this.msgT = 0; }
+  constructor(g, key = SAVE_KEY, back = () => new GauntletHub()) { this.g = g; this.key = key; this.back = back; this.t = 0; this.sel = 0; this.msg = ''; this.msgT = 0; }
   all() { return this.g.roster.lineup.concat(this.g.roster.bench); }
   repairCost() { const sd = { up: this.g.up }; return this.all().filter(r => r.alive).reduce((a, r) => a + Math.max(0, maxHp(r, sd) - r.hp) * 3, 0); }
   dead() { return this.all().filter(r => !r.alive); }
@@ -349,12 +354,12 @@ class GarageScene {
   }
   update(dt) {
     this.t += dt; this.msgT -= dt; const it = this.items(); this.sel = navList(this.sel, it.length);
-    if (Input.anyHit('b')) { store.set(SAVE_KEY, this.g); Game.set(new GauntletHub()); return; }
+    if (Input.anyHit('b')) { store.set(this.key, this.g); Game.set(this.back()); return; }
     if (Input.anyHit('a') || Input.anyHit('start')) {
-      const x = it[this.sel]; if (x.done) { store.set(SAVE_KEY, this.g); Game.set(new GauntletHub()); return; }
+      const x = it[this.sel]; if (x.done) { store.set(this.key, this.g); Game.set(this.back()); return; }
       if (x.cost == null || x.cost === 0) { Sfx.play('buzz'); this.msg = x.cost == null ? 'MAXED OUT' : 'NOTHING TO DO'; this.msgT = 1.2; return; }
       if (x.cost > this.g.credits) { Sfx.play('buzz'); this.msg = 'NOT ENOUGH CREDITS'; this.msgT = 1.2; return; }
-      this.g.credits -= x.cost; x.act(); Sfx.play('cash'); this.msg = 'DONE'; this.msgT = 1; store.set(SAVE_KEY, this.g);
+      this.g.credits -= x.cost; x.act(); Sfx.play('cash'); this.msg = 'DONE'; this.msgT = 1; store.set(this.key, this.g);
     }
   }
   draw(ctx) {
@@ -391,8 +396,8 @@ class HowToScene {
     drawBackdrop(ctx, this.t + 240, null, 0.78);
     const pages = [
       ['BATTING & PITCHING', ['BATTER  ←/→ shift in the box so the glowing ring covers the pitch', 'A  contact swing — wider sweet spot', 'B  power swing — smaller window, much harder hit', '↓ + A  bunt', 'Timing: swing early to pull, late to go the other way. High pitches fly, low pitches bounce.', '', 'PITCHER  D-pad aims, B cycles pitch, A throws', 'Hold ←/→ while the ball is in the air to steer it', 'PLASMA ball wobbles and is fast, but drains 14 power cell'], '#46e0ff'],
-      ['FIELDING & RUNNING', ['You control the fielder nearest the ball (the one with the ring)', 'Fly balls show a yellow landing ring — get under it to catch', 'With the ball: hold a direction + A to throw', '→ first   ↑ second   ← third   ↓ home   (no direction = smart throw)', 'Run onto a base or into a runner to make the out yourself', '', 'ON OFFENSE  A sends every runner one more base, B sends them back', 'Runners go automatically on grounders and wait on fly balls'], '#3dffa0'],
-      ['CLASH & THE GAUNTLET', ['A close play at a base becomes a CLASH: a 9-second brawl', '←/→ move   A strike   B heavy (breaks guard)   ↓ guard', 'Runner wins: SAFE.  Fielder wins: OUT.  Out of time: most damage wins', 'Armor damage is permanent. Hit 0 and the bot is DESTROYED and replaced', 'Hit-by-pitch also damages armor', '', 'GAUNTLET  beat 5 clubs and the final. 3 continues.', 'Earn credits for wins, runs, strikeouts and kills', 'Spend them in the GARAGE: repairs, rebuilds and club-wide upgrades'], '#ff3d8a'],
+      ['FIELDING & RUNNING', ['You control the fielder nearest the ball (the one with the ring)', 'Fly balls show a yellow landing ring — get under it to catch', 'With the ball: hold a direction + A to throw', '→ first   ↑ second   ← third   ↓ home   (no direction = smart throw)', 'Run onto a base or into a runner to make the out yourself', '', 'ON OFFENSE  A sends every runner one more base, B sends them back', 'Runners go automatically on grounders and wait on fly balls', 'FIELD ASSIST (Settings): your fielder chases the ball when you let go'], '#3dffa0'],
+      ['CLASH & THE GAUNTLET', ['A close play at a base becomes a CLASH: a 9-second brawl', '←/→ move   A strike   B heavy (breaks guard)   ↓ guard', 'Runner wins: SAFE.  Fielder wins: OUT.  Out of time: most damage wins', 'Armor damage is permanent. Hit 0 and the bot is DESTROYED and replaced', 'Hit-by-pitch also damages armor', '', 'SEASON  11 rounds vs every club, top 4 make the playoffs', 'GAUNTLET  beat 5 clubs and the final with 3 continues', 'Credits from wins, runs, Ks and kills buy GARAGE repairs and upgrades'], '#ff3d8a'],
     ];
     const [title, lines, col] = pages[this.page];
     glowTxt(ctx, title, W / 2, 60, 34, '#ffffff', col);
@@ -403,11 +408,11 @@ class HowToScene {
 }
 class SettingsScene {
   constructor() { this.t = 0; this.sel = 0; }
-  items() { const s = Game.settings; return [{ label: 'INNINGS', value: String(s.innings) }, { label: 'DIFFICULTY', value: DIFF_NAMES[s.diff] }, { label: 'CLASHES', value: s.clash ? 'ON' : 'OFF' }, { label: 'SOUND', value: Sfx.muted ? 'OFF' : 'ON' }, { label: 'MUSIC', value: s.music ? 'ON' : 'OFF' }, { label: 'EFFECTS', value: s.fx.toUpperCase() }, { label: 'VIBRATION', value: s.haptics ? 'ON' : 'OFF' }, { label: 'BACK' }]; }
+  items() { const s = Game.settings; return [{ label: 'INNINGS', value: String(s.innings) }, { label: 'DIFFICULTY', value: DIFF_NAMES[s.diff] }, { label: 'CLASHES', value: s.clash ? 'ON' : 'OFF' }, { label: 'SOUND', value: Sfx.muted ? 'OFF' : 'ON' }, { label: 'MUSIC', value: s.music ? 'ON' : 'OFF' }, { label: 'EFFECTS', value: s.fx.toUpperCase() }, { label: 'VIBRATION', value: s.haptics ? 'ON' : 'OFF' }, { label: 'FIELD ASSIST', value: s.assist.toUpperCase() }, { label: 'BACK' }]; }
   update(dt) {
-    this.t += dt; const s = Game.settings; this.sel = navList(this.sel, 8);
+    this.t += dt; const s = Game.settings; this.sel = navList(this.sel, 9);
     const d = Input.anyHit('right') || Input.anyHit('a') ? 1 : Input.anyHit('left') ? -1 : 0;
-    if (Input.anyHit('b') || (this.sel === 7 && Input.anyHit('a'))) { Game.save(); Game.set(new TitleScene()); Game.scene.pressed = true; return; }
+    if (Input.anyHit('b') || (this.sel === 8 && Input.anyHit('a'))) { Game.save(); Game.set(new TitleScene()); Game.scene.pressed = true; return; }
     if (d) {
       Sfx.play('move');
       if (this.sel === 0) { const o = [3, 5, 7, 9]; s.innings = o[(o.indexOf(s.innings) + d + 4) % 4]; }
@@ -417,8 +422,9 @@ class SettingsScene {
       if (this.sel === 4) s.music = !s.music;
       if (this.sel === 5) { const o = ['auto', 'high', 'low']; s.fx = o[(o.indexOf(s.fx) + d + 3) % 3]; }
       if (this.sel === 6) s.haptics = !s.haptics;
+      if (this.sel === 7) { const o = ['auto', 'on', 'off']; s.assist = o[(o.indexOf(s.assist) + d + 3) % 3]; }
       Game.save();
     }
   }
-  draw(ctx) { drawBackdrop(ctx, this.t + 300, null, 0.7); glowTxt(ctx, 'SETTINGS', W / 2, 70, 40, '#ffffff', '#46e0ff'); menuList(ctx, this.items(), this.sel, W / 2, 96, { w: 440, h: 40 }); footer(ctx, '←/→ CHANGE   B BACK   ·   EFFECTS AUTO LOWERS GLOW ON SLOW PHONES'); }
+  draw(ctx) { drawBackdrop(ctx, this.t + 300, null, 0.7); glowTxt(ctx, 'SETTINGS', W / 2, 70, 40, '#ffffff', '#46e0ff'); menuList(ctx, this.items(), this.sel, W / 2, 88, { w: 440, h: 36 }); footer(ctx, '←/→ CHANGE · B BACK · FIELD ASSIST AUTO = ON FOR ROOKIE AND TOUCH SCREENS'); }
 }
