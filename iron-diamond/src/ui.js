@@ -50,7 +50,7 @@ function logo(ctx, x, y, sc, t) {
 // ---------- TITLE
 class TitleScene {
   constructor() { this.sel = 0; this.t = 0; this.pressed = false; }
-  items() { const g = store.get(SAVE_KEY, null), se = store.get(SEASON_KEY, null); return ['EXHIBITION', se && !se.done ? 'SEASON · CONTINUE' : 'SEASON', g && !g.done ? 'GAUNTLET · CONTINUE' : 'GAUNTLET', 'HOW TO PLAY', 'SETTINGS']; }
+  items() { const g = store.get(SAVE_KEY, null), se = store.get(SEASON_KEY, null); return ['EXHIBITION', se && !se.done ? 'SEASON · CONTINUE' : 'SEASON', g && !g.done ? 'GAUNTLET · CONTINUE' : 'GAUNTLET', 'PRACTICE · TUTORIAL & DERBY', 'HOW TO PLAY', 'SETTINGS']; }
   update(dt) {
     this.t += dt;
     if (!this.pressed) { if (Input.anyHit('start') || Input.anyHit('a')) { this.pressed = true; Sfx.play('ok'); } return; }
@@ -60,8 +60,9 @@ class TitleScene {
       if (this.sel === 0) Game.set(new ModeScene());
       if (this.sel === 1) Game.set(new SeasonHub());
       if (this.sel === 2) Game.set(new GauntletHub());
-      if (this.sel === 3) Game.set(new HowToScene());
-      if (this.sel === 4) Game.set(new SettingsScene());
+      if (this.sel === 3) Game.set(new PracticeMenu());
+      if (this.sel === 4) Game.set(new HowToScene());
+      if (this.sel === 5) Game.set(new SettingsScene());
     }
   }
   draw(ctx) {
@@ -73,7 +74,7 @@ class TitleScene {
     logo(ctx, W / 2, 110, 1, this.t);
     txt(ctx, 'ROBOT BASEBALL LEAGUE · 2087 SEASON', W / 2, 160, 18, '#9fdcff', 'center', FONT_H, 700);
     if (!this.pressed) { if (Math.sin(this.t * 4) > -0.3) glowTxt(ctx, 'PRESS START', W / 2, 290, 30, '#ffffff', '#46e0ff'); footer(ctx, 'ENTER / SPACE / TAP · M TO MUTE'); return; }
-    menuList(ctx, this.items(), this.sel, W / 2, 190, { h: 42 });
+    menuList(ctx, this.items(), this.sel, W / 2, 182, { h: 38, w: 400 });
     footer(ctx, '↑↓ SELECT   A / ENTER CONFIRM   M MUTE');
   }
 }
@@ -232,6 +233,9 @@ class GameScene {
       const sd = m.sides[s], rp = sd.ro.bench.find(r => r.alive && r.hp > 0 && r.pos === 'RP');
       if (rp) items.push({ label: `BULLPEN: ${rp.name} IN`, act: () => { const p = m.pitcher(); const i = sd.ro.lineup.indexOf(p); sd.ro.bench.splice(sd.ro.bench.indexOf(rp), 1); rp.pos = 'P'; p.pos = 'RP'; sd.ro.lineup[i] = rp; sd.ro.bench.push(p); m.buildFielders(); this.paused = false; m.banner('PITCHING CHANGE', '#ffffff', sd.team.g, 1.2, 40, `${rp.name} TAKES THE MOUND`); } });
     }
+    for (let s2 = 0; s2 < 2; s2++) if (m.ctrl[s2] != null && m.state === 'pitch' && m.fld === s2 && m.pt.stage === 'aim' && !(m.visits || {})[s2]) {
+      items.push({ label: 'MOUND VISIT (+25 CELL, ONCE)', act: () => { m.visits = m.visits || {}; m.visits[s2] = true; const p = m.pitcher(); p.battery = Math.min(100, p.battery + 25); this.paused = false; m.banner('MOUND VISIT', '#ffffff', m.sides[s2].team.g, 1.2, 40, `${p.name} RECHARGED`); } });
+    }
     items.push({ label: Sfx.muted ? 'SOUND: OFF' : 'SOUND: ON', act: () => Sfx.toggleMute() });
     items.push({ label: this.onQuit ? 'FORFEIT MATCH (COUNTS AS A LOSS)' : 'QUIT MATCH', act: () => { Input.twoPlayer = false; if (this.onQuit) this.onQuit(); else { Game.set(new TitleScene()); Game.scene.pressed = true; } } });
     return items;
@@ -242,7 +246,7 @@ class GameScene {
       const m = this.m, k = Math.min(1, (2.6 - m.timer) * 2);
       ctx.fillStyle = `rgba(4,6,16,${0.6 * (m.timer / 2.6)})`; ctx.fillRect(0, 0, W, H);
       for (let s = 0; s < 2; s++) { const tm = m.sides[s].team; ctx.save(); ctx.globalAlpha = k; drawEmblem(ctx, W / 2 + (s ? 150 : -150), 230, 60, tm); txt(ctx, tm.name, W / 2 + (s ? 150 : -150), 320, 22, '#ffffff', 'center', FONT_H, 900); ctx.restore(); }
-      glowTxt(ctx, 'PLAY BALL!', W / 2, 400, 50, '#ffffff', '#46e0ff');
+      glowTxt(ctx, m.cfg.derby ? 'HOME RUN DERBY' : m.cfg.practice ? 'TRAINING' : 'PLAY BALL!', W / 2, 400, 50, '#ffffff', '#46e0ff');
     }
     if (this.paused) {
       ctx.fillStyle = 'rgba(3,5,14,0.7)'; ctx.fillRect(0, 0, W, H);
@@ -395,8 +399,8 @@ class HowToScene {
     drawBackdrop(ctx, this.t + 240, null, 0.78);
     const pages = [
       ['BATTING & PITCHING', ['BATTER  ←/→ shift so the rings cover the pitch (solid = contact, dashed = power)', 'A  contact swing — wider sweet spot', 'B  power swing — smaller window, much harder hit', 'HOLD ↓  square up to bunt: the bat meets the ball by itself', 'Timing: swing early to pull, late to go the other way. High pitches fly, low pitches bounce.', '', 'PITCHER  D-pad aims, B cycles pitch, A throws', 'Hold ←/→ while the ball is in the air to steer it', 'PLASMA ball wobbles and is fast, but drains 14 power cell'], '#46e0ff'],
-      ['FIELDING & RUNNING', ['You control the fielder nearest the ball (the one with the ring)', 'Fly balls show a yellow landing ring — get under it to catch', 'With the ball: hold a direction + A to throw', '→ first   ↑ second   ← third   ↓ home   (no direction = smart throw)', 'Run onto a base or into a runner to make the out yourself', '', 'ON OFFENSE  A sends every runner one more base, B sends them back', 'Runners go automatically on grounders and wait on fly balls', 'FIELDING / BASE RUNNING (Settings): ASSIST or AUTO do it for you'], '#3dffa0'],
-      ['CLASH & THE GAUNTLET', ['A close play at a base becomes a CLASH: a 9-second brawl', '←/→ move   A strike   B heavy (breaks guard)   ↓ guard', 'Runner wins: SAFE.  Fielder wins: OUT.  Out of time: most damage wins', 'Armor damage is permanent. Hit 0 and the bot is DESTROYED and replaced', 'Hit-by-pitch also damages armor', '', 'SEASON  11 rounds vs every club, top 4 make the playoffs', 'GAUNTLET  beat 5 clubs and the final with 3 continues', 'Credits from wins, runs, Ks and kills buy GARAGE repairs and upgrades'], '#ff3d8a'],
+      ['FIELDING & RUNNING', ['You control the fielder nearest the ball (the one with the ring)', 'Fly balls show a yellow landing ring — get under it to catch', 'With the ball: hold a direction + A to throw', '→ first   ↑ second   ← third   ↓ home   (no direction = smart throw)', 'Run onto a base or into a runner to make the out yourself', '', 'ON OFFENSE  A sends runners on, B sends them back, ↑ STEALS during the windup', 'Runners go automatically on grounders and wait on fly balls', 'PICKOFF on the pitch rail catches runners taking a BIG LEAD', 'FIELDING / BASE RUNNING (Settings): ASSIST or AUTO do it for you'], '#3dffa0'],
+      ['CLASH & THE GAUNTLET', ['A close play at a base becomes a CLASH: a 9-second brawl', '←/→ move   A strike   B heavy (breaks guard)   ↓ guard', 'Runner wins: SAFE.  Fielder wins: OUT.  Out of time: most damage wins', 'Armor damage is permanent. Hit 0 and the bot is DESTROYED and replaced', 'OVERDRIVE: good plays fill the meter under your score; full = a special ability', '', 'SEASON  11 rounds vs every club, top 4 make the playoffs', 'GAUNTLET  beat 5 clubs and the final with 3 continues', 'Credits from wins, runs, Ks and kills buy GARAGE repairs and upgrades'], '#ff3d8a'],
     ];
     const [title, lines, col] = pages[this.page];
     glowTxt(ctx, title, W / 2, 60, 34, '#ffffff', col);

@@ -11,6 +11,7 @@ const BAT_Z = 2.55, IDEAL = 0.13, ZONE_X = 0.95, ZONE_Z0 = 1.5, ZONE_Z1 = 3.7;
 const FIELD_HOME = { P: [0, 60.5], C: [0, -3.5], '1B': [66, 86], '2B': [30, 126], SS: [-32, 124], '3B': [-66, 86], LF: [-128, 238], CF: [0, 288], RF: [128, 238] };
 const SKILL = [0.62, 0.86, 1.06];
 const CLOSE_FT = 24;
+const OD_DESC = { 'LOCK-ON': 'SWEET SPOTS +35%', 'OVERDRIVE SWING': 'POWER ZONE +25% · HITS 18% HARDER', BLINK: 'RUNS 45% FASTER · STEALS ARE AUTOMATIC', POUNCE: 'NEXT CLASH DEALS 60% MORE DAMAGE', SHUTDOWN: 'PITCHES 12% FASTER · BREAK 25% SHARPER' };
 
 class Match {
   constructor(cfg) {
@@ -33,11 +34,12 @@ class Match {
   get bat() { return this.half; } get fld() { return 1 - this.half; }
   human(side) { return this.ctrl[side]; }
   pad(side) { const c = this.ctrl[side]; return c == null ? null : c; }
-  batter() { const sd = this.sides[this.bat]; return sd.ro.lineup[sd.batIdx % 9]; }
+  batter() { if (this.cfg.derby) return this.cfg.derby.robot; const sd = this.sides[this.bat]; return sd.ro.lineup[sd.batIdx % 9]; }
   pitcher() { return this.sides[this.fld].ro.lineup.find(r => r.pos === 'P'); }
   st(r, k) { const sd = this.sides.find(s => s.team.id === r.team) || this.sides[0]; return stat(r, k, sd); }
   sideOf(r) { return this.sides.find(s => s.team.id === r.team) || this.sides[0]; }
   bs(r) { this.bstat = this.bstat || new Map(); if (!this.bstat.has(r)) this.bstat.set(r, { ab: 0, h: 0, hr: 0, rbi: 0, k: 0 }); return this.bstat.get(r); }
+  emit(k, v = true) { (this.flags = this.flags || {})[k] = v; }
   tick(text) { this.ticker = { text, t: this.time }; (this.tickLog = this.tickLog || []).push(text); }
   feedback(text, color) { this.fb = { text, color, t: this.time }; }
   banner(text, color = '#ffffff', glowc = '#46e0ff', dur = 1.4, size = 64, sub = '') { this.banners.push({ text, color, glow: glowc, t: 0, dur, size, sub }); }
@@ -55,7 +57,7 @@ class Match {
   }
   F(pos) { return this.fielders.find(f => f.pos === pos); }
   fspeed(f) { return 16 + this.st(f.r, 'spd') * 1.35; }
-  rspeed(r) { return 18 + this.st(r, 'spd') * 1.5; }
+  rspeed(r) { return (18 + this.st(r, 'spd') * 1.5) * (this.blink === r ? 1.45 : 1); }
   reach(f) { return 2.6 + this.st(f.r, 'fld') * 0.17; }
   armSpd(f) { return 64 + this.st(f.r, 'arm') * 5.5; }
 
@@ -76,6 +78,7 @@ class Match {
       case 'clash': this.clash.update(dt); if (this.clash.done) this.resolveClash(); break;
       case 'wait': this.timer -= dt; if (this.state === 'wait' && this.view === 'field' && this.fielders.length) this.idleFielders(dt); if (this.timer <= 0) { const f = this.next; this.next = null; f && f(); } break;
       case 'replay': this.updateReplay(dt); break;
+      case 'derby': this.updateDerby(dt); break;
       case 'over': break;
     }
     // camera blend
@@ -83,6 +86,8 @@ class Match {
   }
   wait(sec, fn) { this.state = 'wait'; this.timer = sec; this.next = fn; }
   startHalf() {
+    if (this.cfg.derby) { this.outs = 0; this.buildFielders(); this.view = 'bat'; this.banner('HOME RUN DERBY', '#ffffff', this.sides[0].team.g, 1.6, 48, `${this.cfg.derby.outs} OUTS · ONLY HOMERS COUNT`); this.derby = { hr: 0, outs: 0, long: 0, total: 0, last: null }; return this.wait(1.6, () => this.newPitch(true)); }
+    if (this.cfg.practice) { this.outs = 0; this.buildFielders(); this.view = 'bat'; return this.wait(0.3, () => this.newPitch(true)); }
     this.outs = 0; this.bases = [null, null, null]; this.balls = 0; this.strikes = 0;
     if (!this.line[this.half][this.inning - 1]) this.line[this.half][this.inning - 1] = 0;
     this.buildFielders(); this.view = 'bat';
@@ -119,16 +124,22 @@ class Match {
     const prev = this.pt; const b = this.batter();
     this.pt = { stage: 'aim', t: 0, type: prev && this.human(this.fld) != null ? prev.type : 0, aimX: 0, aimZ: 2.6, steer: 0, swing: null, shift: newBatter || !prev ? 0 : prev.shift, cpuT: rnd(0.6, 1.2) / (this.cfg.fast ? 4 : 1), result: null, cross: null, hand: b.hand, plan: null, bx: 0, by: 0, bz: 0, catcher: false, hit: false };
     this.view = 'bat'; this.state = 'pitch'; this.buildFielders();
+    if (newBatter && !this.cfg.derby) this.armOverdrive();
+    // CPU runners sometimes plan a steal (they take a bigger lead: watch for it and throw over)
+    const sc = this.stealCandidate();
+    if (sc && this.pad(this.bat) == null && !this.cfg.derby) { const r = this.bases[sc - 1], sp = this.st(r, 'spd'); if (sp >= 6 && this.outs < 2 && Math.random() < 0.05 + (sp - 6) * 0.045) this.pt.stealPlan = { from: sc }; }
   }
-  pitchSpeed(type) { const p = this.pitcher(); const base = 52 + this.st(p, 'vel') * 3.3; const humanBat = this.human(this.bat) != null && this.human(this.fld) == null; return base * PITCHES[type].spd * (0.8 + 0.2 * p.battery / 100) * (humanBat ? [0.82, 1, 1.12][this.diff] : 1); }
+  pitchSpeed(type) { const p = this.pitcher(); const base = 52 + this.st(p, 'vel') * 3.3; const humanBat = this.human(this.bat) != null && this.human(this.fld) == null; return base * PITCHES[type].spd * (0.8 + 0.2 * p.battery / 100) * (this.odFld ? 1.12 : 1) * (this.cfg.derby || (this.cfg.practice && this.pad(this.fld) == null) ? 0.85 : 1) * (humanBat ? [0.82, 1, 1.12][this.diff] : 1); }
   updatePitch(dt) {
     const pt = this.pt, P = this.pad(this.fld), B = this.pad(this.bat), pr = this.pitcher(), bt = this.batter();
     pt.t += dt;
     // batter shifting
-    if (B != null) { const ax = Input.axis(B).x; pt.shift = clamp(pt.shift + ax * dt * 3.2, -1, 1); }
+    if (B != null) { const ax = Input.axis(B).x; pt.shift = clamp(pt.shift + ax * dt * 3.2, -1, 1); if (ax) this.emit('shifted', (this.flags && this.flags.shifted || 0) + dt); }
     else if (pt.plan) pt.shift = approach(pt.shift, pt.plan.shift, dt * 3);
     // swing input (human)
     if (B != null) { const was = pt.buntHold; pt.buntHold = !pt.swing && pt.stage !== 'post' && Input.held(B, 'down'); if (pt.buntHold && !was) Sfx.play('servo'); }
+    if (B != null && Input.hit(B, 'up')) this.startSteal(true);
+    if (pt.steal) pt.steal.prog = Math.min(0.97, (pt.t - pt.steal.t0) * this.rspeed(pt.steal.r) / 90);
     if (B != null && !pt.swing && pt.stage !== 'after' && pt.stage !== 'aim') {
       if (Input.hit(B, 'a')) pt.swing = { t0: pt.t, kind: Input.held(B, 'down') ? 'bunt' : 'contact' };
       else if (Input.hit(B, 'b')) pt.swing = { t0: pt.t, kind: 'power' };
@@ -137,8 +148,8 @@ class Match {
     if (pt.stage === 'aim') {
       if (P != null) {
         const a = Input.axis(P); pt.aimX = clamp(pt.aimX + a.x * dt * 2.6, -2.4, 2.4); pt.aimZ = clamp(pt.aimZ + a.y * dt * 2.6, 0.6, 4.8);
-        if (Input.hit(P, 'b')) { pt.type = (pt.type + 1) % PITCHES.length; Sfx.play('move'); }
-        if (Input.hit(P, 'a')) { if (PITCHES[pt.type].cost > pr.battery) { Sfx.play('buzz'); pt.type = 0; } else this.windup(); }
+        if (Input.hit(P, 'b')) { this.cyclePitch(); Sfx.play('move'); }
+        if (Input.hit(P, 'a')) { if (pt.pickSel) this.pickoff(); else if (PITCHES[pt.type].cost > pr.battery) { Sfx.play('buzz'); pt.type = 0; } else this.windup(); }
       } else {
         pt.cpuT -= dt; if (pt.cpuT <= 0) this.cpuChoosePitch(), this.windup();
       }
@@ -146,7 +157,7 @@ class Match {
       if (pt.t >= pt.wt) this.release();
     } else if (pt.stage === 'flight') {
       const u = (pt.t - pt.t0) / pt.T;
-      if (P != null && u < 0.8) { const ax = Input.axis(P).x; const ns = clamp(pt.steer + ax * dt * 2.4, -1.5, 1.5); pt.aimX += ns - pt.steer; pt.steer = ns; }
+      if (P != null && u < 0.8) { const ax = Input.axis(P).x; const ns = clamp(pt.steer + ax * dt * 2.4, -1.5, 1.5); pt.aimX += ns - pt.steer; pt.steer = ns; if (Math.abs(ns) > 0.25) this.emit('steered'); }
       this.ballAt(Math.min(u, 1));
       (pt.trail = pt.trail || []).push([pt.bx, pt.by, pt.bz]); if (pt.trail.length > 9) pt.trail.shift();
       if (u >= 1 && !pt.cross) this.crossPlate();
@@ -158,6 +169,7 @@ class Match {
     }
   }
   cpuChoosePitch() {
+    if (this.cfg.derby || this.cfg.practice) { const pt = this.pt; pt.type = Math.random() < 0.75 ? 0 : 3; pt.aimX = rnd(-0.5, 0.5); pt.aimZ = rnd(2.0, 3.1); return; }
     const pt = this.pt, pr = this.pitcher(), ahead = this.strikes > this.balls;
     const w = [4, 2, 2, 2, pr.battery > 40 ? 1.2 : 0]; let t = weightedPick(Math.random, w); pt.type = t;
     const ctl = this.st(pr, 'brk') / 10 * this.sk;
@@ -165,12 +177,48 @@ class Match {
     const zx = waste ? pick([-1, 1]) * rnd(1.1, 1.7) : rnd(-0.85, 0.85), zz = waste ? pick([1.0, 4.2]) : rnd(1.8, 3.4);
     pt.aimX = clamp(zx + gauss() * 0.35 * (1.2 - ctl), -2.4, 2.4); pt.aimZ = clamp(zz + gauss() * 0.35 * (1.2 - ctl), 0.6, 4.8);
   }
-  windup() { const pt = this.pt; pt.stage = 'windup'; pt.wt = pt.t + 0.6; }
+  windup() { const pt = this.pt; pt.stage = 'windup'; pt.wt = pt.t + 0.6; if (pt.stealPlan) this.startSteal(false); }
+  cyclePitch() { const pt = this.pt; if (pt.pickSel) { pt.pickSel = false; pt.type = 0; } else if (pt.type === PITCHES.length - 1 && this.bases.some(Boolean)) pt.pickSel = true; else pt.type = (pt.type + 1) % PITCHES.length; }
+  stealCandidate() { for (let b = 2; b >= 1; b--) if (this.bases[b - 1] && !this.bases[b]) return b; return 0; }
+  startSteal(human) {
+    const pt = this.pt; if (pt.steal || this.state !== 'pitch') return;
+    if (human && !(pt.stage === 'windup' || (pt.stage === 'flight' && (pt.t - pt.t0) / pt.T < 0.35))) return;
+    const from = pt.stealPlan ? pt.stealPlan.from : this.stealCandidate(); if (!from || !this.bases[from - 1]) return;
+    const r = this.bases[from - 1]; pt.steal = { from, r, t0: pt.t - (pt.stealPlan ? 0.25 : 0), prog: 0 }; pt.stealPlan = null;
+    this.emit('steal'); Sfx.play('servo'); this.feedback(`${r.name} IS RUNNING!`, '#ffd84a');
+  }
+  pickoff() {
+    const pt = this.pt, pl = pt.stealPlan, base = pl ? pl.from : (this.bases[0] ? 1 : this.bases[1] ? 2 : 3); pt.pickSel = false; pt.type = 0;
+    const r = this.bases[base - 1]; if (!r) return; this.pitcher().battery = Math.max(0, this.pitcher().battery - 1); Sfx.play('throw');
+    const cov = this.F(base === 1 ? '1B' : base === 2 ? 'SS' : '3B');
+    if (pl && Math.random() < 0.55) { pt.stealPlan = null; this.stealClash(r, cov.r, base, base, 'PICKED OFF'); return; }
+    if (pl) { pt.stealPlan = null; this.feedback('BACK IN TIME · LEAD SHORTENED', '#9fdcff'); } else this.feedback('BACK IN TIME', '#9fdcff');
+  }
+  // runner vs fielder brawl outside a live play (steals and pickoffs): winner decides safe/out
+  stealClash(r, fr, base, from, outLabel) {
+    this.events.clashes++; this.state = 'clash';
+    this.clashCtx = { custom: true, r, fr, base, from, outLabel };
+    this.clash = new Clash({ match: this, a: { r, side: this.sides[this.bat], pad: this.pad(this.bat) }, b: { r: fr, side: this.sides[this.fld], pad: this.pad(this.fld) }, base, sk: this.sk });
+  }
+  resolveSteal(then) {
+    const pt = this.pt, st = pt.steal; pt.steal = null; if (!st || this.bases[st.from - 1] !== st.r) { then(); return; }
+    const cat = this.F('C'), to = st.from + 1, B = BASES[to], tThrow = 0.45 + hyp(B.x, B.y + 3) / this.armSpd(cat), tRun = (1 - (st.catchProg ?? st.prog)) * 90 / this.rspeed(st.r);
+    const margin = tThrow - tRun + (this.blink === st.r ? 9 : 0);
+    if (margin > 0.3) return this.stealSafe(st, then);
+    if (margin < -0.35) return this.stealOut(st, 'CAUGHT STEALING', then);
+    const cov = this.F(to === 2 ? (st.r.hand > 0 ? '2B' : 'SS') : '3B'); this.stealThen = then; this.stealClash(st.r, cov.r, to, st.from, 'CAUGHT STEALING');
+  }
+  stealSafe(st, then) { this.bases[st.from] = st.r; this.bases[st.from - 1] = null; this.banner('STOLEN BASE', '#ffffff', '#3dffa0', 1.0, 46); this.tick(`${st.r.name} STEALS ${['', 'FIRST', 'SECOND', 'THIRD'][st.from + 1]}`); this.odGain(this.bat, 15); Sfx.play('safe'); then(); }
+  stealOut(st, label, then) {
+    this.bases[st.from - 1] = null; this.outs++; this.banner(label, '#ffffff', '#ff4a5a', 1.1, 44); this.tick(`${st.r.name} ${label}`); this.odGain(this.fld, 20); Sfx.play('out');
+    if (this.outs >= 3) { this.wait(1.0, () => this.endHalf()); return; } then();
+  }
+
   release() {
     const pt = this.pt, pr = this.pitcher(), bt = this.batter(), ty = PITCHES[pt.type];
     pr.battery = Math.max(0, pr.battery - ty.cost);
-    pt.stage = 'flight'; pt.t0 = pt.t; const v = this.pitchSpeed(pt.type); pt.T = 55 / v;
-    const bk = 0.6 + this.st(pr, 'brk') * 0.07, hand = pr.hand;
+    this.emit('pitched', pt.type); pt.stage = 'flight'; pt.t0 = pt.t; const v = this.pitchSpeed(pt.type); pt.T = 55 / v;
+    const bk = (0.6 + this.st(pr, 'brk') * 0.07) * (this.odFld ? 1.25 : 1), hand = pr.hand;
     pt.rel = { x: hand * 1.1, y: 55, z: 6.0 }; pt.brk = { x: -hand * ty.bx * bk, z: ty.bz * bk };
     Sfx.play(ty.wobble ? 'plasma' : 'pitch');
     // CPU batter plan
@@ -205,9 +253,11 @@ class Match {
     const assist = humanBat && this.human(this.fld) == null ? [1.2, 0.92, 0.78][this.diff] : 1;
     const K = { contact: [0.9, 1.0, 0.085], power: [0.72, 0.78, 0.058], bunt: [1.35, 1.4, 0.6] }[kind];
     const cm = (0.82 + con * 0.035) * assist;
-    return { reach: K[0] * cm, vtol: K[1] * cm, win: K[2] * (0.85 + con * 0.03) * assist };
+    const od = this.odBat === 'LOCK-ON' ? 1.35 : this.odBat === 'OVERDRIVE SWING' && kind === 'power' ? 1.25 : this.odBat ? 1.15 : 1;
+    return { reach: K[0] * cm * od, vtol: K[1] * cm * od, win: K[2] * (0.85 + con * 0.03) * assist * od };
   }
   crossPlate() {
+    if (this.pt.steal) this.pt.steal.catchProg = this.pt.steal.prog;
     const pt = this.pt, bt = this.batter(), ty = PITCHES[pt.type];
     const x = pt.aimX, z = pt.aimZ; pt.cross = { x, z };
     // velocity at plate for the carry to the mitt
@@ -232,23 +282,30 @@ class Match {
       else if (humanBat) { const ox = Math.abs(dx) / reach, oz = Math.abs(dz) / vtol, ot = Math.abs(timing);
         const why = ot >= Math.max(ox, oz) ? (timing > 0 ? 'TOO EARLY' : 'TOO LATE') : ox >= oz ? (dx * pt.hand > 0 ? 'MISSED · OUTSIDE' : 'MISSED · INSIDE') : (dz > 0 ? 'MISSED · TOO HIGH' : 'MISSED · TOO LOW');
         this.feedback(why, '#ff6a6a'); }
-      pt.result = 'whiff'; this.strike(true); return;
+      pt.result = 'whiff'; this.strike(true); this.hookSteal(); return;
     }
     // no swing: hit-by-pitch?
     if (Math.abs(x - bxp) < 0.85 && z > 0.3 && z < 5.6) { pt.result = 'hbp'; return this.hitByPitch(); }
     const strike = Math.abs(x) <= ZONE_X && z >= ZONE_Z0 && z <= ZONE_Z1;
     if (strike) { pt.result = 'strike'; this.strike(false); } else { pt.result = 'ball'; this.ballCall(); }
+    this.hookSteal();
   }
+  hookSteal() { const pt = this.pt; if (!pt.steal || this.balls >= 4) return; const orig = pt.after; pt.after = () => this.resolveSteal(() => orig && orig()); }
   strike(swinging) {
-    const pt = this.pt; this.strikes++;
+    const pt = this.pt;
+    if (this.cfg.derby) { if (swinging) { pt.after = () => this.derbyOut('MISS'); this.banner('MISS', '#ffffff', '#ff4a5a', 0.8, 40); } else { this.banner('TAKE', '#ffffff', '#9aa6c8', 0.6, 34); pt.after = () => this.newPitch(false); } return; }
+    if (this.cfg.practice) { this.banner(swinging ? 'SWING & MISS' : 'STRIKE', '#ffffff', '#ffd23d', 0.8, 40); pt.after = () => this.newPitch(true); return; }
+    this.strikes++;
     if (this.strikes >= 3) {
-      this.banner('STRIKEOUT', '#ffffff', '#ff4a5a', 1.3, 60); this.sides[this.fld].k++; { const st = this.bs(this.batter()); st.ab++; st.k++; } this.tick(`${this.batter().name} STRIKES OUT ${swinging ? 'SWINGING' : 'LOOKING'}`);
+      this.banner('STRIKEOUT', '#ffffff', '#ff4a5a', 1.3, 60); this.sides[this.fld].k++; this.odGain(this.fld, 15); { const st = this.bs(this.batter()); st.ab++; st.k++; } this.tick(`${this.batter().name} STRIKES OUT ${swinging ? 'SWINGING' : 'LOOKING'}`);
       pt.after = () => { this.outs++; Sfx.play('out'); this.nextBatter(); };
     } else { this.banner(swinging ? 'SWING & MISS' : 'STRIKE', '#ffffff', '#ffd23d', 0.9, 44); pt.after = () => this.newPitch(false); }
   }
   ballCall() {
-    const pt = this.pt; this.balls++;
-    if (this.balls >= 4) { this.banner('WALK', '#ffffff', '#3dffa0', 1.1, 54); this.tick(`${this.batter().name} WALKS`); pt.after = () => { this.forceAdvance(); this.nextBatter(); }; }
+    const pt = this.pt;
+    if (this.cfg.derby || this.cfg.practice) { this.banner('BALL', '#ffffff', '#3dffa0', 0.6, 34); pt.after = () => this.newPitch(!!this.cfg.practice); return; }
+    this.balls++;
+    if (this.balls >= 4) { this.odGain(this.bat, 8); this.banner('WALK', '#ffffff', '#3dffa0', 1.1, 54); this.tick(`${this.batter().name} WALKS`); pt.after = () => { this.forceAdvance(); this.nextBatter(); }; }
     else { this.banner('BALL', '#ffffff', '#3dffa0', 0.8, 40); pt.after = () => this.newPitch(false); }
   }
   hitByPitch() {
@@ -264,6 +321,7 @@ class Match {
   }
   scoreRun(r) { this.score[this.bat]++; this.line[this.bat][this.inning - 1] = (this.line[this.bat][this.inning - 1] || 0) + 1; Sfx.play('run'); if (this.playRuns) this.playRuns.push(r); }
   nextBatter() {
+    if (this.cfg.practice) { this.outs = 0; this.bases = (this.practiceBases || [null, null, null]).slice(); return this.newPitch(true); }
     const sd = this.sides[this.bat]; sd.batIdx = (sd.batIdx + 1) % 9;
     if (this.checkWalkoff()) return this.endGame();
     if (this.outs >= 3) return this.wait(0.9, () => this.endHalf());
@@ -271,11 +329,11 @@ class Match {
   }
   contact(q, timing, dx, dz, kind) {
     const pt = this.pt, bt = this.batter(), hand = pt.hand, pow = this.st(bt, 'pow');
-    Sfx.play('bat'); this.shake = 0.25 + q * 0.3; pt.hit = true; pt.hitT = pt.t; this.hitStop = q > 0.55 && kind !== 'bunt' ? 0.05 + q * 0.06 : 0;
+    this.emit('contact', kind); Sfx.play('bat'); this.shake = 0.25 + q * 0.3; pt.hit = true; pt.hitT = pt.t; this.hitStop = q > 0.55 && kind !== 'bunt' ? 0.05 + q * 0.06 : 0;
     let v, th, ph;
     if (kind === 'bunt') { v = rnd(26, 40); th = rnd(-14, 2); ph = rnd(-32, 32); }
     else {
-      v = (77 + 98 * q) * (0.8 + 0.045 * pow) * (kind === 'power' ? 1.17 : 1);
+      v = (77 + 98 * q) * (0.8 + 0.045 * pow) * (kind === 'power' ? 1.17 : 1) * (this.odBat === 'OVERDRIVE SWING' ? 1.18 : 1);
       th = 14 + dz * 26 + (kind === 'power' ? 6 : 0) + gauss() * 6 + (1 - q) * gauss() * 14;
       ph = -hand * timing * 42 + hand * dx * 12 + gauss() * 6;
       if (q < 0.14) { ph = pick([-1, 1]) * rnd(60, 110); th = rnd(20, 60); }
@@ -285,11 +343,12 @@ class Match {
     (this.playLog = this.playLog || []).push({ q: +q.toFixed(2), v: Math.round(v), th: Math.round(th), ph: Math.round(ph), kind });
     const vx = v * Math.cos(th * DEG) * Math.sin(ph * DEG), vy = v * Math.cos(th * DEG) * Math.cos(ph * DEG), vz = v * Math.sin(th * DEG);
     this.parts.burst(pt.cross.x, 0, pt.cross.z, 18, '#bff6ff', 25);
+    if (this.cfg.derby) return this.derbySwing(pt.cross, vx, vy, vz);
     const foulNow = Math.abs(ph) > 45 && (th < 28 || Math.abs(ph) > 78);
     if (foulNow) {
       pt.hitBall = { x: pt.cross.x, y: 0.2, z: pt.cross.z, vx, vy, vz, bounced: true }; pt.postT = 1.0;
       this.banner('FOUL BALL', '#ffffff', '#ffd23d', 0.9, 44); Sfx.play('foul');
-      pt.after = () => { if (this.strikes < 2) this.strikes++; this.newPitch(false); };
+      pt.steal = null; pt.after = () => { if (this.strikes < 2) this.strikes++; this.newPitch(false); };
       return;
     }
     this.events.plays++;
@@ -297,7 +356,7 @@ class Match {
   }
   stepBall(dt) { const b = this.pt.hitBall; b.vz -= 32 * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt; if (b.z < 0) { b.z = 0; b.vz *= -0.4; } }
   destroy(r, sd) {
-    r.alive = false; r.hp = 0; sd.lost++; this.sides[1 - sd.idx].ko++;
+    r.alive = false; r.hp = 0; sd.lost++; this.sides[1 - sd.idx].ko++; this.odGain(1 - sd.idx, 30);
     Sfx.play('boom'); this.shake = 1;
     this.banner('DESTROYED', '#ffffff', '#ff3d3d', 1.8, 64, `${r.name} #${r.num} IS SCRAP`); this.tick(`${r.name} DESTROYED`);
     const nr = this.substitute(sd, r); this.log.push(`${r.name} destroyed`);
@@ -321,6 +380,7 @@ class Match {
       const tgt = this.launch === 'fly' ? base + 0.42 : base + 1;
       this.runners.push({ r: this.bases[i], s: base, tgt, start: base, force: f ? base + 1 : null, needTag: false, out: false, scored: false, isBatter: false, minBase: f ? base + 1 : base, immune: 0, delay: 0 });
     }
+    if (this.pt && this.pt.steal) { const st = this.pt.steal, rn = this.runners.find(x => x.r === st.r && !x.isBatter); if (rn) { rn.s = st.from + st.prog; rn.tgt = st.from + 1; rn.minBase = Math.max(rn.minBase, st.from); } this.pt.steal = null; }
     // fielders react
     for (const f of this.fielders) { f.react = (0.12 + rnd(0.2)) / (this.human(this.fld) != null ? 1 : this.sk); f.task = 'home'; }
     this.chaser = null; this.predict(); this.assignCovers();
@@ -370,7 +430,7 @@ class Match {
     this.wait(1.0, () => { if (this.strikes < 2) this.strikes++; this.newPitch(false); });
   }
   homeRun() {
-    this.hr = true; this.events.hr++; Sfx.play('hr'); this.shake = 0.6;
+    this.hr = true; this.events.hr++; this.odGain(this.bat, 20); Sfx.play('hr'); this.shake = 0.6;
     const b = this.ball, tm = this.sides[this.bat].team; this.fireworks = 2.4; for (let i = 0; i < 9; i++) setTimeout(() => { const x = rnd(-260, 260), y = rnd(330, 470), z = rnd(110, 190), c = pick([tm.g, '#ffffff', tm.p, tm.s]); this.parts.burst(x, y, z, 60, c, 55, { g: 9, size: 1.8, drag: 1.4, life: 1.6 }); this.parts.burst(x, y, z, 14, '#ffffff', 20, { g: 6, size: 1.2, drag: 2 }); Sfx.play('foul'); }, i * 260);
     this.banner('HOME RUN', '#ffffff', this.sides[this.bat].team.g, 2.4, 80, `${this.batter().name} GOES DEEP`); Sfx.play('cheer');
     { const n = this.runners.filter(r => !r.out && !r.scored).length; this.tick(`${this.batter().name} ${['', 'SOLO HOMER', 'TWO-RUN HOMER', 'THREE-RUN HOMER', 'GRAND SLAM'][n] || 'HOMERS'} · ${Math.round(hyp(this.ball.x, this.ball.y))} FT`); }
@@ -514,7 +574,7 @@ class Match {
     this.banner('OUT', '#ffffff', '#ff4a5a', 0.9, 54); h.tagCool = this.playT + 0.3; this.markOut(rn, kind);
   }
   markOut(rn, kind) {
-    if (rn.out) return; rn.out = true; this.outs++; Sfx.play('out');
+    if (rn.out) return; rn.out = true; this.outs++; Sfx.play('out'); if (this.cfg.practice) this.outs = Math.min(this.outs, 2);
     if (rn.isBatter) for (const r of this.runners) { if (!r.isBatter) { r.force = null; if (r.minBase > r.start && r.s < r.minBase) r.minBase = r.start; } }
     if (this.outs >= 3) {
       this.thirdOutKind = kind;
@@ -529,19 +589,65 @@ class Match {
     this.clash = new Clash({ match: this, a: { r: rn.r, side: offSide, pad: this.pad(this.bat) }, b: { r: h.r, side: defSide, pad: this.pad(this.fld) }, base, sk: this.sk });
   }
   resolveClash() {
+    this.emit('clashed');
+    if (this.clashCtx.custom) return this.resolveStealClash();
     const { rn, h, kind, base } = this.clashCtx, res = this.clash.result; this.state = 'play';
     const offSide = this.sides[this.bat], defSide = this.sides[this.fld];
     if (res.bDestroyed) { const nr = this.destroy(h.r, defSide); h.r = nr; if (this.ball.held && this.ball.held.f === h) { /* new bot keeps the ball */ } }
     if (res.aDestroyed) { const nr = this.destroy(rn.r, offSide); rn.r = nr; }
     if (res.winner === 'a' && !res.aDestroyed) {
-      this.banner('SAFE', '#ffffff', '#3dffa0', 1.0, 58); Sfx.play('safe'); this.tick(`CLASH: ${rn.r.name} BEATS ${h.r.name} · SAFE`);
+      this.odGain(this.bat, 25); this.banner('SAFE', '#ffffff', '#3dffa0', 1.0, 58); Sfx.play('safe'); this.tick(`CLASH: ${rn.r.name} BEATS ${h.r.name} · SAFE`);
       rn.s = base; rn.tgt = base; if (rn.force != null && base >= rn.force) rn.force = null; if (kind === 'tag-up') rn.needTag = false; rn.immune = this.playT + 2.5; h.tagCool = this.playT + 1.2;
       if (base >= 4) { rn.scored = true; this.scoreRun(rn.r); }
       // runner may be pushed past by others; keep the play alive
     } else {
-      this.banner('OUT', '#ffffff', '#ff4a5a', 1.0, 58); this.tick(`CLASH: ${h.r.name} BEATS ${rn.r.name} · OUT`); this.markOut(rn, kind); h.tagCool = this.playT + 0.3;
+      this.odGain(this.fld, 25); this.banner('OUT', '#ffffff', '#ff4a5a', 1.0, 58); this.tick(`CLASH: ${h.r.name} BEATS ${rn.r.name} · OUT`); this.markOut(rn, kind); h.tagCool = this.playT + 0.3;
     }
     this.clash = null;
+  }
+  resolveStealClash() {
+    const c = this.clashCtx, res = this.clash.result; this.clash = null; this.state = 'pitch';
+    const off = this.sides[this.bat], def = this.sides[this.fld]; let r = c.r;
+    if (res.bDestroyed) this.destroy(c.fr, def);
+    if (res.aDestroyed) { const nr = this.destroy(c.r, off); this.bases[c.from - 1] = nr; r = nr; }
+    this.odGain(res.winner === 'a' ? this.bat : this.fld, 25);
+    const then = this.stealThen || (() => this.newPitch(false)); this.stealThen = null;
+    const st = { from: c.from, r };
+    if (res.winner === 'a' && !res.aDestroyed) { if (c.base === c.from) { this.banner('SAFE', '#ffffff', '#3dffa0', 1.0, 54); this.newPitch(false); return; } this.stealSafe(st, then); }
+    else this.stealOut(st, c.outLabel, c.base === c.from ? () => this.newPitch(false) : then);
+  }
+  // ------------------------------------------------------------ home run derby
+  derbySwing(c, vx, vy, vz) {
+    // carry with no walls gives the true distance; the real flight decides homer / foul / out
+    const sim = { x: c.x, y: 0.4, z: c.z, vx, vy, vz, batted: true, bounced: false, thrown: false }; let carry = 0, hr = false;
+    for (let i = 0; i < 1600; i++) { const sp = hyp(sim.vx, sim.vy, sim.vz), k = 0.0022, dt = 1 / 120; sim.vx -= k * sp * sim.vx * dt; sim.vy -= k * sp * sim.vy * dt; sim.vz -= (32 + k * sp * sim.vz) * dt; sim.x += sim.vx * dt; sim.y += sim.vy * dt; sim.z += sim.vz * dt;
+      const r = hyp(sim.x, sim.y), th = Math.atan2(sim.x, sim.y); if (!hr && Math.abs(th) <= P_ && r >= fenceR(th) && sim.z > FENCE_H) hr = true; if (sim.z <= 0) { carry = r; break; } }
+    const th = Math.atan2(vx, vy), foul = Math.abs(th) > P_ + 0.02;
+    this.derby.cur = { hr: hr && !foul, foul, dist: Math.round(carry) }; this.derby.t = 0;
+    this.ball = { x: c.x, y: 0.4, z: c.z, vx, vy, vz, held: null, batted: true, bounced: false, thrown: false, trail: [] };
+    this.state = 'derby'; this.view = 'field'; this.focus = { x: c.x, y: 20 }; this.runners = [];
+  }
+  updateDerby(dt) {
+    const D = this.derby, b = this.ball; D.t += dt;
+    if (!D.cur.landed) { for (let i = 0; i < 4; i++) { const sp = hyp(b.vx, b.vy, b.vz), k = 0.0022, h = dt / 4; b.vx -= k * sp * b.vx * h; b.vy -= k * sp * b.vy * h; b.vz -= (32 + k * sp * b.vz) * h; b.x += b.vx * h; b.y += b.vy * h; b.z += b.vz * h; if (b.z <= 0.15) { b.z = 0.15; b.vx = b.vy = b.vz = 0; D.cur.landed = true; break; } }
+      b.trail.push([b.x, b.y, b.z]); if (b.trail.length > 10) b.trail.shift(); }
+    this.focus.x = lerp(this.focus.x, b.x, Math.min(1, dt * 3)); this.focus.y = lerp(this.focus.y, b.y, Math.min(1, dt * 3));
+    if (!D.cur.called && (D.cur.landed || D.t > 1.6)) {
+      D.cur.called = true; D.last = D.cur.dist;
+      if (D.cur.hr) { D.hr++; D.total += D.cur.dist; D.long = Math.max(D.long, D.cur.dist); Sfx.play('hr'); Sfx.play('cheer'); this.banner(`${D.cur.dist} FT`, '#ffffff', this.sides[0].team.g, 1.4, 64, `HOME RUN #${D.hr}`); for (let i = 0; i < 3; i++) this.parts.burst(rnd(-200, 200), rnd(380, 460), rnd(110, 170), 50, pick([this.sides[0].team.g, '#ffffff']), 50, { g: 9, size: 1.6, drag: 1.4, life: 1.5 }); }
+      else { this.banner(D.cur.foul ? 'FOUL · OUT' : `${D.cur.dist} FT · OUT`, '#ffffff', '#ff4a5a', 1.0, 44); D.outs++; Sfx.play('out'); }
+    }
+    if (D.cur.called && D.t > (D.cur.hr ? 3.0 : 2.0)) { this.ball = null; if (D.outs >= this.cfg.derby.outs) return this.endDerby(); this.newPitch(false); }
+  }
+  derbyOut() { this.derby.outs++; Sfx.play('out'); if (this.derby.outs >= this.cfg.derby.outs) return this.endDerby(); this.newPitch(false); }
+  endDerby() { this.state = 'over'; this.over = true; this.view = 'field'; this.winner = 0; const D = this.derby; this.banner(`${D.hr} HOME RUN${D.hr === 1 ? '' : 'S'}`, '#ffffff', this.sides[0].team.g, 3, 64, D.long ? `LONGEST ${D.long} FT` : 'NO HOMERS THIS TIME'); Sfx.play('hr'); }
+  // ------------------------------------------------------------ overdrive
+  odGain(i, amt) { const sd = this.sides[i], was = sd.od || 0; sd.od = Math.min(100, was + amt); if (was < 100 && sd.od >= 100) { this.tick(`${sd.team.id} OVERDRIVE READY`); Sfx.play('cash'); } }
+  armOverdrive() {
+    this.odBat = null; this.odFld = false; this.blink = null;
+    const bs = this.sides[this.bat], fs = this.sides[this.fld], bt = this.batter();
+    if ((bs.od || 0) >= 100) { bs.od = 0; const k = { STRIKER: 'LOCK-ON', TITAN: 'OVERDRIVE SWING', VECTOR: 'BLINK', RAPTOR: 'POUNCE' }[bt.cls]; this.odBat = k; if (k === 'BLINK') this.blink = bt; if (k === 'POUNCE') bt.pounce = true; this.banner(`OVERDRIVE · ${k}`, '#ffffff', bs.team.g, 1.4, 44, OD_DESC[k]); Sfx.play('plasma'); }
+    if ((fs.od || 0) >= 100) { fs.od = 0; this.odFld = true; if (!this.odBat) this.banner('OVERDRIVE · SHUTDOWN', '#ffffff', fs.team.g, 1.4, 44, OD_DESC.SHUTDOWN); Sfx.play('plasma'); }
   }
   // ------------------------------------------------------------ runners
   updateRunners(dt) {
@@ -632,6 +738,7 @@ class Match {
     }
   }
   endPlay(fromOut) {
+    this.emit('played');
     if (this.state === 'over') return;
     const bat = this.runners.find(r => r.isBatter);
     const live = this.runners.filter(r => !r.out && !r.scored);
@@ -640,7 +747,7 @@ class Match {
     if (this.outs >= 3) { this.bases = [null, null, null]; } else this.bases = nb;
     if (bat) { const st = this.bs(bat.r); st.ab++; if (!bat.out) st.h++; st.rbi += (this.playRuns || []).length; }
     if (bat && this.lastLaunch) { const dir = this.lastLaunch.ph < -15 ? ' TO LEFT' : this.lastLaunch.ph > 15 ? ' TO RIGHT' : ' UP THE MIDDLE', runs = (this.playRuns || []).length, rs = runs ? ` · ${runs} RUN${runs > 1 ? 'S' : ''} SCORE${runs > 1 ? '' : 'S'}` : '';
-      if (!bat.out) { const s2 = clamp(Math.round(bat.s), 1, 4); this.tick(`${bat.r.name} ${['', 'SINGLES', 'DOUBLES', 'TRIPLES', 'LEGS OUT AN INSIDE-THE-PARK HR'][s2]}${s2 < 4 ? dir : ''}${rs}`); Sfx.play('cheer'); }
+      if (!bat.out) { this.odGain(this.bat, 12); const s2 = clamp(Math.round(bat.s), 1, 4); this.tick(`${bat.r.name} ${['', 'SINGLES', 'DOUBLES', 'TRIPLES', 'LEGS OUT AN INSIDE-THE-PARK HR'][s2]}${s2 < 4 ? dir : ''}${rs}`); Sfx.play('cheer'); }
       else this.tick(`${bat.r.name} ${this.launch === 'fly' ? 'FLIES OUT' : this.launch === 'liner' ? 'LINES OUT' : 'GROUNDS OUT'}${dir}${rs}`); }
     if (bat && !bat.out && !this.hr) { this.sides[this.bat].hits++; const s = Math.round(bat.s); if (!fromOut) this.banner(['', 'SINGLE', 'DOUBLE', 'TRIPLE', 'INSIDE-THE-PARK'][clamp(s, 1, 4)], '#ffffff', this.sides[this.bat].team.g, 1.0, 46); }
     if (this.playLog && this.playLog.length) { const L = this.playLog[this.playLog.length - 1]; L.res = bat ? (bat.out ? 'out' : 'b' + Math.round(bat.s)) : '?'; L.outs = this.outs; L.runs = (this.playRuns || []).length; L.dist = Math.round(this.maxDist || 0); }

@@ -65,7 +65,7 @@ function drawMatch(ctx, m) {
   if (pitchView && pt) {
     const bt = m.batter(), bx = m.batterX();
     ents.push({ x: bx, y: 0, z: 0, r: bt, team: batSide.team, o: { t, back: true }, batter: true, side: batSide });
-    for (let i = 0; i < 3; i++) if (m.bases[i]) { const B = BASES[i + 1], N = BASES[(i + 2) % 4]; const d = hyp(N.x - B.x, N.y - B.y); ents.push({ x: B.x + (N.x - B.x) / d * 4, y: B.y + (N.y - B.y) / d * 4, z: 0, r: m.bases[i], team: batSide.team, o: { t, back: false, crouch: 0.2 }, side: batSide }); }
+    for (let i = 0; i < 3; i++) if (m.bases[i]) { const st = pt.steal && pt.steal.r === m.bases[i] ? pt.steal : null; if (st) { const p2 = basePos(i + 1 + st.prog); ents.push({ x: p2.x, y: p2.y, z: 0, r: m.bases[i], team: batSide.team, o: { t, run: 1, back: true, lean: 0.4 }, side: batSide }); continue; } const lead = pt.stealPlan && pt.stealPlan.from === i + 1 ? 10 : 4; const B = BASES[i + 1], N = BASES[(i + 2) % 4]; const d = hyp(N.x - B.x, N.y - B.y); ents.push({ x: B.x + (N.x - B.x) / d * lead, y: B.y + (N.y - B.y) / d * lead, z: 0, r: m.bases[i], team: batSide.team, o: { t, back: false, crouch: lead > 4 ? 0.45 : 0.2, lean: lead > 4 ? -0.3 : 0 }, side: batSide }); }
   } else if (m.runners) {
     for (const rn of m.runners) { if (rn.out || rn.scored) continue; const p = basePos(rn.s); const dir = rn.tgt >= rn.s ? 1 : -1; const seg = Math.min(3, Math.floor(rn.s)); const a = BASES[seg], b = BASES[seg + 1]; const vy = (b.y - a.y) * dir, vx = (b.x - a.x) * dir; const moving = rn.s !== rn.tgt, slide = moving && rn.tgt % 1 === 0 && Math.abs(rn.tgt - rn.s) * 90 < 7 && rn.tgt > rn.s; ents.push({ x: p.x, y: p.y, z: 0, r: rn.r, team: batSide.team, o: { t: t + rn.start, run: moving && !slide ? 1 : 0, crouch: slide ? 0.7 : 0, back: moving ? vy > 0 : false, lean: slide ? clamp(vx / 40, -1, 1) * 1.2 + 0.3 : moving ? clamp(vx / 80, -1, 1) : 0 }, side: batSide }); }
   }
@@ -90,6 +90,8 @@ function drawMatch(ctx, m) {
     const e = it.e, q = e.q;
     if (e.ump) { const z = 7.5 + Math.sin(t * 2) * 0.3, p = cam.proj(e.x, e.y, z); if (p) { ctx.fillStyle = '#1a1f2b'; ctx.beginPath(); ctx.arc(p.x, p.y, 0.6 * p.s, 0, TAU); ctx.fill(); glow(ctx, p.x, p.y, 1.2 * p.s, '#ff3d5a', 0.8); ctx.fillStyle = '#ff3d5a'; ctx.beginPath(); ctx.arc(p.x, p.y, 0.18 * p.s, 0, TAU); ctx.fill(); } continue; }
     const hp = e.r.hp / maxHp(e.r, e.side);
+    const aura = (e.batter && m.odBat) || (m.odFld && e.r && e.r.pos === 'P' && pitchView);
+    if (aura) { const ac = e.team.g, hh = CLASSES[e.r.cls].h * q.s; glow(ctx, q.x, q.y - hh * 0.5, hh * (0.9 + 0.1 * Math.sin(t * 8)), ac, 0.55); for (let k = 0; k < 6; k++) { const ph = ((t * 0.8 + k / 6) % 1); glow(ctx, q.x + Math.sin(k * 2.1 + t) * hh * 0.3, q.y - ph * hh * 1.2, 6 + q.s * 0.5, ac, 1 - ph); } }
     if (e.batter) { drawBatter(ctx, cam, m, e, q); continue; }
     drawRobot(ctx, q.x, q.y, q.s * boost * (e.sc || 1), e.r, e.team, Object.assign({ hp }, e.o));
     if (e.ctrl) { const top = q.y - CLASSES[e.r.cls].h * q.s * boost - 10; ctx.fillStyle = e.team.g; ctx.beginPath(); ctx.moveTo(q.x - 6, top - 8); ctx.lineTo(q.x + 6, top - 8); ctx.lineTo(q.x, top); ctx.closePath(); ctx.fill(); }
@@ -111,6 +113,7 @@ function drawMatch(ctx, m) {
   // vignette
   const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.85); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.5)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
   if (!m.isReplay) { drawHUD(ctx, m, pitchView); drawTicker(ctx, m); }
+  if (m.cfg.derby && !m.isReplay) drawDerbyHud(ctx, m);
   if (pitchView && m.walkup && m.state !== 'intro') drawWalkup(ctx, m);
   if (m.state === 'clash' && m.clash) m.clash.draw(ctx);
   drawBanners(ctx, m);
@@ -221,6 +224,7 @@ function drawHUD(ctx, m, pitchView) {
   ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(x + 144, y + 8, 1.5, 60);
   txt(ctx, (m.half ? '▼' : '▲') + ' ' + m.inning, x + 154, y + 22, 18, '#ffffff', 'left', FONT_H, 900);
   const dots = (label, n, max, col, yy) => { txt(ctx, label, x + 154, yy, 13, '#9aa6c8', 'left', FONT_H, 700); for (let i = 0; i < max; i++) { ctx.fillStyle = i < n ? col : 'rgba(255,255,255,0.15)'; ctx.beginPath(); ctx.arc(x + 174 + i * 13, yy, 4.5, 0, TAU); ctx.fill(); if (i < n) glow(ctx, x + 174 + i * 13, yy, 9, col, 0.5); } };
+  for (let s2 = 0; s2 < 2; s2++) { const od = m.sides[s2].od || 0, full = od >= 100, col = m.sides[s2].team.g, yy = y + 22 + s2 * 32; ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fillRect(x + 42, yy + 11, 90, 3); ctx.fillStyle = full ? (Math.sin(m.time * 10) > 0 ? '#ffffff' : col) : col; ctx.fillRect(x + 42, yy + 11, 90 * od / 100, 3); if (full) glow(ctx, x + 132, yy + 12, 8, col, 0.8); }
   dots('B', m.balls, 3, '#3dffa0', y + 44); dots('S', m.strikes, 2, '#ffd23d', y + 60);
   txt(ctx, 'O', x + 214, y + 44, 13, '#9aa6c8', 'left', FONT_H, 700); for (let i = 0; i < 2; i++) { ctx.fillStyle = i < m.outs ? '#ff4a5a' : 'rgba(255,255,255,0.15)'; ctx.beginPath(); ctx.arc(x + 232 + i * 13, y + 44, 4.5, 0, TAU); ctx.fill(); }
   // base diamond
@@ -336,11 +340,16 @@ function drawWalkup(ctx, m) {
 }
 
 function drawPitchRail(ctx, m, pr, ps, TL) {
-  const pt = m.pt, ih = TL ? 34 : 52, gap = TL ? 4 : 6, top = TL ? 206 : 108, w = TL ? 150 : 176, x0 = W - w - 10;
+  const pt = m.pt, ih = TL ? 30 : 46, gap = TL ? 3 : 5, top = TL ? 206 : 100, w = TL ? 150 : 176, x0 = W - w - 10;
+  if (m.bases.some(Boolean)) { const y = top + PITCHES.length * (ih + gap), sel = !!pt.pickSel, x = x0 - (sel ? 10 : 0), warn = !!pt.stealPlan;
+    tapZone(x, y, w + 10, ih, () => { if (pt.stage === 'aim') { pt.pickSel = true; Sfx.play('move'); } });
+    ctx.save(); rrect(ctx, x, y, w + (sel ? 10 : 0), ih, 7); ctx.fillStyle = sel ? 'rgba(255,106,106,0.3)' : 'rgba(10,14,30,0.78)'; ctx.fill(); ctx.strokeStyle = sel || warn ? '#ff6a6a' : 'rgba(140,160,220,0.25)'; ctx.lineWidth = sel ? 2 : 1; ctx.stroke(); ctx.restore();
+    txt(ctx, '⤺', x + 22, y + ih / 2, 18, '#ff6a6a', 'center', FONT_B, 700); txt(ctx, 'PICKOFF', x + 40, y + ih / 2, TL ? 13 : 15, sel ? '#ffffff' : '#c8d2f0', 'left', FONT_H, 900);
+    if (warn && Math.sin(m.time * 8) > -0.3) txt(ctx, 'BIG LEAD!', x + w - 8 + (sel ? 10 : 0), y + ih / 2, 10, '#ff6a6a', 'right', FONT_H, 900); }
   txt(ctx, 'PITCHES · B / TAP', W - 14, top - 12, 11, '#9aa6c8', 'right', FONT_H, 900);
   PITCHES.forEach((p, i) => {
-    const y = top + i * (ih + gap), sel = i === pt.type, can = p.cost <= pr.battery, x = x0 - (sel ? 10 : 0);
-    tapZone(x, y, w + 10, ih, () => { if (pt.stage !== 'aim') return; if (can) { pt.type = i; Sfx.play('move'); } else Sfx.play('buzz'); });
+    const y = top + i * (ih + gap), sel = i === pt.type && !pt.pickSel, can = p.cost <= pr.battery, x = x0 - (sel ? 10 : 0);
+    tapZone(x, y, w + 10, ih, () => { if (pt.stage !== 'aim') return; if (can) { pt.type = i; pt.pickSel = false; Sfx.play('move'); } else Sfx.play('buzz'); });
     ctx.save(); rrect(ctx, x, y, w + (sel ? 10 : 0), ih, 7);
     const g = ctx.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, sel ? hexA(p.col, 0.32) : 'rgba(10,14,30,0.78)'); g.addColorStop(1, 'rgba(8,11,24,0.85)');
     ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = sel ? p.col : 'rgba(140,160,220,0.25)'; ctx.lineWidth = sel ? 2 : 1; ctx.stroke(); ctx.restore();
@@ -350,9 +359,9 @@ function drawPitchRail(ctx, m, pr, ps, TL) {
     const ix = x + 22, iy = y + ih / 2, k = ih * 0.36; ctx.strokeStyle = p.col; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ix, iy - k);
     if (p.wobble) { for (let j = 1; j <= 6; j++) ctx.lineTo(ix + (j % 2 ? 4 : -4), iy - k + j * k / 3); } else ctx.quadraticCurveTo(ix, iy, ix + p.bx * 5, iy + k - p.bz * 2);
     ctx.stroke(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.wobble ? ix : ix + p.bx * 5, p.wobble ? iy + k : iy + k - p.bz * 2, 2.5, 0, TAU); ctx.fill();
-    txt(ctx, p.name, x + 40, TL ? y + ih / 2 : y + 17, TL ? 13 : 15, sel ? '#ffffff' : '#c8d2f0', 'left', FONT_H, 900);
-    if (!TL) { txt(ctx, 'SPD', x + 40, y + 37, 9, '#8f9bc0', 'left', FONT_H, 700); bar(ctx, x + 64, y + 33, 50, 6, (p.spd - 0.6) / 0.55, p.col); }
-    txt(ctx, p.cost > 3 ? `⚡${p.cost}` : `${p.cost}`, x + w - 8 + (sel ? 10 : 0), TL ? y + ih / 2 : y + 37, 11, p.cost > 3 ? '#d06bff' : '#8f9bc0', 'right', FONT_H, 700);
+    txt(ctx, p.name, x + 40, TL ? y + ih / 2 : y + 15, TL ? 13 : 15, sel ? '#ffffff' : '#c8d2f0', 'left', FONT_H, 900);
+    if (!TL) { txt(ctx, 'SPD', x + 40, y + 33, 9, '#8f9bc0', 'left', FONT_H, 700); bar(ctx, x + 64, y + 29, 50, 6, (p.spd - 0.6) / 0.55, p.col); }
+    txt(ctx, p.cost > 3 ? `⚡${p.cost}` : `${p.cost}`, x + w - 8 + (sel ? 10 : 0), TL ? y + ih / 2 : y + 33, 11, p.cost > 3 ? '#d06bff' : '#8f9bc0', 'right', FONT_H, 700);
     ctx.globalAlpha = 1;
   });
 }
@@ -365,6 +374,11 @@ function drawSwingPanel(ctx, m, TL) {
     txt(ctx, name, x + cw / 2, y + 14, 13, '#ffffff', 'center', FONT_H, 900);
     ctx.font = `900 9px ${FONT_H}`; const kw = ctx.measureText(key).width + 8; ctx.fillStyle = hexA(col, 0.9); rrect(ctx, x + 5, y + 24, kw, 12, 3); ctx.fill(); txt(ctx, key, x + 5 + kw / 2, y + 30.5, 9, '#05070f', 'center', FONT_H, 900); txt(ctx, sub, x + 9 + kw + (cw - 14 - kw) / 2, y + 30.5, 8, '#9aa6c8', 'center', FONT_H, 700);
   });
+  const sc = m.stealCandidate();
+  if ((sc && !pt.steal) || pt.steal) { const lbl = pt.steal ? 'RUNNING!' : `↑ STEAL ${['', '2ND', '3RD'][sc]}`, ready = pt.stage === 'windup' || (pt.stage === 'flight' && (pt.t - pt.t0) / pt.T < 0.35), sx = x0 + cw * 3 + gap * 2 - 96, sy = y - 58;
+    tapZone(sx, sy, 96, 20, () => m.startSteal(true));
+    ctx.save(); rrect(ctx, sx, sy, 96, 20, 10); ctx.fillStyle = pt.steal ? 'rgba(255,216,74,0.35)' : ready ? 'rgba(255,216,74,0.22)' : 'rgba(8,11,24,0.7)'; ctx.fill(); ctx.strokeStyle = ready || pt.steal ? '#ffd84a' : 'rgba(255,216,74,0.4)'; ctx.stroke(); ctx.restore();
+    txt(ctx, lbl, sx + 48, sy + 10.5, 10, ready || pt.steal ? '#ffffff' : '#c8b878', 'center', FONT_H, 900); }
   if (m.cfg.meter === false) return;
   // timing meter: swing when the marker crosses the window
   const bw = cw * 3 + gap * 2, by = y - 18, bx = x0;

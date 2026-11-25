@@ -34,6 +34,10 @@ python3 tools/build_iron_diamond.py iron-diamond-single.html
 ## Modes
 
 - **Exhibition**: 1 player vs CPU, 2 players head to head, or CPU vs CPU to watch.
+- **Practice**: an interactive **Tutorial** walks through every control and
+  waits for you to try each one (swings, bunt, steal, pitching, steering,
+  fielding, a clash). **Home Run Derby** gives you a pitching machine and 10
+  outs; only homers count, and the best runs go on a leaderboard.
 - **Season**: play an 11-round round robin against every other club while
   the rest of the league plays its own games. Standings track W-L, games back and
   run differential; the top 4 make the playoffs (semifinal, then the Iron
@@ -95,6 +99,24 @@ move, A strike, B heavy (breaks guard), Down guards. If the runner wins, they're
 safe; if the fielder wins, the runner is out. When time runs out, whoever dealt more
 damage wins. Damage is permanent, and a bot that hits 0 armor is **destroyed** and
 replaced from the bench (or by a scrap drone).
+
+## Stealing, pickoffs and Overdrive
+
+- **Steal**: with a runner on and the base ahead empty, press **↑** (or tap
+  STEAL) once the pitcher starts his windup. The runner races the catcher's
+  throw; a clear win is safe or out, and a close one becomes a clash at the bag.
+  CPU runners steal too, and you can see them take a **big lead** first.
+- **Pickoff**: when runners are on, a PICKOFF item appears on the pitch rail.
+  Against a runner with a big lead it often catches them (or starts a clash).
+- **Overdrive**: hits, homers, walks, strikeouts, steals and clash wins fill
+  the meter under each team's score. When it's full, the next batter gets their
+  frame's ability for that at-bat: Striker **Lock-On** (sweet spots +35%),
+  Titan **Overdrive Swing** (bigger power zone, hits 18% harder), Vector
+  **Blink** (45% faster, steals automatic), Raptor **Pounce** (next clash deals
+  60% more damage). A full meter on defence gives your pitcher **Shutdown**
+  (faster pitches, sharper break). Armed robots glow.
+- **Mound visit**: once per game, from the pause menu, recharges your pitcher's
+  battery by 25.
 
 ## Broadcast touches
 

@@ -9,7 +9,7 @@ class Clash {
     Sfx.play('clash');
   }
   S(f, k) { return stat(f.r, k, f.side); }
-  dmg(f, heavy) { const base = 3 + this.S(f, 'fgt') * 0.75 + this.S(f, 'pow') * 0.25; let d = base * (heavy ? 2.3 : 1); if (f.r.cls === 'TITAN' && heavy) d *= 1.2; if (f.r.cls === 'RAPTOR' && !heavy) d *= 1.12; return d * rnd(0.9, 1.1); }
+  dmg(f, heavy) { const base = 3 + this.S(f, 'fgt') * 0.75 + this.S(f, 'pow') * 0.25; let d = base * (heavy ? 2.3 : 1); if (f.r.cls === 'TITAN' && heavy) d *= 1.2; if (f.r.cls === 'RAPTOR' && !heavy) d *= 1.12; if (f.r.pounce) d *= 1.6; return d * rnd(0.9, 1.1); }
   update(dt) {
     this.t += dt; this.shake = Math.max(0, this.shake - dt * 3);
     for (const p of this.sparks) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 600 * dt; } this.sparks = this.sparks.filter(p => p.t < p.life);
@@ -80,6 +80,7 @@ class Clash {
     if (f.stT >= f.len) f.st = 'idle';
   }
   finish(winner, ko) {
+    for (const f of this.f) f.r.pounce = false;
     const [A, B] = this.f;
     if (!winner) winner = A.dealt >= B.dealt ? 'a' : 'b';
     this.result = { winner, ko: !!ko, aDestroyed: A.r.hp <= 0, bDestroyed: B.r.hp <= 0, dealt: [A.dealt, B.dealt] };
