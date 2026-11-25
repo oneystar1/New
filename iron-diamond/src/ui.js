@@ -9,6 +9,7 @@ const Game = {
 function applyFx() { const f = Game.settings.fx; FX.high = f !== 'low'; FX.auto = f === 'auto'; FX.haptics = Game.settings.haptics; }
 Sfx.musicOn = Game.settings.music; applyFx();
 const DIFF_NAMES = ['ROOKIE', 'PRO', 'LEGEND'];
+function tapZone(x, y, w, h, fn) { (Game.taps = Game.taps || []).push({ x, y, w, h, fn }); }
 
 // ---------- shared backdrop: orbiting stadium flyover
 const bgCam = new Cam();
@@ -26,6 +27,7 @@ function menuList(ctx, items, sel, x, y, opts = {}) {
     ctx.fillStyle = on ? 'rgba(70,224,255,0.18)' : 'rgba(10,14,30,0.65)'; ctx.fill();
     ctx.strokeStyle = on ? '#46e0ff' : 'rgba(120,140,200,0.25)'; ctx.lineWidth = on ? 2 : 1; ctx.stroke(); ctx.restore();
     if (on) { glow(ctx, x - w / 2 + 18, yy + h / 2, 16, '#46e0ff', 0.8); ctx.fillStyle = '#46e0ff'; ctx.beginPath(); ctx.moveTo(x - w / 2 + 12, yy + h / 2 - 7); ctx.lineTo(x - w / 2 + 22, yy + h / 2); ctx.lineTo(x - w / 2 + 12, yy + h / 2 + 7); ctx.fill(); }
+    tapZone(x - w / 2, yy, w, h, () => { const sc = Game.scene; if ('sel' in sc) sc.sel = i; Input.touchLatch.a = true; });
     txt(ctx, label, x, yy + h / 2 + 1, 20, dis ? '#5a6280' : on ? '#ffffff' : '#b5bfe0', 'center', FONT_H, 900);
     if (it.value != null) txt(ctx, it.value, x + w / 2 - 16, yy + h / 2 + 1, 18, '#ffd84a', 'right', FONT_H, 900);
   });
@@ -126,6 +128,7 @@ class TeamSelect {
       ctx.save(); rrect(ctx, x, y, cw, ch, 8); const g = ctx.createLinearGradient(0, y, 0, y + ch); g.addColorStop(0, hexA(tm.p, 0.5)); g.addColorStop(1, 'rgba(8,10,22,0.85)'); ctx.fillStyle = g; ctx.fill();
       const taken = (this.locked[0] === i || this.locked[1] === i);
       ctx.strokeStyle = taken ? '#ffffff' : 'rgba(150,170,230,0.25)'; ctx.lineWidth = taken ? 2 : 1; ctx.stroke(); ctx.restore();
+      tapZone(x, y, cw, ch, () => { const p = this.mode === '2p' ? 0 : this.step; if (this.cur[p] === i) Input.touchLatch.a = true; else { this.cur[p] = i; Sfx.play('move'); } });
       drawEmblem(ctx, x + cw / 2, y + 34, 22, tm);
       txt(ctx, tm.city, x + cw / 2, y + 66, 11, '#c8d2f0', 'center', FONT_H, 700);
       txt(ctx, tm.name, x + cw / 2, y + 81, tm.name.length > 11 ? 11 : 14, '#ffffff', 'center', FONT_H, 900);
@@ -173,7 +176,7 @@ class VsScene {
     if (this.t > 0.6 && (Input.anyHit('start') || Input.anyHit('a'))) {
       Sfx.play('ok'); const s = Game.settings;
       const cfg = { teams: this.teams, rosters: this.rosters, ctrl: this.ctrl, innings: s.innings, diff: s.diff, clash: s.clash, up: this.extra.up };
-      Game.set(new GameScene(cfg, this.extra.onEnd || (m => Game.set(new ResultScene(m, null)))));
+      const gs = new GameScene(cfg, this.extra.onEnd || (m => Game.set(new ResultScene(m, null)))); gs.onQuit = this.extra.onQuit; Game.set(gs);
     }
     if (Input.anyHit('b') && !this.extra.onEnd) { Sfx.play('back'); Game.set(new ModeScene()); }
   }
@@ -226,7 +229,7 @@ class GameScene {
       if (rp) items.push({ label: `BULLPEN: ${rp.name} IN`, act: () => { const p = m.pitcher(); const i = sd.ro.lineup.indexOf(p); sd.ro.bench.splice(sd.ro.bench.indexOf(rp), 1); rp.pos = 'P'; p.pos = 'RP'; sd.ro.lineup[i] = rp; sd.ro.bench.push(p); m.buildFielders(); this.paused = false; m.banner('PITCHING CHANGE', '#ffffff', sd.team.g, 1.2, 40, `${rp.name} TAKES THE MOUND`); } });
     }
     items.push({ label: Sfx.muted ? 'SOUND: OFF' : 'SOUND: ON', act: () => Sfx.toggleMute() });
-    items.push({ label: 'QUIT MATCH', act: () => { Input.twoPlayer = false; if (this.onQuit) this.onQuit(); else { Game.set(new TitleScene()); Game.scene.pressed = true; } } });
+    items.push({ label: this.onQuit ? 'FORFEIT MATCH (COUNTS AS A LOSS)' : 'QUIT MATCH', act: () => { Input.twoPlayer = false; if (this.onQuit) this.onQuit(); else { Game.set(new TitleScene()); Game.scene.pressed = true; } } });
     return items;
   }
   draw(ctx) {
@@ -299,7 +302,8 @@ class GauntletHub {
       store.set(SAVE_KEY, g);
       Game.set(new ResultScene(m, { lines, next: () => { if (g.done) { Game.set(new GauntletEnd(g)); } else Game.set(new GauntletHub()); } }));
     };
-    Game.set(new VsScene('1p', [g.teamIdx, oppIdx], { rosters, up: [g.up, oppUp], onEnd }));
+    const onQuit = () => { g.losses++; g.lives--; if (g.lives <= 0) g.done = true; store.set(SAVE_KEY, g); Game.set(g.done ? new GauntletEnd(g) : new GauntletHub()); };
+    Game.set(new VsScene('1p', [g.teamIdx, oppIdx], { rosters, up: [g.up, oppUp], onEnd, onQuit }));
   }
   draw(ctx) {
     const g = this.g; if (!g) { drawBackdrop(ctx, this.t, null); return; }
@@ -359,7 +363,7 @@ class GarageScene {
     txt(ctx, `CREDITS ${g.credits}`, 200, 76, 20, '#ffd84a', 'center', FONT_H, 900);
     const it = this.items();
     it.forEach((x, i) => {
-      const y = 100 + i * 40, on = i === this.sel; ctx.save(); rrect(ctx, 20, y, 360, 34, 6); ctx.fillStyle = on ? 'rgba(70,224,255,0.18)' : 'rgba(10,14,30,0.7)'; ctx.fill(); ctx.strokeStyle = on ? '#46e0ff' : 'rgba(120,140,200,0.2)'; ctx.stroke(); ctx.restore();
+      const y = 100 + i * 40, on = i === this.sel; tapZone(20, y, 360, 34, () => { if (this.sel === i) Input.touchLatch.a = true; else { this.sel = i; Sfx.play('move'); } }); ctx.save(); rrect(ctx, 20, y, 360, 34, 6); ctx.fillStyle = on ? 'rgba(70,224,255,0.18)' : 'rgba(10,14,30,0.7)'; ctx.fill(); ctx.strokeStyle = on ? '#46e0ff' : 'rgba(120,140,200,0.2)'; ctx.stroke(); ctx.restore();
       txt(ctx, x.label, 34, y + 13, 14, '#ffffff', 'left', FONT_H, 900);
       if (x.desc) txt(ctx, x.desc, 34, y + 27, 11, '#9aa6c8', 'left', FONT_B, 700);
       if (x.lv != null) for (let k = 0; k < 3; k++) { ctx.fillStyle = k < x.lv ? tm.g : 'rgba(255,255,255,0.15)'; ctx.fillRect(250 + k * 14, y + 12, 10, 10); }

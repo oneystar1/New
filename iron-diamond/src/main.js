@@ -20,6 +20,14 @@
   if (params.has('auto')) { if (focus) focus.hidden = true; }
   addEventListener('pointerdown', unlock, { once: false }); addEventListener('keydown', unlock, { once: true });
 
+  // tap the picture: hit a menu item / team card, or act as A outside a live match
+  cv.addEventListener('pointerdown', e => {
+    const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
+    const z = (Game.taps || []).slice().reverse().find(t => x >= t.x && x <= t.x + t.w && y >= t.y && y <= t.y + t.h);
+    if (z) { e.preventDefault(); z.fn(); return; }
+    const sc = Game.scene, live = sc instanceof GameScene && !sc.paused && !sc.m.over;
+    if (!live && !(Game.taps || []).length) Input.touchLatch.a = true;
+  });
   // touch controls
   const touchEl = document.getElementById('touch');
   if (touchEl) {
@@ -86,6 +94,7 @@
     }
     resize();
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    Game.taps = [];
     try { Game.scene.draw(ctx); } catch (e) { const m = String(e && e.stack || e); if (!window.ID.errors.includes(m) && window.ID.errors.length < 20) { console.error(e); window.ID.errors.push(m); } }
     if (Sfx.muted) { txt(ctx, '🔇', W - 18, 18, 14, '#8f9bc0', 'center'); }
     if (toastT > 0) { toastT -= 1 / 60; ctx.globalAlpha = Math.min(1, toastT); txt(ctx, toast, W / 2, 16, 13, '#9fdcff', 'center', FONT_H, 700); ctx.globalAlpha = 1; }

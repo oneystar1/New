@@ -80,10 +80,17 @@ function drawMatch(ctx, m) {
   if (pitchView && pt && pt.hitT != null && pt.cross) { const k = (pt.t - pt.hitT) / 0.35; if (k >= 0 && k < 1) { const q = cam.proj(pt.cross.x, 0, pt.cross.z); if (q) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(200,250,255,${1 - k})`; ctx.lineWidth = 6 * (1 - k) + 1; ctx.beginPath(); ctx.ellipse(q.x, q.y, 20 + k * 180, (20 + k * 180) * 0.6, 0, 0, TAU); ctx.stroke(); ctx.restore(); glow(ctx, q.x, q.y, 120 * (1 - k) + 20, '#ffffff', 1 - k); } if (k < 0.25) { ctx.fillStyle = `rgba(255,255,255,${0.35 * (1 - k * 4)})`; ctx.fillRect(0, 0, W, H); } } }
   // strike zone & aim reticle (batting view)
   if (pitchView && pt && m.camK < 0.2) drawZone(ctx, cam, m);
+  // Rookie assist: show where the pitch will cross once it's halfway there
+  if (pitchView && pt && pt.stage === 'flight' && m.diff === 0 && m.pad(m.bat) != null && m.pad(m.fld) == null) {
+    const u = (pt.t - pt.t0) / pt.T; if (u > 0.4) { const q = cam.proj(pt.aimX, 0, pt.aimZ); if (q) { const a = Math.min(1, (u - 0.4) * 3); ctx.strokeStyle = `rgba(255,216,74,${0.7 * a})`; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(q.x, q.y, 0.3 * q.s, 0, TAU); ctx.stroke(); ctx.setLineDash([]); } }
+  }
+  // swing feedback
+  if (m.fb && m.time - m.fb.t < 1.1 && pitchView) { const k = (m.time - m.fb.t) / 1.1, q = cam.proj(0, 0, 4.6); if (q) { ctx.globalAlpha = 1 - k * k; glowTxt(ctx, m.fb.text, q.x, q.y - k * 30, 26, '#ffffff', m.fb.color); ctx.globalAlpha = 1; } }
   Game.bloom && Game.bloom();
   // vignette
   const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.85); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.5)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
   drawHUD(ctx, m, pitchView);
+  drawTicker(ctx, m);
   if (m.state === 'clash' && m.clash) m.clash.draw(ctx);
   drawBanners(ctx, m);
 }
@@ -96,7 +103,7 @@ function ballWorld(m) {
   return null;
 }
 function drawBall(ctx, cam, q, w, m, boost) {
-  const r = Math.max(2.2, 0.16 * q.s * (w.pitch ? 1.5 : boost));
+  const r = Math.max(2.4, 0.16 * q.s * (w.pitch ? 1.8 : boost));
   let col = '#ffffff';
   if (w.pitch && m.pt) col = PITCHES[m.pt.type].col;
   // trail
@@ -240,4 +247,14 @@ function drawBanners(ctx, m) {
   glowTxt(ctx, b.text, 0, 0, b.size, b.color, b.glow);
   if (b.sub) txt(ctx, b.sub, 0, b.size * 0.62 + 6, 18, '#dfe6ff', 'center', FONT_H, 700);
   ctx.restore();
+}
+
+function drawTicker(ctx, m) {
+  const tk = m.ticker; if (!tk || m.state === 'clash' || m.state === 'intro') return;
+  const age = m.time - tk.t; if (age > 5) return;
+  const a = Math.min(1, age * 4, (5 - age) * 2); ctx.save(); ctx.globalAlpha = a;
+  ctx.font = `700 15px ${FONT_H}`; const w = Math.min(560, ctx.measureText(tk.text).width + 40), x = 14, y = 96;
+  const g = ctx.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, 'rgba(8,12,28,0.88)'); g.addColorStop(1, 'rgba(8,12,28,0.55)');
+  ctx.fillStyle = g; rrect(ctx, x, y, w, 26, 6); ctx.fill(); ctx.fillStyle = m.sides[m.bat].team.g; ctx.fillRect(x, y, 3, 26);
+  txt(ctx, tk.text, x + 14, y + 13.5, 14, '#e8ecff', 'left', FONT_H, 700); ctx.restore();
 }

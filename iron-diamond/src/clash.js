@@ -84,7 +84,7 @@ class Clash {
     if (!winner) winner = A.dealt >= B.dealt ? 'a' : 'b';
     this.result = { winner, ko: !!ko, aDestroyed: A.r.hp <= 0, bDestroyed: B.r.hp <= 0, dealt: [A.dealt, B.dealt] };
     this.endT = ko ? 2.0 : 1.4;
-    if (ko) { const L = winner === 'a' ? B : A; Sfx.play('boom'); this.shake = 1.2; for (let i = 0; i < 80; i++) this.sparks.push({ x: L.x, y: -80 + rnd(-40, 40), vx: rnd(-500, 500), vy: rnd(-700, -50), t: 0, life: rnd(0.5, 1.4), c: pick(['#ffd84a', '#ff6a2a', '#ffffff', '#ff3d3d']) }); }
+    if (ko) { const L = winner === 'a' ? B : A; Sfx.play('boom'); Sfx.play('roar'); this.shake = 1.2; for (let i = 0; i < 80; i++) this.sparks.push({ x: L.x, y: -80 + rnd(-40, 40), vx: rnd(-500, 500), vy: rnd(-700, -50), t: 0, life: rnd(0.5, 1.4), c: pick(['#ffd84a', '#ff6a2a', '#ffffff', '#ff3d3d']) }); }
     else Sfx.play('buzz');
   }
   draw(ctx) {

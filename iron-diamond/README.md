@@ -22,6 +22,9 @@ gets a FULL button for true fullscreen. **Settings → Effects** chooses AUTO
 (the default, which drops the glow and light effects if the phone can't keep
 60 fps), HIGH or LOW.
 
+On a phone you can also tap menu items, team cards and garage rows directly
+(tap once to pick, again to confirm).
+
 To publish a single-file copy (for hosting anywhere):
 
 ```sh
@@ -35,7 +38,8 @@ python3 tools/build_iron_diamond.py iron-diamond-single.html
   Armor damage carries over between matches. Earn credits for wins, runs,
   strikeouts and destroyed bots, then spend them in the **Garage** on repairs,
   rebuilding scrapped bots and club-wide upgrades (power, contact, speed, fight,
-  arm, plating). Progress saves in the browser.
+  arm, plating). Progress saves in the browser. Forfeiting a match from the
+  pause menu counts as a loss and keeps the damage.
 - **Settings**: 3/5/7/9 innings, Rookie/Pro/Legend difficulty, clashes on/off, sound, music.
 
 ## Controls
@@ -48,7 +52,9 @@ python3 tools/build_iron_diamond.py iron-diamond-single.html
 | Start / pause | `Enter` | `Backspace` | Start |
 | Mute | `M` | | |
 
-**Batting.** Shift left/right so the glowing ring covers the pitch. A is a contact
+**Batting.** After every swing you get feedback (PERFECT, EARLY, LATE,
+MISSED · TOO HIGH…). On Rookie a dashed ring shows where the pitch will cross.
+Shift left/right so the glowing ring covers the pitch. A is a contact
 swing, B a power swing (smaller window, harder hit), Down+A bunts. Swing early to
 pull, late to go the other way; high pitches fly, low pitches bounce.
 

@@ -10,7 +10,7 @@ const PITCHES = [
 const BAT_Z = 2.55, IDEAL = 0.13, ZONE_X = 0.95, ZONE_Z0 = 1.5, ZONE_Z1 = 3.7;
 const FIELD_HOME = { P: [0, 60.5], C: [0, -3.5], '1B': [66, 86], '2B': [30, 126], SS: [-32, 124], '3B': [-66, 86], LF: [-128, 238], CF: [0, 288], RF: [128, 238] };
 const SKILL = [0.62, 0.86, 1.06];
-const CLOSE_FT = 18;
+const CLOSE_FT = 24;
 
 class Match {
   constructor(cfg) {
@@ -37,6 +37,8 @@ class Match {
   pitcher() { return this.sides[this.fld].ro.lineup.find(r => r.pos === 'P'); }
   st(r, k) { const sd = this.sides.find(s => s.team.id === r.team) || this.sides[0]; return stat(r, k, sd); }
   sideOf(r) { return this.sides.find(s => s.team.id === r.team) || this.sides[0]; }
+  tick(text) { this.ticker = { text, t: this.time }; (this.tickLog = this.tickLog || []).push(text); }
+  feedback(text, color) { this.fb = { text, color, t: this.time }; }
   banner(text, color = '#ffffff', glowc = '#46e0ff', dur = 1.4, size = 64, sub = '') { this.banners.push({ text, color, glow: glowc, t: 0, dur, size, sub }); }
   substitute(sd, r, quiet) {
     const i = sd.ro.lineup.indexOf(r); if (i < 0) return r;
@@ -82,7 +84,12 @@ class Match {
     this.outs = 0; this.bases = [null, null, null]; this.balls = 0; this.strikes = 0;
     if (!this.line[this.half][this.inning - 1]) this.line[this.half][this.inning - 1] = 0;
     this.buildFielders(); this.view = 'bat';
-    const p = this.pitcher(); p.battery = Math.min(100, p.battery + 30);
+    let p = this.pitcher(); p.battery = Math.min(100, p.battery + 30);
+    const fs = this.sides[this.fld], rp = fs.ro.bench.find(r => r.alive && r.hp > 0 && r.pos === 'RP');
+    if (this.human(this.fld) == null && rp && (p.battery < 45 || p.hp < maxHp(p, fs) * 0.3)) {
+      const i = fs.ro.lineup.indexOf(p); fs.ro.bench.splice(fs.ro.bench.indexOf(rp), 1); rp.pos = 'P'; p.pos = 'RP'; fs.ro.lineup[i] = rp; fs.ro.bench.push(p); rp.battery = 100;
+      this.tick(`${fs.team.id} BULLPEN: ${rp.name} TAKES THE MOUND`); p = rp;
+    }
     this.banner(`${this.half ? 'BOTTOM' : 'TOP'} ${this.inning}${this.inning > this.innings ? ' · EXTRAS' : ''}`, '#ffffff', this.sides[this.bat].team.g, 1.6, 48, `${this.sides[this.bat].team.city} ${this.sides[this.bat].team.name} AT BAT`);
     this.wait(1.6, () => this.newPitch(true));
   }
@@ -206,8 +213,12 @@ class Match {
       const timing = sw.kind === 'bunt' ? 0 : (age - IDEAL) / win, dx = x - pt.shift, dz = z - BAT_Z;
       if (Math.abs(timing) <= 1 && Math.abs(dx) <= reach && Math.abs(dz) <= vtol) {
         const q = clamp(1 - 0.45 * Math.pow(Math.abs(dx) / reach, 1.5) - 0.35 * Math.pow(Math.abs(dz) / vtol, 1.5) - 0.45 * Math.pow(Math.abs(timing), 1.5), 0.05, 1);
+        if (humanBat && sw.kind !== 'bunt') this.feedback(q >= 0.85 ? 'PERFECT' : timing > 0.4 ? 'EARLY' : timing < -0.4 ? 'LATE' : 'SOLID', q >= 0.85 ? '#3dffa0' : '#ffd84a');
         return this.contact(q, timing, dx, dz, sw.kind);
       }
+      if (humanBat) { const ox = Math.abs(dx) / reach, oz = Math.abs(dz) / vtol, ot = Math.abs(timing);
+        const why = ot >= Math.max(ox, oz) ? (timing > 0 ? 'TOO EARLY' : 'TOO LATE') : ox >= oz ? (dx * pt.hand > 0 ? 'MISSED · OUTSIDE' : 'MISSED · INSIDE') : (dz > 0 ? 'MISSED · TOO HIGH' : 'MISSED · TOO LOW');
+        this.feedback(why, '#ff6a6a'); }
       pt.result = 'whiff'; this.strike(true); return;
     }
     // no swing: hit-by-pitch?
@@ -218,13 +229,13 @@ class Match {
   strike(swinging) {
     const pt = this.pt; this.strikes++;
     if (this.strikes >= 3) {
-      this.banner('STRIKEOUT', '#ffffff', '#ff4a5a', 1.3, 60); this.sides[this.fld].k++;
+      this.banner('STRIKEOUT', '#ffffff', '#ff4a5a', 1.3, 60); this.sides[this.fld].k++; this.tick(`${this.batter().name} STRIKES OUT ${swinging ? 'SWINGING' : 'LOOKING'}`);
       pt.after = () => { this.outs++; Sfx.play('out'); this.nextBatter(); };
     } else { this.banner(swinging ? 'SWING & MISS' : 'STRIKE', '#ffffff', '#ffd23d', 0.9, 44); pt.after = () => this.newPitch(false); }
   }
   ballCall() {
     const pt = this.pt; this.balls++;
-    if (this.balls >= 4) { this.banner('WALK', '#ffffff', '#3dffa0', 1.1, 54); pt.after = () => { this.forceAdvance(); this.nextBatter(); }; }
+    if (this.balls >= 4) { this.banner('WALK', '#ffffff', '#3dffa0', 1.1, 54); this.tick(`${this.batter().name} WALKS`); pt.after = () => { this.forceAdvance(); this.nextBatter(); }; }
     else { this.banner('BALL', '#ffffff', '#3dffa0', 0.8, 40); pt.after = () => this.newPitch(false); }
   }
   hitByPitch() {
@@ -257,6 +268,7 @@ class Match {
       if (q < 0.14) { ph = pick([-1, 1]) * rnd(60, 110); th = rnd(20, 60); }
     }
     th = clamp(th, -15, 72);
+    this.lastLaunch = { th, ph };
     (this.playLog = this.playLog || []).push({ q: +q.toFixed(2), v: Math.round(v), th: Math.round(th), ph: Math.round(ph), kind });
     const vx = v * Math.cos(th * DEG) * Math.sin(ph * DEG), vy = v * Math.cos(th * DEG) * Math.cos(ph * DEG), vz = v * Math.sin(th * DEG);
     this.parts.burst(pt.cross.x, 0, pt.cross.z, 18, '#bff6ff', 25);
@@ -274,7 +286,7 @@ class Match {
   destroy(r, sd) {
     r.alive = false; r.hp = 0; sd.lost++; this.sides[1 - sd.idx].ko++;
     Sfx.play('boom'); this.shake = 1;
-    this.banner('DESTROYED', '#ffffff', '#ff3d3d', 1.8, 64, `${r.name} #${r.num} IS SCRAP`);
+    this.banner('DESTROYED', '#ffffff', '#ff3d3d', 1.8, 64, `${r.name} #${r.num} IS SCRAP`); this.tick(`${r.name} DESTROYED`);
     const nr = this.substitute(sd, r); this.log.push(`${r.name} destroyed`);
     return nr;
   }
@@ -346,7 +358,8 @@ class Match {
   homeRun() {
     this.hr = true; this.events.hr++; Sfx.play('hr'); this.shake = 0.6;
     const b = this.ball, tm = this.sides[this.bat].team; this.fireworks = 2.4; for (let i = 0; i < 9; i++) setTimeout(() => { const x = rnd(-260, 260), y = rnd(330, 470), z = rnd(110, 190), c = pick([tm.g, '#ffffff', tm.p, tm.s]); this.parts.burst(x, y, z, 60, c, 55, { g: 9, size: 1.8, drag: 1.4, life: 1.6 }); this.parts.burst(x, y, z, 14, '#ffffff', 20, { g: 6, size: 1.2, drag: 2 }); Sfx.play('foul'); }, i * 260);
-    this.banner('HOME RUN', '#ffffff', this.sides[this.bat].team.g, 2.4, 80, `${this.batter().name} GOES DEEP`);
+    this.banner('HOME RUN', '#ffffff', this.sides[this.bat].team.g, 2.4, 80, `${this.batter().name} GOES DEEP`); Sfx.play('cheer');
+    { const n = this.runners.filter(r => !r.out && !r.scored).length; this.tick(`${this.batter().name} ${['', 'SOLO HOMER', 'TWO-RUN HOMER', 'THREE-RUN HOMER', 'GRAND SLAM'][n] || 'HOMERS'} · ${Math.round(hyp(this.ball.x, this.ball.y))} FT`); }
     b.held = { x: b.x, y: b.y }; b.vx = b.vy = b.vz = 0;
     const scorers = this.runners.filter(r => !r.out && !r.scored).sort((a, c) => c.s - a.s);
     this.sides[this.bat].hits++;
@@ -503,12 +516,12 @@ class Match {
     if (res.bDestroyed) { const nr = this.destroy(h.r, defSide); h.r = nr; if (this.ball.held && this.ball.held.f === h) { /* new bot keeps the ball */ } }
     if (res.aDestroyed) { const nr = this.destroy(rn.r, offSide); rn.r = nr; }
     if (res.winner === 'a' && !res.aDestroyed) {
-      this.banner('SAFE', '#ffffff', '#3dffa0', 1.0, 58); Sfx.play('safe');
+      this.banner('SAFE', '#ffffff', '#3dffa0', 1.0, 58); Sfx.play('safe'); this.tick(`CLASH: ${rn.r.name} BEATS ${h.r.name} · SAFE`);
       rn.s = base; rn.tgt = base; if (rn.force != null && base >= rn.force) rn.force = null; if (kind === 'tag-up') rn.needTag = false; rn.immune = this.playT + 2.5; h.tagCool = this.playT + 1.2;
       if (base >= 4) { rn.scored = true; this.scoreRun(rn.r); }
       // runner may be pushed past by others; keep the play alive
     } else {
-      this.banner('OUT', '#ffffff', '#ff4a5a', 1.0, 58); this.markOut(rn, kind); h.tagCool = this.playT + 0.3;
+      this.banner('OUT', '#ffffff', '#ff4a5a', 1.0, 58); this.tick(`CLASH: ${h.r.name} BEATS ${rn.r.name} · OUT`); this.markOut(rn, kind); h.tagCool = this.playT + 0.3;
     }
     this.clash = null;
   }
@@ -603,6 +616,9 @@ class Match {
     const nb = [null, null, null];
     for (const rn of live.sort((a, c) => c.s - a.s)) { let s = Math.round(rn.s); if (rn.s % 1 !== 0) s = rn.tgt > rn.s ? Math.ceil(rn.s) : Math.floor(rn.s); s = clamp(s, 1, 3); while (s > 1 && nb[s - 1]) s--; while (nb[s - 1] && s < 3) s++; if (!nb[s - 1]) nb[s - 1] = rn.r; }
     if (this.outs >= 3) { this.bases = [null, null, null]; } else this.bases = nb;
+    if (bat && this.lastLaunch) { const dir = this.lastLaunch.ph < -15 ? ' TO LEFT' : this.lastLaunch.ph > 15 ? ' TO RIGHT' : ' UP THE MIDDLE', runs = (this.playRuns || []).length, rs = runs ? ` · ${runs} RUN${runs > 1 ? 'S' : ''} SCORE${runs > 1 ? '' : 'S'}` : '';
+      if (!bat.out) { const s2 = clamp(Math.round(bat.s), 1, 4); this.tick(`${bat.r.name} ${['', 'SINGLES', 'DOUBLES', 'TRIPLES', 'LEGS OUT AN INSIDE-THE-PARK HR'][s2]}${s2 < 4 ? dir : ''}${rs}`); Sfx.play('cheer'); }
+      else this.tick(`${bat.r.name} ${this.launch === 'fly' ? 'FLIES OUT' : this.launch === 'liner' ? 'LINES OUT' : 'GROUNDS OUT'}${dir}${rs}`); }
     if (bat && !bat.out && !this.hr) { this.sides[this.bat].hits++; const s = Math.round(bat.s); if (!fromOut) this.banner(['', 'SINGLE', 'DOUBLE', 'TRIPLE', 'INSIDE-THE-PARK'][clamp(s, 1, 4)], '#ffffff', this.sides[this.bat].team.g, 1.0, 46); }
     if (this.playLog && this.playLog.length) { const L = this.playLog[this.playLog.length - 1]; L.res = bat ? (bat.out ? 'out' : 'b' + Math.round(bat.s)) : '?'; L.outs = this.outs; L.runs = (this.playRuns || []).length; L.dist = Math.round(this.maxDist || 0); }
     this.playRuns = null; this.runners = []; this.ball = null; this.landing = null;

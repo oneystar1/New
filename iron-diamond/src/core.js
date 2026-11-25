@@ -81,7 +81,7 @@ const Sfx = {
     this.music = this.ac.createGain(); this.music.gain.value = 0.22; this.music.connect(this.master);
     const len = this.ac.sampleRate; this.noiseBuf = this.ac.createBuffer(1, len, this.ac.sampleRate);
     const d = this.noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-    this.startMusic();
+    this.startMusic(); this.crowdBed();
   },
   toggleMute() { this.muted = !this.muted; store.set('ironDiamond.muted', this.muted); if (this.master) this.master.gain.value = this.muted ? 0 : 0.6; },
   tone(f, dur, type = 'square', vol = 0.2, slide = 0, when = 0, dest) {
@@ -99,6 +99,17 @@ const Sfx = {
     s.connect(f); f.connect(g); g.connect(dest || this.master); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
   },
   buzz(ms) { try { if (navigator.vibrate && FX.haptics !== false) navigator.vibrate(ms); } catch (e) { } },
+  swell(dur, vol, freq) { // crowd cheer: noise with a soft attack
+    if (!this.ac) return; const t = this.ac.currentTime, src = this.ac.createBufferSource(); src.buffer = this.noiseBuf; src.loop = true;
+    const f = this.ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 0.6; const g = this.ac.createGain();
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.25); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+    src.connect(f); f.connect(g); g.connect(this.master); src.start(t, Math.random()); src.stop(t + dur + 0.05);
+  },
+  crowdBed() { // constant low murmur under everything
+    if (!this.ac || this._bed) return; const src = this.ac.createBufferSource(); src.buffer = this.noiseBuf; src.loop = true;
+    const f = this.ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 650; f.Q.value = 0.5; const g = this.ac.createGain(); g.gain.value = 0.035;
+    src.connect(f); f.connect(g); g.connect(this.master); src.start(); this._bed = g;
+  },
   play(name) {
     const hap = { bat: 18, hit: 25, heavy: 45, boom: [60, 40, 90], clash: 30, hr: [30, 40, 30, 40, 60] }[name]; if (hap) this.buzz(hap);
     if (!this.ac) return;
@@ -128,6 +139,8 @@ const Sfx = {
       case 'boom': this.noise(1.2, 0.9, 400, 0.6, 0, 'lowpass'); this.tone(60, 0.9, 'sawtooth', 0.4, -30); this.noise(0.6, 0.5, 2500, 0.5, 0.05); break;
       case 'buzz': this.tone(110, 0.35, 'sawtooth', 0.15); break;
       case 'cash': this.tone(1318, 0.08, 'square', 0.1); this.tone(1760, 0.15, 'square', 0.1, 0, 0.07); break;
+      case 'cheer': this.swell(1.8, 0.32, 1100); break;
+      case 'roar': this.swell(2.6, 0.45, 900); break;
       case 'servo': this.tone(240, 0.15, 'sawtooth', 0.04, 200); break;
     }
   },
