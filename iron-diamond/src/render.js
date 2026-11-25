@@ -143,6 +143,7 @@ function drawBall(ctx, cam, q, w, m, boost) {
 function drawBatter(ctx, cam, m, e, q) {
   const pt = m.pt, hand = pt.hand, X = e.x; const sw = pt.swing;
   let p = null, kind = sw ? sw.kind : null;
+  if (!sw && pt.buntHold) kind = 'bunt';
   if (sw) p = clamp((pt.t - sw.t0) / 0.3, 0, 1);
   if (pt.hit && sw) p = clamp((pt.t - sw.t0) / 0.3, 0, 1);
   let hx = X + hand * 0.55, hy = 0.2, hz = 4.6;
@@ -170,8 +171,14 @@ function drawZone(ctx, cam, m) {
   ctx.save(); ctx.globalAlpha = humanBat ? 0.9 : 0.45;
   for (let i = 0; i < 4; i++) cam.line(ctx, c[i], c[(i + 1) % 4], 'rgba(160,240,255,0.55)', 1.5);
   ctx.restore();
-  // batter's sweet-spot indicator
-  if (humanBat) { const q = cam.proj(pt.shift, 0, BAT_Z); if (q) { ctx.strokeStyle = hexA(m.sides[m.bat].team.g, 0.7); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(q.x, q.y, 0.35 * q.s, 0, TAU); ctx.stroke(); } }
+  // sweet-spot rings: contact (solid), power (dashed gold), bunt (filled green while squared)
+  if (humanBat) { const q = cam.proj(pt.shift, 0, BAT_Z); if (q) {
+    const tm = m.sides[m.bat].team, zc = m.swingZone('contact'), zp = m.swingZone('power'), zb = m.swingZone('bunt'), sw = pt.swing;
+    const ring = (z, col, dash, fill) => { ctx.save(); ctx.beginPath(); ctx.ellipse(q.x, q.y, z.reach * q.s, z.vtol * q.s, 0, 0, TAU); if (fill) { ctx.fillStyle = fill; ctx.fill(); } ctx.setLineDash(dash || []); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.stroke(); ctx.restore(); };
+    if (pt.buntHold || (sw && sw.kind === 'bunt')) ring(zb, 'rgba(61,255,160,0.9)', null, 'rgba(61,255,160,0.10)');
+    else { ring(zc, hexA(tm.g, sw && sw.kind === 'contact' ? 0.95 : 0.6)); ring(zp, sw && sw.kind === 'power' ? '#ffd84a' : 'rgba(255,216,74,0.6)', [5, 4]); }
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(q.x, q.y, 2.5, 0, TAU); ctx.fill();
+  } }
   // pitcher aim reticle (only when it would not spoil a human batter)
   if (m.pad(m.fld) != null && (!humanBat || m.cfg.showAim) && pt.stage === 'aim') {
     const q = cam.proj(pt.aimX, 0, pt.aimZ); if (q) { const r = 0.32 * q.s, col = PITCHES[pt.type].col; ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, TAU); ctx.moveTo(q.x - r * 1.7, q.y); ctx.lineTo(q.x - r * 0.6, q.y); ctx.moveTo(q.x + r * 0.6, q.y); ctx.lineTo(q.x + r * 1.7, q.y); ctx.moveTo(q.x, q.y - r * 1.7); ctx.lineTo(q.x, q.y - r * 0.6); ctx.moveTo(q.x, q.y + r * 0.6); ctx.lineTo(q.x, q.y + r * 1.7); ctx.stroke(); glow(ctx, q.x, q.y, r * 2, col, 0.4); }
@@ -229,15 +236,11 @@ function drawHUD(ctx, m, pitchView) {
     const TL = Game.touchLand; robotCard(ctx, TL ? W - 354 : 14, TL ? 12 : H - 98, bt, bs, 'AT BAT', `${bs.batIdx + 1}. ${bt.pos}`, [['POW', m.st(bt, 'pow')], ['CON', m.st(bt, 'con')], ['SPD', m.st(bt, 'spd')]]);
     const pr = m.pitcher(), ps = m.sides[m.fld];
     robotCard(ctx, W - 354, TL ? 102 : H - 98, pr, ps, 'PITCHING', `VEL ${m.st(pr, 'vel')} · BRK ${m.st(pr, 'brk')}`, null, pr.battery / 100);
-    // pitch selector
-    if (humanFld) {
-      const pt = m.pt, oy = TL ? 194 - (H - 268) : 0; panel(ctx, TL ? W - 504 : W - 164, H - 268 + oy, 150, 162, ps.team.g, 0.75); const ox = TL ? -340 : 0;
-      txt(ctx, 'PITCH  [B]', W - 152 + ox, H - 252 + oy, 13, '#9aa6c8', 'left', FONT_H, 700);
-      PITCHES.forEach((p, i) => { const yy = H - 230 + i * 25 + oy, sel = i === pt.type, can = p.cost <= pr.battery; if (sel) { ctx.fillStyle = hexA(p.col, 0.18); ctx.fillRect(W - 158 + ox, yy - 11, 138, 22); } ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(W - 146 + ox, yy, 4, 0, TAU); ctx.fill(); txt(ctx, p.name, W - 136 + ox, yy, 15, can ? (sel ? '#ffffff' : '#aab4d6') : '#5a6280', 'left', FONT_H, sel ? 900 : 700); if (p.cost > 3) txt(ctx, `⚡${p.cost}`, W - 26 + ox, yy, 13, '#d06bff', 'right', FONT_B, 700); });
-    }
+    if (humanFld) drawPitchRail(ctx, m, pr, ps, TL);
+    if (humanBat && m.state === 'pitch') drawSwingPanel(ctx, m, TL);
     let hint = '';
-    if (humanBat && humanFld) hint = 'BATTER: ←/→ shift · A swing · B power · ↓+A bunt     PITCHER: aim, B pitch, A throw, steer ←/→';
-    else if (humanBat) hint = '←/→ SHIFT   A SWING   B POWER SWING   ↓+A BUNT';
+    if (humanBat && humanFld) hint = 'PITCHER: aim, B or tap to pick a pitch, A throw, steer ←/→';
+    else if (humanBat) hint = '';
     else if (humanFld) hint = m.pt.stage === 'aim' ? 'D-PAD AIM   B PITCH TYPE   A THROW' : 'HOLD ←/→ TO STEER THE PITCH';
     if (hint) txt(ctx, hint, W / 2, Game.touchLand ? H - 58 : H - 14, 15, '#c8d2f0', 'center', FONT_B, 700);
   } else if (m.state === 'play' || m.state === 'wait') {
@@ -330,4 +333,50 @@ function drawWalkup(ctx, m) {
   txt(ctx, `${CLASSES[r.cls].name} · POW ${m.st(r, 'pow')} · CON ${m.st(r, 'con')} · SPD ${m.st(r, 'spd')}`, 150, 74, 13, '#c8d2f0', 'left', FONT_B, 700);
   txt(ctx, line, 150, 92, 13, '#ffd84a', 'left', FONT_H, 700);
   ctx.restore();
+}
+
+function drawPitchRail(ctx, m, pr, ps, TL) {
+  const pt = m.pt, ih = TL ? 34 : 52, gap = TL ? 4 : 6, top = TL ? 206 : 108, w = TL ? 150 : 176, x0 = W - w - 10;
+  txt(ctx, 'PITCHES · B / TAP', W - 14, top - 12, 11, '#9aa6c8', 'right', FONT_H, 900);
+  PITCHES.forEach((p, i) => {
+    const y = top + i * (ih + gap), sel = i === pt.type, can = p.cost <= pr.battery, x = x0 - (sel ? 10 : 0);
+    tapZone(x, y, w + 10, ih, () => { if (pt.stage !== 'aim') return; if (can) { pt.type = i; Sfx.play('move'); } else Sfx.play('buzz'); });
+    ctx.save(); rrect(ctx, x, y, w + (sel ? 10 : 0), ih, 7);
+    const g = ctx.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, sel ? hexA(p.col, 0.32) : 'rgba(10,14,30,0.78)'); g.addColorStop(1, 'rgba(8,11,24,0.85)');
+    ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = sel ? p.col : 'rgba(140,160,220,0.25)'; ctx.lineWidth = sel ? 2 : 1; ctx.stroke(); ctx.restore();
+    if (sel) glow(ctx, x + 4, y + ih / 2, 18, p.col, 0.6);
+    ctx.globalAlpha = can ? 1 : 0.4;
+    // movement icon: where the ball bends on its way in
+    const ix = x + 22, iy = y + ih / 2, k = ih * 0.36; ctx.strokeStyle = p.col; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ix, iy - k);
+    if (p.wobble) { for (let j = 1; j <= 6; j++) ctx.lineTo(ix + (j % 2 ? 4 : -4), iy - k + j * k / 3); } else ctx.quadraticCurveTo(ix, iy, ix + p.bx * 5, iy + k - p.bz * 2);
+    ctx.stroke(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.wobble ? ix : ix + p.bx * 5, p.wobble ? iy + k : iy + k - p.bz * 2, 2.5, 0, TAU); ctx.fill();
+    txt(ctx, p.name, x + 40, TL ? y + ih / 2 : y + 17, TL ? 13 : 15, sel ? '#ffffff' : '#c8d2f0', 'left', FONT_H, 900);
+    if (!TL) { txt(ctx, 'SPD', x + 40, y + 37, 9, '#8f9bc0', 'left', FONT_H, 700); bar(ctx, x + 64, y + 33, 50, 6, (p.spd - 0.6) / 0.55, p.col); }
+    txt(ctx, p.cost > 3 ? `⚡${p.cost}` : `${p.cost}`, x + w - 8 + (sel ? 10 : 0), TL ? y + ih / 2 : y + 37, 11, p.cost > 3 ? '#d06bff' : '#8f9bc0', 'right', FONT_H, 700);
+    ctx.globalAlpha = 1;
+  });
+}
+function drawSwingPanel(ctx, m, TL) {
+  const pt = m.pt, sw = pt.swing, touch = document.body.classList.contains('touch'), cw = 80, gap = 4, y = TL ? 272 : H - 58, x0 = TL ? 16 : W / 2 - (cw * 3 + gap * 2) / 2;
+  const opts = [['contact', 'A', 'CONTACT', 'BIG ZONE'], ['power', 'B', 'POWER', 'FAR HIT'], ['bunt', 'HOLD ↓', 'BUNT', '']];
+  opts.forEach(([k, key, name, sub], i) => {
+    const x = x0 + i * (cw + gap), on = (sw && sw.kind === k) || (k === 'bunt' && pt.buntHold), col = k === 'power' ? '#ffd84a' : k === 'bunt' ? '#3dffa0' : m.sides[m.bat].team.g;
+    ctx.save(); rrect(ctx, x, y, cw, 40, 7); ctx.fillStyle = on ? hexA(col, 0.3) : 'rgba(8,11,24,0.78)'; ctx.fill(); ctx.strokeStyle = on ? col : hexA(col, 0.45); ctx.lineWidth = on ? 2 : 1; ctx.stroke(); ctx.restore();
+    txt(ctx, name, x + cw / 2, y + 14, 13, '#ffffff', 'center', FONT_H, 900);
+    ctx.font = `900 9px ${FONT_H}`; const kw = ctx.measureText(key).width + 8; ctx.fillStyle = hexA(col, 0.9); rrect(ctx, x + 5, y + 24, kw, 12, 3); ctx.fill(); txt(ctx, key, x + 5 + kw / 2, y + 30.5, 9, '#05070f', 'center', FONT_H, 900); txt(ctx, sub, x + 9 + kw + (cw - 14 - kw) / 2, y + 30.5, 8, '#9aa6c8', 'center', FONT_H, 700);
+  });
+  if (m.cfg.meter === false) return;
+  // timing meter: swing when the marker crosses the window
+  const bw = cw * 3 + gap * 2, by = y - 18, bx = x0;
+  ctx.fillStyle = 'rgba(8,11,24,0.78)'; rrect(ctx, bx, by - 5, bw, 12, 6); ctx.fill();
+  const flying = pt.stage === 'flight' || pt.stage === 'post';
+  const T = pt.T || 55 / m.pitchSpeed(pt.type), u0 = (T - IDEAL) / T, zc = m.swingZone('contact'), zp = m.swingZone('power');
+  const X = u => bx + clamp(u, 0, 1.08) / 1.08 * bw;
+  ctx.globalAlpha = flying ? 1 : 0.45;
+  ctx.fillStyle = hexA(m.sides[m.bat].team.g, 0.55); ctx.fillRect(X(u0 - zc.win / T), by - 3, X(u0 + zc.win / T) - X(u0 - zc.win / T), 8);
+  ctx.fillStyle = 'rgba(255,216,74,0.85)'; ctx.fillRect(X(u0 - zp.win / T), by - 3, X(u0 + zp.win / T) - X(u0 - zp.win / T), 8);
+  ctx.globalAlpha = 1;
+  txt(ctx, 'TIMING', bx + bw / 2, by - 14, 9, '#9aa6c8', 'center', FONT_H, 900); if (!TL) txt(ctx, '←/→ SHIFT SO THE RINGS COVER THE PITCH', W / 2, H - 9, 10, '#8f9bc0', 'center', FONT_H, 700);
+  if (pt.stage === 'flight') { const u = (pt.t - pt.t0) / pt.T, mx = X(u); ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(mx, by - 8); ctx.lineTo(mx + 5, by - 14); ctx.lineTo(mx - 5, by - 14); ctx.fill(); ctx.fillRect(mx - 1, by - 6, 2, 14); }
+  if (pt.swingU != null) { const sx = X(pt.swingU); ctx.fillStyle = pt.hit ? '#3dffa0' : '#ff6a6a'; ctx.fillRect(sx - 2, by - 7, 4, 16); }
 }

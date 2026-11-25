@@ -57,26 +57,38 @@ python3 tools/build_iron_diamond.py iron-diamond-single.html
 | Start / pause | `Enter` | `Backspace` | Start |
 | Mute | `M` | | |
 
-**Batting.** After every swing you get feedback (PERFECT, EARLY, LATE,
-MISSED · TOO HIGH…). On Rookie a dashed ring shows where the pitch will cross.
-Shift left/right so the glowing ring covers the pitch. A is a contact
+**Batting.** Three swings, shown on a panel while you bat:
+
+- **A · Contact**: the big solid ring at the plate is its sweet spot.
+- **B · Power**: the smaller dashed gold ring; harder to square up, hits much farther.
+- **Hold ↓ · Bunt**: square around and the bat meets the ball by itself if it's
+  inside the green bunt zone. Let go to pull back.
+
+Shift left/right so the rings cover the pitch. The **timing meter** shows a
+marker racing toward the swing window (wide = contact, narrow gold = power) and
+marks where you swung. After every swing you get feedback (PERFECT, EARLY,
+LATE, MISSED · TOO HIGH…). On Rookie a dashed ring shows where the pitch will
+cross. A is a contact
 swing, B a power swing (smaller window, harder hit), Down+A bunts. Swing early to
 pull, late to go the other way; high pitches fly, low pitches bounce.
 
-**Pitching.** Aim with the d-pad, B cycles Fastball / Curve / Slider / Changeup /
-Plasma, A throws. Hold left/right to steer the ball in flight. Every pitch drains the
+**Pitching.** Pitches sit on a rail at the side of the screen showing each
+one's movement, speed and battery cost. Aim with the d-pad, press B or tap the
+rail to pick Fastball / Curve / Slider / Changeup / Plasma, A throws. Hold left/right to steer the ball in flight. Every pitch drains the
 pitcher's power cell (Plasma drains 14). From the pause menu you can bring in your
 reliever.
 
-**Fielding.** You run the fielder nearest the ball. With **Field Assist** on
-(Settings; AUTO turns it on for Rookie and touch screens) the fielder chases the
-ball whenever you let go of the d-pad and makes the throw if you hesitate. A yellow ring marks where a fly
+**Fielding.** You run the fielder nearest the ball. **Settings → Fielding**:
+ASSIST (default) chases the ball whenever you let go of the d-pad and throws if
+you hesitate; AUTO lets the CPU field and throw for you (steer to take over);
+MANUAL is all you. A yellow ring marks where a fly
 ball will land. With the ball, hold a direction and press A to throw (→ 1st, ↑ 2nd,
 ← 3rd, ↓ home; no direction picks the smart play), or run onto the base or into
 the runner yourself.
 
 **Running.** Runners go on grounders and wait on fly balls. A sends everyone
-another base, B sends them back.
+another base, B sends them back. **Settings → Base Running: AUTO** (default)
+lets runners take smart extra bases on their own; A and B still override.
 
 **Clash.** A close play at a base becomes a 9-second brawl in a holo-ring: ←/→
 move, A strike, B heavy (breaks guard), Down guards. If the runner wins, they're

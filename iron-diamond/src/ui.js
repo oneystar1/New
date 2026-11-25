@@ -2,7 +2,7 @@
 'use strict';
 const Game = {
   scene: null, t: 0,
-  settings: Object.assign({ innings: 3, diff: 1, clash: true, music: true, fx: 'auto', haptics: true, assist: 'auto' }, store.get('ironDiamond.settings', {})),
+  settings: Object.assign({ innings: 3, diff: 1, clash: true, music: true, fx: 'auto', haptics: true, field: 'assist', run: 'auto', meter: true }, store.get('ironDiamond.settings', {})),
   set(s) { this.scene = s; s.enter && s.enter(); },
   save() { store.set('ironDiamond.settings', this.settings); Sfx.musicOn = this.settings.music; applyFx(); },
 };
@@ -178,8 +178,7 @@ class VsScene {
     this.t += dt;
     if (this.t > 0.6 && (Input.anyHit('start') || Input.anyHit('a'))) {
       Sfx.play('ok'); const s = Game.settings;
-      const assist = s.assist === 'on' || (s.assist === 'auto' && (s.diff === 0 || document.body.classList.contains('touch')));
-      const cfg = { teams: this.teams, rosters: this.rosters, ctrl: this.ctrl, innings: s.innings, diff: s.diff, clash: s.clash, up: this.extra.up, assist };
+      const cfg = { teams: this.teams, rosters: this.rosters, ctrl: this.ctrl, innings: s.innings, diff: s.diff, clash: s.clash, up: this.extra.up, assist: s.field === 'assist', autoField: s.field === 'auto', autoRun: s.run === 'auto', meter: s.meter };
       const gs = new GameScene(cfg, this.extra.onEnd || (m => Game.set(new ResultScene(m, null)))); gs.onQuit = this.extra.onQuit; Game.set(gs);
     }
     if (Input.anyHit('b') && !this.extra.onEnd) { Sfx.play('back'); Game.set(new ModeScene()); }
@@ -395,8 +394,8 @@ class HowToScene {
   draw(ctx) {
     drawBackdrop(ctx, this.t + 240, null, 0.78);
     const pages = [
-      ['BATTING & PITCHING', ['BATTER  ←/→ shift in the box so the glowing ring covers the pitch', 'A  contact swing — wider sweet spot', 'B  power swing — smaller window, much harder hit', '↓ + A  bunt', 'Timing: swing early to pull, late to go the other way. High pitches fly, low pitches bounce.', '', 'PITCHER  D-pad aims, B cycles pitch, A throws', 'Hold ←/→ while the ball is in the air to steer it', 'PLASMA ball wobbles and is fast, but drains 14 power cell'], '#46e0ff'],
-      ['FIELDING & RUNNING', ['You control the fielder nearest the ball (the one with the ring)', 'Fly balls show a yellow landing ring — get under it to catch', 'With the ball: hold a direction + A to throw', '→ first   ↑ second   ← third   ↓ home   (no direction = smart throw)', 'Run onto a base or into a runner to make the out yourself', '', 'ON OFFENSE  A sends every runner one more base, B sends them back', 'Runners go automatically on grounders and wait on fly balls', 'FIELD ASSIST (Settings): your fielder chases the ball when you let go'], '#3dffa0'],
+      ['BATTING & PITCHING', ['BATTER  ←/→ shift so the rings cover the pitch (solid = contact, dashed = power)', 'A  contact swing — wider sweet spot', 'B  power swing — smaller window, much harder hit', 'HOLD ↓  square up to bunt: the bat meets the ball by itself', 'Timing: swing early to pull, late to go the other way. High pitches fly, low pitches bounce.', '', 'PITCHER  D-pad aims, B cycles pitch, A throws', 'Hold ←/→ while the ball is in the air to steer it', 'PLASMA ball wobbles and is fast, but drains 14 power cell'], '#46e0ff'],
+      ['FIELDING & RUNNING', ['You control the fielder nearest the ball (the one with the ring)', 'Fly balls show a yellow landing ring — get under it to catch', 'With the ball: hold a direction + A to throw', '→ first   ↑ second   ← third   ↓ home   (no direction = smart throw)', 'Run onto a base or into a runner to make the out yourself', '', 'ON OFFENSE  A sends every runner one more base, B sends them back', 'Runners go automatically on grounders and wait on fly balls', 'FIELDING / BASE RUNNING (Settings): ASSIST or AUTO do it for you'], '#3dffa0'],
       ['CLASH & THE GAUNTLET', ['A close play at a base becomes a CLASH: a 9-second brawl', '←/→ move   A strike   B heavy (breaks guard)   ↓ guard', 'Runner wins: SAFE.  Fielder wins: OUT.  Out of time: most damage wins', 'Armor damage is permanent. Hit 0 and the bot is DESTROYED and replaced', 'Hit-by-pitch also damages armor', '', 'SEASON  11 rounds vs every club, top 4 make the playoffs', 'GAUNTLET  beat 5 clubs and the final with 3 continues', 'Credits from wins, runs, Ks and kills buy GARAGE repairs and upgrades'], '#ff3d8a'],
     ];
     const [title, lines, col] = pages[this.page];
@@ -408,23 +407,31 @@ class HowToScene {
 }
 class SettingsScene {
   constructor() { this.t = 0; this.sel = 0; }
-  items() { const s = Game.settings; return [{ label: 'INNINGS', value: String(s.innings) }, { label: 'DIFFICULTY', value: DIFF_NAMES[s.diff] }, { label: 'CLASHES', value: s.clash ? 'ON' : 'OFF' }, { label: 'SOUND', value: Sfx.muted ? 'OFF' : 'ON' }, { label: 'MUSIC', value: s.music ? 'ON' : 'OFF' }, { label: 'EFFECTS', value: s.fx.toUpperCase() }, { label: 'VIBRATION', value: s.haptics ? 'ON' : 'OFF' }, { label: 'FIELD ASSIST', value: s.assist.toUpperCase() }, { label: 'BACK' }]; }
-  update(dt) {
-    this.t += dt; const s = Game.settings; this.sel = navList(this.sel, 9);
-    const d = Input.anyHit('right') || Input.anyHit('a') ? 1 : Input.anyHit('left') ? -1 : 0;
-    if (Input.anyHit('b') || (this.sel === 8 && Input.anyHit('a'))) { Game.save(); Game.set(new TitleScene()); Game.scene.pressed = true; return; }
-    if (d) {
-      Sfx.play('move');
-      if (this.sel === 0) { const o = [3, 5, 7, 9]; s.innings = o[(o.indexOf(s.innings) + d + 4) % 4]; }
-      if (this.sel === 1) s.diff = (s.diff + d + 3) % 3;
-      if (this.sel === 2) s.clash = !s.clash;
-      if (this.sel === 3) Sfx.toggleMute();
-      if (this.sel === 4) s.music = !s.music;
-      if (this.sel === 5) { const o = ['auto', 'high', 'low']; s.fx = o[(o.indexOf(s.fx) + d + 3) % 3]; }
-      if (this.sel === 6) s.haptics = !s.haptics;
-      if (this.sel === 7) { const o = ['auto', 'on', 'off']; s.assist = o[(o.indexOf(s.assist) + d + 3) % 3]; }
-      Game.save();
-    }
+  rows() {
+    const s = Game.settings, cyc = (k, o) => d => { s[k] = o[(o.indexOf(s[k]) + d + o.length) % o.length]; };
+    return [
+      { label: 'INNINGS', value: String(s.innings), ch: cyc('innings', [3, 5, 7, 9]) },
+      { label: 'DIFFICULTY', value: DIFF_NAMES[s.diff], ch: d => { s.diff = (s.diff + d + 3) % 3; } },
+      { label: 'FIELDING', value: s.field.toUpperCase(), ch: cyc('field', ['assist', 'auto', 'manual']), help: 'ASSIST: chases when you let go · AUTO: CPU fields, you can take over' },
+      { label: 'BASE RUNNING', value: s.run.toUpperCase(), ch: cyc('run', ['auto', 'manual']), help: 'AUTO: runners take smart extra bases · A / B still override' },
+      { label: 'TIMING METER', value: s.meter ? 'ON' : 'OFF', ch: () => { s.meter = !s.meter; }, help: 'Shows the swing window while you bat' },
+      { label: 'CLASHES', value: s.clash ? 'ON' : 'OFF', ch: () => { s.clash = !s.clash; } },
+      { label: 'EFFECTS', value: s.fx.toUpperCase(), ch: cyc('fx', ['auto', 'high', 'low']), help: 'AUTO lowers glow and light effects on slow phones' },
+      { label: 'SOUND', value: Sfx.muted ? 'OFF' : 'ON', ch: () => Sfx.toggleMute() },
+      { label: 'MUSIC', value: s.music ? 'ON' : 'OFF', ch: () => { s.music = !s.music; } },
+      { label: 'VIBRATION', value: s.haptics ? 'ON' : 'OFF', ch: () => { s.haptics = !s.haptics; } },
+      { label: 'BACK', back: true },
+    ];
   }
-  draw(ctx) { drawBackdrop(ctx, this.t + 300, null, 0.7); glowTxt(ctx, 'SETTINGS', W / 2, 70, 40, '#ffffff', '#46e0ff'); menuList(ctx, this.items(), this.sel, W / 2, 88, { w: 440, h: 36 }); footer(ctx, '←/→ CHANGE · B BACK · FIELD ASSIST AUTO = ON FOR ROOKIE AND TOUCH SCREENS'); }
+  update(dt) {
+    this.t += dt; const rows = this.rows(); this.sel = navList(this.sel, rows.length);
+    const d = Input.anyHit('right') || Input.anyHit('a') ? 1 : Input.anyHit('left') ? -1 : 0;
+    if (Input.anyHit('b') || (rows[this.sel].back && Input.anyHit('a'))) { Game.save(); Game.set(new TitleScene()); Game.scene.pressed = true; return; }
+    if (d && rows[this.sel].ch) { Sfx.play('move'); rows[this.sel].ch(d); Game.save(); }
+  }
+  draw(ctx) {
+    drawBackdrop(ctx, this.t + 300, null, 0.72); glowTxt(ctx, 'SETTINGS', W / 2, 36, 32, '#ffffff', '#46e0ff');
+    const rows = this.rows(); menuList(ctx, rows, this.sel, W / 2, 62, { w: 460, h: 34 });
+    footer(ctx, rows[this.sel].help || '←/→ OR TAP TO CHANGE   ·   B BACK');
+  }
 }

@@ -1,29 +1,52 @@
-// IRON DIAMOND — vector robot renderer. Units are feet; origin at the feet, -y is up.
+// IRON DIAMOND — vector robot renderer, high-tech edition. Units are feet; origin at the feet, -y is up.
+// Every frame is layered armour plates over a carbon under-suit, with glowing actuator joints,
+// emissive circuit traces, wraparound visors, thrusters and a cool rim light from the upper left.
 'use strict';
 const OUT = '#070a12';
 function drawRobot(ctx, x, y, s, r, team, o = {}) {
   const t = o.t || 0, back = !!o.back, cls = r.cls;
   const P = r.scrap ? '#7a7f88' : team.p, S = r.scrap ? '#3b3f46' : team.s, G = r.scrap ? '#ffb347' : team.g;
-  const dmg = o.hp == null ? 1 : o.hp;
+  const dmg = o.hp == null ? 1 : o.hp, hi = s > 3.2, lo = s < 2.2; // level of detail by on-screen size
   ctx.save(); ctx.translate(x, y); ctx.scale(s * (o.flip ? -1 : 1), s);
   if (o.alpha != null) ctx.globalAlpha = o.alpha;
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  const run = o.run || 0, ph = t * 12, crouch = o.crouch || 0;
-  const metal = (c) => { const g = ctx.createLinearGradient(-1.6, -0.4, 1.6, 0.4); g.addColorStop(0, shade(c, 0.42)); g.addColorStop(0.2, shade(c, 0.12)); g.addColorStop(0.3, shade(c, 0.62)); g.addColorStop(0.38, shade(c, 0.08)); g.addColorStop(0.75, shade(c, -0.28)); g.addColorStop(1, shade(c, -0.58)); return g; };
-  // soft top-light highlight + seam line helpers
-  const spec = (cx, cy, rx, ry) => { ctx.save(); ctx.globalAlpha *= 0.55; const g = ctx.createRadialGradient(cx - rx * 0.3, cy - ry * 0.3, 0, cx - rx * 0.3, cy - ry * 0.3, Math.max(rx, ry)); g.addColorStop(0, 'rgba(255,255,255,0.9)'); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU); ctx.fill(); ctx.restore(); };
-  const seam = (x1, y1, x2, y2) => { ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 0.05; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.beginPath(); ctx.moveTo(x1 + 0.05, y1 + 0.05); ctx.lineTo(x2 + 0.05, y2 + 0.05); ctx.stroke(); };
-  const pulse = 0.75 + 0.25 * Math.sin(t * 3.1 + (r.num || 0));
-  const cap = (x1, y1, x2, y2, w, col) => { ctx.strokeStyle = OUT; ctx.lineWidth = w + 0.16; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); };
-  const poly = (pts, fill) => { ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 0.12; ctx.stroke(); };
-  const ell = (cx, cy, rx, ry, fill, stroke = true) => { ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU); ctx.fillStyle = fill; ctx.fill(); if (stroke) { ctx.strokeStyle = OUT; ctx.lineWidth = 0.12; ctx.stroke(); } };
-  const lamp = (cx, cy, rr, col = G) => { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, rr * 0.55, 0, TAU); ctx.fill(); ctx.save(); ctx.globalCompositeOperation = 'lighter'; const k = rr * (2.6 + pulse * 0.8); ctx.drawImage(glowSprite(col), cx - k, cy - k, k * 2, k * 2); ctx.restore(); };
-  const rr = (x0, y0, w, h, rad, fill) => { rrect(ctx, x0, y0, w, h, rad); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 0.12; ctx.stroke(); };
-  // leg cycle
-  const legL = Math.sin(ph) * run, legR = -legL;
-  const bob = run ? Math.abs(Math.cos(ph)) * 0.18 * run : 0;
+  const run = o.run || 0, ph = t * 12, crouch = o.crouch || 0, pulse = 0.7 + 0.3 * Math.sin(t * 3.1 + (r.num || 0));
+  // ---- materials
+  const metal = (c) => { const g = ctx.createLinearGradient(-1.6, -0.5, 1.6, 0.5); g.addColorStop(0, shade(c, 0.5)); g.addColorStop(0.18, shade(c, 0.18)); g.addColorStop(0.27, shade(c, 0.7)); g.addColorStop(0.34, shade(c, 0.1)); g.addColorStop(0.72, shade(c, -0.3)); g.addColorStop(1, shade(c, -0.62)); return g; };
+  const suit = (() => { const g = ctx.createLinearGradient(-1, 0, 1, 0); g.addColorStop(0, '#3a4560'); g.addColorStop(0.5, '#1d2232'); g.addColorStop(1, '#0d1018'); return g; })();
+  const glass = (y0, y1) => { const g = ctx.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, '#2a3a66'); g.addColorStop(0.45, '#070a14'); g.addColorStop(1, '#141c36'); return g; };
+  const rim = ctx.createLinearGradient(-2.4, -7.5, 0.4, -1); rim.addColorStop(0, 'rgba(205,235,255,0.85)'); rim.addColorStop(1, 'rgba(205,235,255,0)');
+  const PM = metal(P), SM = metal(S), DM = metal(shade(P, -0.35)), GM = metal('#4a5266');
+  // ---- primitives
+  const path = (pts) => { ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.closePath(); };
+  const plate = (pts, fill, lw = 0.1) => { path(pts); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = lw; ctx.stroke(); if (hi) { ctx.strokeStyle = rim; ctx.lineWidth = 0.055; ctx.stroke(); } };
+  const ell = (cx, cy, rx, ry, fill, stroke = true) => { ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU); ctx.fillStyle = fill; ctx.fill(); if (stroke) { ctx.strokeStyle = OUT; ctx.lineWidth = 0.1; ctx.stroke(); if (hi) { ctx.strokeStyle = rim; ctx.lineWidth = 0.05; ctx.stroke(); } } };
+  const rr = (x0, y0, w, h, rad, fill) => { rrect(ctx, x0, y0, w, h, rad); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 0.1; ctx.stroke(); if (hi) { ctx.strokeStyle = rim; ctx.lineWidth = 0.05; ctx.stroke(); } };
+  const cap = (x1, y1, x2, y2, w, col) => { ctx.strokeStyle = OUT; ctx.lineWidth = w + 0.14; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.stroke(); };
+  const glowLine = (pts, w = 0.06, a = 1, closed = false) => {
+    if (lo) return; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]); if (closed) ctx.closePath();
+    ctx.strokeStyle = hexA(G, 0.4 * a * pulse); ctx.lineWidth = w * 3.4; ctx.stroke(); ctx.strokeStyle = hexA(shade(G, 0.55), 0.95 * a); ctx.lineWidth = w; ctx.stroke(); ctx.restore();
+  };
+  const lamp = (cx, cy, rr2, col = G) => { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, rr2 * 0.55, 0, TAU); ctx.fill(); ctx.save(); ctx.globalCompositeOperation = 'lighter'; const k = rr2 * (2.6 + pulse * 0.9); ctx.drawImage(glowSprite(col), cx - k, cy - k, k * 2, k * 2); ctx.restore(); };
+  const joint = (cx, cy, jr) => { ell(cx, cy, jr, jr, '#151a26'); if (!lo) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = hexA(G, 0.85 * pulse); ctx.lineWidth = jr * 0.32; ctx.beginPath(); ctx.arc(cx, cy, jr * 0.62, t * 2, t * 2 + TAU * 0.75); ctx.stroke(); ctx.restore(); } ctx.fillStyle = shade(G, 0.6); ctx.beginPath(); ctx.arc(cx, cy, jr * 0.22, 0, TAU); ctx.fill(); };
+  // tapered armour segment between two points, laid over a thinner under-suit strut
+  const limb = (x1, y1, x2, y2, w1, w2, fill, stripe) => {
+    cap(x1, y1, x2, y2, Math.min(w1, w2) * 0.55, '#1a1f2c');
+    let dx = x2 - x1, dy = y2 - y1; const l = hyp(dx, dy) || 1; dx /= l; dy /= l; const nx = -dy, ny = dx;
+    const a = 0.12, ax1 = x1 + dx * l * a, ay1 = y1 + dy * l * a, ax2 = x2 - dx * l * a, ay2 = y2 - dy * l * a;
+    plate([[ax1 + nx * w1 / 2, ay1 + ny * w1 / 2], [ax2 + nx * w2 / 2, ay2 + ny * w2 / 2], [ax2 - nx * w2 / 2, ay2 - ny * w2 / 2], [ax1 - nx * w1 / 2, ay1 - ny * w1 / 2]], fill);
+    if (stripe && hi) glowLine([[lerp(ax1, ax2, 0.15) + nx * w1 * 0.18, lerp(ay1, ay2, 0.15) + ny * w1 * 0.18], [lerp(ax1, ax2, 0.85) + nx * w2 * 0.18, lerp(ay1, ay2, 0.85) + ny * w2 * 0.18]], 0.045, 0.8);
+  };
+  const traces = (segs, speed = 1) => { if (!hi) return; for (const sg of segs) glowLine(sg, 0.04, 0.7); const k = (((t * 0.8 * speed) % 1) + 1) % 1; for (const sg of segs) { const i = Math.min(sg.length - 2, Math.floor(k * (sg.length - 1))), f = k * (sg.length - 1) - i; const px = lerp(sg[i][0], sg[i + 1][0], f), py = lerp(sg[i][1], sg[i + 1][1], f); ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glowSprite('#ffffff'), px - 0.2, py - 0.2, 0.4, 0.4); ctx.restore(); } };
+  const hexCore = (cx, cy, rad) => { ctx.beginPath(); for (let i = 0; i < 6; i++) { const an = i * TAU / 6 + Math.PI / 6; ctx.lineTo(cx + Math.cos(an) * rad, cy + Math.sin(an) * rad); } ctx.closePath(); ctx.fillStyle = '#080b14'; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 0.08; ctx.stroke(); glowLine((() => { const p = []; for (let i = 0; i < 6; i++) { const an = i * TAU / 6 + Math.PI / 6; p.push([cx + Math.cos(an) * rad * 0.78, cy + Math.sin(an) * rad * 0.78]); } return p; })(), 0.05, 1, true); if (!lo) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = hexA(G, 0.9); ctx.lineWidth = 0.05; for (let i = 0; i < 3; i++) { const an = t * 3 + i * TAU / 3; ctx.beginPath(); ctx.arc(cx, cy, rad * 0.45, an, an + 0.9); ctx.stroke(); } ctx.restore(); } lamp(cx, cy, rad * 0.4); };
+  const visor = (x0, y0, w, h) => { rrect(ctx, x0, y0, w, h, h * 0.45); ctx.fillStyle = glass(y0, y0 + h); ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 0.07; ctx.stroke(); if (lo) { ctx.fillStyle = G; ctx.fillRect(x0 + w * 0.1, y0 + h * 0.4, w * 0.8, h * 0.25); return; }
+    ctx.save(); rrect(ctx, x0, y0, w, h, h * 0.45); ctx.clip(); ctx.fillStyle = 'rgba(255,255,255,0.28)'; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + w * 0.45, y0); ctx.lineTo(x0 + w * 0.3, y0 + h); ctx.lineTo(x0 - 0.1, y0 + h); ctx.fill();
+    const sx = x0 + w / 2 + Math.sin(t * 2.3 + (r.num || 0)) * w * 0.35; ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = hexA(G, 0.95); ctx.fillRect(sx - w * 0.12, y0 + h * 0.35, w * 0.24, h * 0.3); ctx.drawImage(glowSprite(G), sx - w * 0.4, y0 - h, w * 0.8, h * 3); ctx.restore(); };
+  const thruster = (cx, cy, w) => { rr(cx - w / 2, cy, w, w * 0.9, w * 0.2, GM); if (lo) return; const fl = 0.7 + 0.3 * Math.sin(t * 40 + cx * 9); ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createLinearGradient(0, cy + w * 0.9, 0, cy + w * 0.9 + w * 2.2 * fl); g.addColorStop(0, hexA(shade(G, 0.6), 0.95)); g.addColorStop(1, hexA(G, 0)); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(cx - w * 0.38, cy + w * 0.9); ctx.lineTo(cx + w * 0.38, cy + w * 0.9); ctx.lineTo(cx, cy + w * 0.9 + w * 2.2 * fl); ctx.closePath(); ctx.fill(); ctx.restore(); };
+  const backNum = (cy, size) => { ctx.save(); ctx.font = `900 ${size}px ${FONT_H}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = shade(S, 0.1); ctx.fillText(String(r.num), 0, cy); if (!lo) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = hexA(G, 0.35); ctx.fillText(String(r.num), 0, cy); } ctx.restore(); };
+  // ---- motion
+  const legL = Math.sin(ph) * run, legR = -legL, bob = run ? Math.abs(Math.cos(ph)) * 0.18 * run : 0;
   ctx.translate(0, crouch * 1.4 - bob * 0.5);
-  // default arm targets (relative to shoulder) — may be overridden
   const arms = (sx, sy, side) => {
     const sw = (side < 0 ? legL : legR) * 0.7;
     let hx = sx + side * 0.25 + sw * 0.4, hy = sy + 1.9 - Math.abs(sw) * 0.3;
@@ -35,100 +58,117 @@ function drawRobot(ctx, x, y, s, r, team, o = {}) {
     if (o.windup != null && side === 1) { hx = sx - 0.9 * o.windup; hy = sy - 0.8 * o.windup; }
     return [hx, hy];
   };
-  const drawArm = (sx, sy, side, w, col, handR, handCol) => {
+  const drawArm = (sx, sy, side, w, fill, handR, blade) => {
     const [hx, hy] = arms(sx, sy, side);
     const ex = (sx + hx) / 2 + side * 0.35, ey = (sy + hy) / 2 + 0.15;
-    cap(sx, sy, ex, ey, w, col); cap(ex, ey, hx, hy, w * 0.85, typeof col === 'string' ? shade(col, -0.15) : '#2a303d');
-    ell(hx, hy, handR, handR, handCol || '#2a303d');
+    limb(sx, sy, ex, ey, w * 1.15, w * 0.85, fill, true);
+    if (cls === 'TITAN' && hi) { ctx.strokeStyle = '#c8d0e0'; ctx.lineWidth = 0.06; ctx.beginPath(); ctx.moveTo(sx - side * 0.2, sy + 0.25); ctx.lineTo(ex - side * 0.15, ey - 0.15); ctx.stroke(); }
+    limb(ex, ey, hx, hy, w * 0.9, w * 0.75, fill === PM ? DM : fill, false);
+    joint(ex, ey, w * 0.42);
+    if (blade) { let dx = hx - ex, dy = hy - ey; const l = hyp(dx, dy) || 1; dx /= l; dy /= l; const nx = -dy * side, ny = dx * side; const b = [[ex + nx * 0.15, ey + ny * 0.15], [hx + dx * 0.55 + nx * 0.05, hy + dy * 0.55 + ny * 0.05], [hx + nx * 0.28, hy + ny * 0.28]]; plate(b, SM, 0.07); glowLine([b[0], b[1]], 0.04, 1); }
+    ell(hx, hy, handR, handR * 0.9, GM); glowLine([[hx - handR * 0.6, hy - handR * 0.2], [hx + handR * 0.6, hy - handR * 0.2]], 0.04, 0.9);
     if (o.ball && side === 1 && o.throwArm == null) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(hx, hy - 0.1, 0.22, 0, TAU); ctx.fill(); }
-    if (o.reach > 0.6 && side === 1) lamp(hx + 0.2, hy, 0.25, G);
+    if (o.reach > 0.6 && side === 1) lamp(hx + 0.2, hy, 0.28, G);
   };
-  const lean = o.lean || 0;
-  const upper = () => { ctx.transform(1, 0, lean * 0.13, 1, 0, 0); };
-  const backNum = (cy, size) => { ctx.save(); ctx.font = `900 ${size}px ${FONT_H}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = S; ctx.fillText(String(r.num), 0, cy); ctx.restore(); };
-  // order arms so the far arm draws first. Side +1 is the robot's "throwing" arm (viewer right in back view)
-  const armSides = back ? [-1, 1] : [1, -1];
+  const lean = o.lean || 0, upper = () => { ctx.transform(1, 0, lean * 0.13, 1, 0, 0); };
+  const armSides = back ? [-1, 1] : [1, -1], farArm = back ? -1 : 1, nearArm = -farArm;
 
   if (cls === 'STRIKER') {
     const hipY = -3.3;
-    // legs
     for (const side of [-1, 1]) {
-      const sw = side < 0 ? legL : legR, lift = Math.max(0, sw) * 0.7;
-      const fx = side * 0.5 + sw * 0.15, fy = -lift;
-      const kx = side * 0.62 + sw * 0.1, ky = -1.7 - lift * 0.6 + crouch * 0.5;
-      cap(side * 0.38, hipY, kx, ky, 0.52, metal(shade(P, -0.2))); cap(kx, ky, fx, fy - 0.25, 0.42, '#2a303d');
-      rr(fx - 0.32, fy - 0.35, 0.64, 0.35, 0.12, S);
-      ell(kx, ky, 0.2, 0.2, S);
+      const sw = side < 0 ? legL : legR, lift = Math.max(0, sw) * 0.7, fx = side * 0.5 + sw * 0.15, fy = -lift, kx = side * 0.62 + sw * 0.1, ky = -1.7 - lift * 0.6 + crouch * 0.5;
+      limb(side * 0.36, hipY, kx, ky, 0.64, 0.46, PM, true); limb(kx, ky, fx, fy - 0.3, 0.46, 0.32, DM, true);
+      plate([[fx - 0.34, fy], [fx + 0.38, fy], [fx + 0.3, fy - 0.36], [fx - 0.2, fy - 0.42]], SM, 0.08); glowLine([[fx - 0.22, fy - 0.08], [fx + 0.26, fy - 0.08]], 0.035);
+      joint(kx, ky, 0.21);
     }
     ctx.save(); upper();
-    for (const side of armSides) if (side === (back ? -1 : 1)) drawArm(side * 1.05, -5.45, side, 0.36, metal(P), 0.24);
-    poly([[-0.62, hipY], [0.62, hipY], [1.02, -5.65], [-1.02, -5.65]], metal(P)); seam(0, -3.8, 0, -4.6); seam(-0.7, -4.0, 0.7, -4.0); spec(-0.3, -5.2, 0.5, 0.3);
-    rr(-0.55, -3.75, 1.1, 0.55, 0.15, '#1f2430');
-    if (!back) { poly([[-0.8, -4.65], [0.8, -4.65], [0.92, -5.6], [-0.92, -5.6]], metal(S)); lamp(0, -4.95, 0.2); }
-    else { rr(-0.62, -5.45, 1.24, 1.5, 0.2, metal(shade(P, -0.3))); backNum(-4.65, 0.75); lamp(-0.35, -3.85, 0.12, G); lamp(0.35, -3.85, 0.12, G); }
-    ell(-1.05, -5.5, 0.43, 0.38, metal(S)); ell(1.05, -5.5, 0.43, 0.38, metal(S)); spec(-1.12, -5.62, 0.25, 0.16); spec(0.98, -5.62, 0.25, 0.16);
-    rr(-0.18, -6.0, 0.36, 0.3, 0.06, '#2a303d');
-    rr(-0.46, -6.9, 0.92, 0.95, 0.32, metal(P)); spec(-0.12, -6.7, 0.3, 0.18);
-    if (!back) { rr(-0.4, -6.55, 0.8, 0.24, 0.1, '#0a0e18'); ctx.fillStyle = G; ctx.fillRect(-0.36, -6.5, 0.72, 0.13); ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glowSprite(G), -1.1, -7.2, 2.2, 1.6); ctx.restore(); }
-    else { cap(0, -6.85, 0, -7.25, 0.12, S); }
-    for (const side of armSides) if (side === (back ? 1 : -1)) drawArm(side * 1.05, -5.45, side, 0.36, metal(P), 0.24);
+    drawArm(farArm * 1.08, -5.45, farArm, 0.36, PM, 0.24);
+    plate([[-0.5, hipY + 0.15], [0.5, hipY + 0.15], [0.62, hipY - 0.4], [-0.62, hipY - 0.4]], '#1d2232');
+    for (let i = 0; i < 3; i++) rr(-0.5 + i * 0.03, -3.85 - i * 0.24, 1.0 - i * 0.06, 0.2, 0.08, suit);
+    if (!back) {
+      plate([[-1.06, -5.72], [1.06, -5.72], [0.88, -4.62], [0.32, -4.28], [-0.32, -4.28], [-0.88, -4.62]], PM);
+      plate([[-0.72, -5.55], [0.72, -5.55], [0.6, -4.8], [0, -4.5], [-0.6, -4.8]], SM, 0.07);
+      traces([[[-0.26, -4.95], [-0.62, -5.2], [-0.9, -5.2]], [[0.26, -4.95], [0.62, -5.2], [0.9, -5.2]], [[0, -4.7], [0, -4.4], [-0.2, -4.2]]]);
+      hexCore(0, -4.98, 0.27);
+    } else {
+      plate([[-1.02, -5.72], [1.02, -5.72], [0.7, -4.0], [-0.7, -4.0]], DM);
+      for (let i = 0; i < 4; i++) lamp(0, -5.4 + i * 0.36, 0.06);
+      backNum(-4.85, 0.62); thruster(-0.42, -4.75, 0.28); thruster(0.42, -4.75, 0.28);
+    }
+    for (const side of [-1, 1]) { const pp = [[side * 0.72, -5.88], [side * 1.48, -5.7], [side * 1.52, -5.12], [side * 0.98, -5.0]]; plate(pp, SM); glowLine([[side * 0.82, -5.82], [side * 1.42, -5.66]], 0.04); }
+    rr(-0.17, -6.05, 0.34, 0.32, 0.06, suit);
+    rr(-0.47, -6.98, 0.94, 0.98, 0.36, PM);
+    plate([[-0.47, -6.55], [-0.62, -6.75], [-0.6, -6.25], [-0.45, -6.2]], SM, 0.06); plate([[0.47, -6.55], [0.62, -6.75], [0.6, -6.25], [0.45, -6.2]], SM, 0.06);
+    if (!back) { visor(-0.42, -6.66, 0.84, 0.32); glowLine([[-0.3, -6.9], [0.3, -6.9]], 0.035, 0.7); }
+    else { glowLine([[-0.25, -6.75], [0.25, -6.75]], 0.04); glowLine([[-0.18, -6.55], [0.18, -6.55]], 0.04); cap(0, -6.95, 0, -7.3, 0.08, S); lamp(0, -7.32, 0.06); }
+    drawArm(nearArm * 1.08, -5.45, nearArm, 0.36, PM, 0.24);
     ctx.restore();
   } else if (cls === 'TITAN') {
-    // treads
-    const tx = (t * (run ? 9 : 0)) % 0.6;
-    rr(-1.55, -1.25, 3.1, 1.25, 0.55, '#191d25');
-    ctx.save(); rrect(ctx, -1.5, -1.2, 3.0, 1.15, 0.5); ctx.clip(); ctx.fillStyle = '#2c3240';
-    for (let i = -3; i < 6; i++) ctx.fillRect(-1.6 + i * 0.6 + tx, -1.2, 0.24, 1.2);
-    ctx.restore();
-    for (const wx of [-1.0, 0, 1.0]) { ell(wx, -0.6, 0.32, 0.32, metal('#4a5263')); ell(wx, -0.6, 0.12, 0.12, S, false); }
-    rr(-0.95, -2.05, 1.9, 0.9, 0.2, metal('#3c4352'));
+    const tx = (t * (run ? 9 : 0)) % 0.5;
+    rr(-1.6, -1.3, 3.2, 1.3, 0.6, '#151922');
+    ctx.save(); rrect(ctx, -1.55, -1.25, 3.1, 1.2, 0.55); ctx.clip(); ctx.fillStyle = '#2a3040'; for (let i = -4; i < 8; i++) ctx.fillRect(-1.7 + i * 0.5 + tx, -1.25, 0.2, 1.25); ctx.restore();
+    for (const wx of [-1.05, 0, 1.05]) { ell(wx, -0.62, 0.34, 0.34, GM); if (!lo) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = hexA(G, 0.8); ctx.lineWidth = 0.06; ctx.beginPath(); ctx.arc(wx, -0.62, 0.2, t * 4, t * 4 + 4); ctx.stroke(); ctx.restore(); } }
+    plate([[-1.7, -1.05], [1.7, -1.05], [1.55, -1.55], [-1.55, -1.55]], SM); glowLine([[-1.45, -1.3], [1.45, -1.3]], 0.04, 0.8);
+    rr(-0.95, -2.1, 1.9, 0.75, 0.2, GM);
     ctx.save(); upper();
-    for (const side of armSides) if (side === (back ? -1 : 1)) drawArm(side * 1.95, -5.3, side, 0.62, metal(shade(P, -0.15)), 0.5, metal('#3a4150'));
-    poly([[-1.15, -1.95], [1.15, -1.95], [1.75, -5.9], [-1.75, -5.9]], metal(P)); seam(-1.3, -2.6, 1.3, -2.6); seam(-1.55, -5.2, 1.55, -5.2); spec(-0.6, -5.4, 0.9, 0.35);
-    if (!back) { poly([[-0.9, -3.0], [0.9, -3.0], [1.1, -4.6], [-1.1, -4.6]], '#1d222c'); for (let i = 0; i < 4; i++) { ctx.fillStyle = hexA(G, 0.85); ctx.fillRect(-0.75, -3.25 - i * 0.35, 1.5, 0.12); } lamp(0, -5.15, 0.32); }
-    else { rr(-1.2, -5.6, 2.4, 2.2, 0.3, metal(shade(P, -0.3))); backNum(-4.5, 1.0); lamp(-0.7, -3.2, 0.2, G); lamp(0.7, -3.2, 0.2, G); }
-    for (const side of [-1, 1]) { rr(side * 1.95 - 0.6, -6.3, 1.2, 1.0, 0.25, metal(S)); lamp(side * 1.95, -6.05, 0.09, G); }
-    ell(0, -6.05, 0.55, 0.42, metal('#3c4352')); spec(-0.15, -6.2, 0.3, 0.15);
-    if (!back) { lamp(-0.2, -6.1, 0.1); lamp(0.2, -6.1, 0.1); }
-    for (const side of armSides) if (side === (back ? 1 : -1)) drawArm(side * 1.95, -5.3, side, 0.62, metal(shade(P, -0.15)), 0.5, metal('#3a4150'));
+    drawArm(farArm * 2.0, -5.3, farArm, 0.66, PM, 0.5);
+    plate([[-1.2, -1.95], [1.2, -1.95], [1.8, -5.95], [-1.8, -5.95]], PM);
+    if (!back) {
+      plate([[-1.25, -4.7], [1.25, -4.7], [1.5, -5.85], [-1.5, -5.85]], SM, 0.08);
+      rr(-0.95, -4.55, 1.9, 1.5, 0.15, '#0c1018');
+      for (let i = 0; i < 5; i++) { const a = 0.5 + 0.5 * Math.sin(t * 5 - i); ctx.fillStyle = hexA(G, 0.35 + 0.55 * a); ctx.fillRect(-0.82, -4.4 + i * 0.27, 1.64, 0.1); }
+      hexCore(0, -5.28, 0.36);
+      traces([[[-0.4, -5.28], [-1.2, -5.28], [-1.45, -5.0]], [[0.4, -5.28], [1.2, -5.28], [1.45, -5.0]]]);
+    } else {
+      backNum(-4.3, 0.95);
+      for (const sx2 of [-0.8, 0.8]) { rr(sx2 - 0.25, -6.35, 0.5, 1.4, 0.12, GM); if (!lo) glow(ctx, sx2, -6.4, 0.6, '#ff9a4a', 0.55 + 0.25 * Math.sin(t * 9 + sx2)); }
+    }
+    for (const side of [-1, 1]) { rr(side * 2.0 - 0.65, -6.4, 1.3, 1.05, 0.25, SM); plate([[side * 1.45, -6.4], [side * 2.55, -6.4], [side * 2.4, -6.75], [side * 1.6, -6.75]], PM, 0.08); for (let k = 0; k < 3; k++) { ctx.fillStyle = hexA(G, 0.75); ctx.fillRect(side * 2.0 - 0.4, -6.2 + k * 0.22, 0.8, 0.07); } }
+    ell(0, -6.1, 0.6, 0.46, GM);
+    if (!back) visor(-0.42, -6.28, 0.84, 0.2);
+    drawArm(nearArm * 2.0, -5.3, nearArm, 0.66, PM, 0.5);
     ctx.restore();
   } else if (cls === 'VECTOR') {
     const hb = Math.sin(t * 3.3) * 0.18; ctx.translate(0, -hb);
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glowSprite(G), -0.9, -1.6, 1.8, 2.2); ctx.restore();
-    poly([[-0.35, -1.6], [0.35, -1.6], [0.2, -1.05], [-0.2, -1.05]], '#2a303d');
-    lamp(0, -1.0, 0.22, G);
+    if (!lo) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (let k = 0; k < 3; k++) { const p = (((t * 0.9 + k / 3) % 1) + 1) % 1; ctx.strokeStyle = hexA(G, 0.55 * (1 - p)); ctx.lineWidth = 0.06; ctx.beginPath(); ctx.ellipse(0, -1.05 + p * 1.0 + hb, 0.4 + p * 0.9, (0.4 + p * 0.9) * 0.28, 0, 0, TAU); ctx.stroke(); } ctx.drawImage(glowSprite(G), -0.9, -1.7, 1.8, 2.2); ctx.restore(); }
+    plate([[-0.36, -1.65], [0.36, -1.65], [0.22, -1.08], [-0.22, -1.08]], GM, 0.07); lamp(0, -1.02, 0.2, G);
     ctx.save(); upper();
-    for (const side of armSides) if (side === (back ? -1 : 1)) drawArm(side * 1.35, -3.7, side, 0.26, metal(S), 0.22, metal(P));
-    ell(0, -3.35, 1.05, 1.5, metal(P)); spec(-0.35, -4.2, 0.55, 0.5); seam(-0.95, -2.6, 0.95, -2.6);
-    ctx.strokeStyle = OUT; ctx.lineWidth = 0.36; ctx.beginPath(); ctx.ellipse(0, -3.1, 1.22, 0.32, 0, 0, TAU); ctx.stroke();
-    ctx.strokeStyle = S; ctx.lineWidth = 0.22; ctx.beginPath(); ctx.ellipse(0, -3.1, 1.22, 0.32, 0, 0, TAU); ctx.stroke();
-    if (!back) { ell(0, -3.95, 0.42, 0.42, '#0b0f19'); lamp(0, -3.95, 0.24); }
-    else { backNum(-3.75, 0.7); lamp(-0.45, -2.4, 0.1, G); lamp(0.45, -2.4, 0.1, G); }
-    cap(0, -4.8, 0, -5.45, 0.1, '#8b94a8'); lamp(0, -5.5, 0.12, G);
-    for (const side of [-1, 1]) poly([[side * 0.8, -4.2], [side * 1.25, -4.85], [side * 0.95, -3.9]], metal(S));
-    for (const side of armSides) if (side === (back ? 1 : -1)) drawArm(side * 1.35, -3.7, side, 0.26, metal(S), 0.22, metal(P));
+    const pod = (side) => { const [hx, hy] = arms(side * 1.35, -3.7, side); if (!lo) { ctx.save(); ctx.setLineDash([0.12, 0.1]); ctx.lineDashOffset = -t * 2; ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = hexA(G, 0.75); ctx.lineWidth = 0.05; ctx.beginPath(); ctx.moveTo(side * 0.95, -3.6); ctx.lineTo(hx, hy); ctx.stroke(); ctx.restore(); } ell(side * 1.12, -3.65, 0.2, 0.2, SM); plate([[hx - 0.28, hy - 0.35], [hx + 0.28, hy - 0.35], [hx + 0.2, hy + 0.3], [hx - 0.2, hy + 0.3]], SM, 0.07); glowLine([[hx - 0.15, hy + 0.1], [hx + 0.15, hy + 0.1]], 0.04); if (o.ball && side === 1) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(hx, hy + 0.4, 0.22, 0, TAU); ctx.fill(); } if (o.reach > 0.6 && side === 1) lamp(hx + 0.2, hy, 0.28, G); };
+    pod(farArm);
+    ctx.save(); ctx.beginPath(); ctx.ellipse(0, -3.35, 1.05, 1.5, 0, 0, TAU); ctx.clip();
+    ctx.fillStyle = PM; ctx.fillRect(-1.1, -4.9, 2.2, 3.2); ctx.fillStyle = DM; ctx.fillRect(0.08, -4.9, 1.1, 3.2); ctx.restore();
+    ctx.beginPath(); ctx.ellipse(0, -3.35, 1.05, 1.5, 0, 0, TAU); ctx.strokeStyle = OUT; ctx.lineWidth = 0.1; ctx.stroke(); if (hi) { ctx.strokeStyle = rim; ctx.lineWidth = 0.05; ctx.stroke(); }
+    glowLine([[0.04, -4.8], [0.04, -1.95]], 0.045, 0.9);
+    ctx.strokeStyle = OUT; ctx.lineWidth = 0.34; ctx.beginPath(); ctx.ellipse(0, -3.05, 1.2, 0.3, 0, 0, TAU); ctx.stroke(); ctx.strokeStyle = SM; ctx.lineWidth = 0.22; ctx.stroke();
+    if (!lo) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = hexA(G, 0.85); ctx.lineWidth = 0.05; ctx.beginPath(); ctx.ellipse(0, -3.05, 1.2, 0.3, 0, t * 2, t * 2 + 2.2); ctx.stroke(); ctx.restore(); }
+    if (!back) { ell(0, -3.95, 0.46, 0.46, '#070a12'); if (!lo) { ctx.save(); ctx.strokeStyle = hexA(G, 0.6); ctx.lineWidth = 0.04; for (let k = 0; k < 6; k++) { const an = t * 1.5 + k * TAU / 6; ctx.beginPath(); ctx.arc(0, -3.95, 0.36, an, an + 0.6); ctx.stroke(); } ctx.restore(); } ell(0, -3.95, 0.24, 0.24, glass(-4.2, -3.7), false); lamp(0, -3.95, 0.16); }
+    else { backNum(-3.7, 0.62); for (let i = 0; i < 3; i++) glowLine([[-0.5, -2.7 + i * 0.18], [0.5, -2.7 + i * 0.18]], 0.035, 0.7); }
+    cap(0, -4.8, 0, -5.45, 0.08, '#8b94a8'); lamp(0, -5.5, 0.11 + 0.04 * Math.sin(t * 6), G);
+    for (const side of [-1, 1]) { const f = [[side * 0.78, -4.25], [side * 1.32, -4.95], [side * 0.98, -3.9]]; plate(f, SM, 0.07); glowLine([f[0], f[1]], 0.035, 0.8); }
+    pod(nearArm);
     ctx.restore();
   } else { // RAPTOR
-    const hipY = -3.25;
-    const tailSide = back ? 1 : -1;
-    if (!back) { ctx.strokeStyle = OUT; ctx.lineWidth = 0.34; ctx.beginPath(); ctx.moveTo(0, -3.2); ctx.quadraticCurveTo(1.6 * tailSide, -2.4 + Math.sin(t * 4) * 0.2, 1.8 * tailSide, -3.6); ctx.stroke(); ctx.strokeStyle = S; ctx.lineWidth = 0.2; ctx.stroke(); }
+    const hipY = -3.25, tailSide = back ? 1 : -1;
+    const tail = () => { const pts = []; for (let i = 0; i <= 6; i++) { const k = i / 6; pts.push([tailSide * (0.2 + k * 1.7), -3.2 + Math.sin(k * 3) * 0.9 * k - k * 0.2 + Math.sin(t * 4 + k * 3) * 0.12 * k]); } for (let i = 0; i < 6; i++) { const [ax, ay] = pts[i], [bx, by] = pts[i + 1], w = 0.32 - i * 0.04; limb(ax, ay, bx, by, w, w * 0.85, i % 2 ? DM : PM, false); } lamp(pts[6][0], pts[6][1], 0.1); };
+    if (!back) tail();
     for (const side of [-1, 1]) {
       const sw = side < 0 ? legL : legR, lift = Math.max(0, sw) * 0.75;
-      const hx = side * 0.45, kx = side * 0.85 + sw * 0.1, ky = -2.15 - lift * 0.4 + crouch * 0.4, ax = side * 0.5 + sw * 0.2, ay = -0.75 - lift, tx2 = side * 0.72 + sw * 0.25, ty = -lift * 0.5;
-      cap(hx, hipY, kx, ky, 0.55, metal(shade(P, -0.15))); cap(kx, ky, ax, ay, 0.34, '#2a303d'); cap(ax, ay, tx2, ty - 0.08, 0.26, S);
-      poly([[tx2 - 0.35, ty], [tx2 + 0.4, ty], [tx2 + 0.1, ty - 0.25]], '#2a303d');
+      const hx = side * 0.45, kx = side * 0.88 + sw * 0.1, ky = -2.15 - lift * 0.4 + crouch * 0.4, ax = side * 0.5 + sw * 0.2, ay = -0.78 - lift, tx2 = side * 0.72 + sw * 0.25, ty = -lift * 0.5;
+      limb(hx, hipY, kx, ky, 0.66, 0.5, PM, true); limb(kx, ky, ax, ay, 0.42, 0.28, DM, true); cap(ax, ay, tx2, ty - 0.08, 0.2, '#1a1f2c');
+      plate([[tx2 - 0.38, ty], [tx2 + 0.45, ty], [tx2 + 0.12, ty - 0.28]], SM, 0.07); joint(kx, ky, 0.2); joint(ax, ay, 0.13);
     }
     ctx.save(); upper();
-    for (const side of armSides) if (side === (back ? -1 : 1)) drawArm(side * 0.95, -5.0, side, 0.3, metal(S), 0.2, G);
-    poly([[-0.7, hipY], [0.7, hipY], [1.0, -5.25], [0, -5.6], [-1.0, -5.25]], metal(P)); seam(0, -3.4, 0, -3.9); spec(-0.3, -5.0, 0.45, 0.25);
-    if (!back) { poly([[-0.45, -3.9], [0.45, -3.9], [0.6, -4.9], [0, -5.15], [-0.6, -4.9]], metal(S)); lamp(0, -4.45, 0.16); }
-    else { backNum(-4.4, 0.7); }
-    for (const side of [-1, 1]) poly([[side * 0.55, -5.2], [side * 1.55, -6.15], [side * 1.05, -5.0]], metal(S));
-    rr(-0.5, -6.35, 1.0, 0.72, 0.18, metal(P)); spec(-0.15, -6.2, 0.3, 0.15);
-    poly([[-0.25, -6.35], [0.25, -6.35], [0, -6.95]], metal(S));
-    if (!back) { ctx.fillStyle = '#0a0e18'; ctx.fillRect(-0.42, -6.05, 0.84, 0.2); ctx.fillStyle = G; ctx.fillRect(-0.36, -6.0, 0.72, 0.1); lamp(0.15 * Math.sin(t * 2), -5.95, 0.14); }
-    if (back) { ctx.strokeStyle = OUT; ctx.lineWidth = 0.34; ctx.beginPath(); ctx.moveTo(0, -3.3); ctx.quadraticCurveTo(1.4 * tailSide, -2.2 + Math.sin(t * 4) * 0.2, 1.7 * tailSide, -3.3); ctx.stroke(); ctx.strokeStyle = S; ctx.lineWidth = 0.2; ctx.stroke(); }
-    for (const side of armSides) if (side === (back ? 1 : -1)) drawArm(side * 0.95, -5.0, side, 0.3, metal(S), 0.2, G);
+    drawArm(farArm * 0.98, -5.0, farArm, 0.32, PM, 0.2, true);
+    plate([[-0.72, hipY], [0.72, hipY], [1.02, -5.25], [0, -5.62], [-1.02, -5.25]], PM);
+    if (!back) { plate([[-0.48, -3.85], [0.48, -3.85], [0.62, -4.9], [0, -5.18], [-0.62, -4.9]], SM, 0.07); traces([[[0, -4.2], [0, -3.6]], [[-0.3, -4.7], [-0.75, -4.95]], [[0.3, -4.7], [0.75, -4.95]]]); hexCore(0, -4.45, 0.2); }
+    else { backNum(-4.4, 0.6); for (let i = 0; i < 4; i++) lamp(0, -5.3 + i * 0.35, 0.05); }
+    for (const side of [-1, 1]) { const f = [[side * 0.55, -5.2], [side * 1.62, -6.25], [side * 1.08, -4.98]]; plate(f, SM); glowLine([[side * 0.62, -5.2], [side * 1.55, -6.18]], 0.04); }
+    if (back) for (let i = 0; i < 3; i++) { const f = [[-0.14, -4.0 - i * 0.55], [0, -4.6 - i * 0.55], [0.14, -4.0 - i * 0.55]]; plate(f, SM, 0.06); glowLine([f[0], f[1]], 0.03); }
+    plate([[-0.08, -6.4], [0.08, -6.4], [0.02, -6.95], [-0.3, -6.75]], SM, 0.06); glowLine([[0, -6.45], [-0.26, -6.75]], 0.035);
+    plate([[-0.54, -5.75], [0.54, -5.75], [0.5, -6.25], [0.18, -6.58], [-0.18, -6.58], [-0.5, -6.25]], PM);
+    if (!back) { rrect(ctx, -0.44, -6.12, 0.88, 0.2, 0.08); ctx.fillStyle = '#05070d'; ctx.fill(); const ex2 = Math.sin(t * 2.2) * 0.28; ctx.fillStyle = G; ctx.fillRect(-0.4, -6.07, 0.8, 0.1); lamp(ex2, -6.02, 0.15); }
+    if (back) tail();
+    drawArm(nearArm * 0.98, -5.0, nearArm, 0.32, PM, 0.2, true);
     ctx.restore();
   }
   // battle damage: scorch marks below 65% armor, cracks and shorting sparks below 40%

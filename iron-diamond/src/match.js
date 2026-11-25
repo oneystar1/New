@@ -128,6 +128,7 @@ class Match {
     if (B != null) { const ax = Input.axis(B).x; pt.shift = clamp(pt.shift + ax * dt * 3.2, -1, 1); }
     else if (pt.plan) pt.shift = approach(pt.shift, pt.plan.shift, dt * 3);
     // swing input (human)
+    if (B != null) { const was = pt.buntHold; pt.buntHold = !pt.swing && pt.stage !== 'post' && Input.held(B, 'down'); if (pt.buntHold && !was) Sfx.play('servo'); }
     if (B != null && !pt.swing && pt.stage !== 'after' && pt.stage !== 'aim') {
       if (Input.hit(B, 'a')) pt.swing = { t0: pt.t, kind: Input.held(B, 'down') ? 'bunt' : 'contact' };
       else if (Input.hit(B, 'b')) pt.swing = { t0: pt.t, kind: 'power' };
@@ -199,6 +200,13 @@ class Match {
     if (pt.plan && pt.plan.swingAt != null && !pt.swing && (pt.t - pt.t0) >= pt.plan.swingAt) { pt.swing = { t0: pt.t, kind: pt.plan.kind }; Sfx.play(pt.plan.kind === 'bunt' ? 'servo' : 'swing'); }
   }
   batterX() { return -this.pt.hand * 2.7 + this.pt.shift; }
+  swingZone(kind) { // sweet-spot size and timing window for the current batter
+    const bt = this.batter(), con = this.st(bt, 'con'), humanBat = this.pad(this.bat) != null;
+    const assist = humanBat && this.human(this.fld) == null ? [1.2, 0.92, 0.78][this.diff] : 1;
+    const K = { contact: [0.9, 1.0, 0.085], power: [0.72, 0.78, 0.058], bunt: [1.35, 1.4, 0.6] }[kind];
+    const cm = (0.82 + con * 0.035) * assist;
+    return { reach: K[0] * cm, vtol: K[1] * cm, win: K[2] * (0.85 + con * 0.03) * assist };
+  }
   crossPlate() {
     const pt = this.pt, bt = this.batter(), ty = PITCHES[pt.type];
     const x = pt.aimX, z = pt.aimZ; pt.cross = { x, z };
@@ -207,19 +215,21 @@ class Match {
     pt.stage = 'post'; pt.postT = 1.0;
     const sw = pt.swing; const humanBat = this.pad(this.bat) != null;
     const bxp = this.batterX();
-    if (sw && sw.t0 <= pt.t + 0.001) {
-      const age = pt.t - sw.t0, con = this.st(bt, 'con'), pow = this.st(bt, 'pow');
-      const assist = humanBat && this.human(this.fld) == null ? [1.2, 0.92, 0.78][this.diff] : 1;
-      const K = { contact: [0.9, 1.0, 0.085], power: [0.72, 0.78, 0.058], bunt: [1.3, 1.0, 0.6] }[sw.kind];
-      const cm = (0.82 + con * 0.035) * assist;
-      const reach = K[0] * cm, vtol = K[1] * cm, win = K[2] * (0.85 + con * 0.03) * assist;
+    if (!sw && pt.buntHold) { pt.swing = { t0: pt.t, kind: 'bunt' }; }
+    const sw2 = pt.swing;
+    if (sw2 && sw2.t0 <= pt.t + 0.001) {
+      const sw = sw2, age = pt.t - sw.t0;
+      const { reach, vtol, win } = this.swingZone(sw.kind);
       const timing = sw.kind === 'bunt' ? 0 : (age - IDEAL) / win, dx = x - pt.shift, dz = z - BAT_Z;
+      pt.swingU = sw.kind === 'bunt' ? null : (sw.t0 - pt.t0) / pt.T;
       if (Math.abs(timing) <= 1 && Math.abs(dx) <= reach && Math.abs(dz) <= vtol) {
         const q = clamp(1 - 0.45 * Math.pow(Math.abs(dx) / reach, 1.5) - 0.35 * Math.pow(Math.abs(dz) / vtol, 1.5) - 0.45 * Math.pow(Math.abs(timing), 1.5), 0.05, 1);
-        if (humanBat && sw.kind !== 'bunt') this.feedback(q >= 0.85 ? 'PERFECT' : timing > 0.4 ? 'EARLY' : timing < -0.4 ? 'LATE' : 'SOLID', q >= 0.85 ? '#3dffa0' : '#ffd84a');
+        if (humanBat && sw.kind === 'bunt') this.feedback('BUNT DOWN', '#3dffa0');
+        else if (humanBat) this.feedback(q >= 0.85 ? 'PERFECT' : timing > 0.4 ? 'EARLY' : timing < -0.4 ? 'LATE' : 'SOLID', q >= 0.85 ? '#3dffa0' : '#ffd84a');
         return this.contact(q, timing, dx, dz, sw.kind);
       }
-      if (humanBat) { const ox = Math.abs(dx) / reach, oz = Math.abs(dz) / vtol, ot = Math.abs(timing);
+      if (humanBat && sw.kind === 'bunt') this.feedback(Math.abs(dz) > vtol ? (dz > 0 ? 'BUNT MISSED · TOO HIGH' : 'BUNT MISSED · TOO LOW') : 'BUNT MISSED · WIDE', '#ff6a6a');
+      else if (humanBat) { const ox = Math.abs(dx) / reach, oz = Math.abs(dz) / vtol, ot = Math.abs(timing);
         const why = ot >= Math.max(ox, oz) ? (timing > 0 ? 'TOO EARLY' : 'TOO LATE') : ox >= oz ? (dx * pt.hand > 0 ? 'MISSED · OUTSIDE' : 'MISSED · INSIDE') : (dz > 0 ? 'MISSED · TOO HIGH' : 'MISSED · TOO LOW');
         this.feedback(why, '#ff6a6a'); }
       pt.result = 'whiff'; this.strike(true); return;
@@ -446,7 +456,7 @@ class Match {
   }
   updateFielder(f, dt, hum) {
     const b = this.ball; f.react -= dt;
-    if (hum != null && !(this.cfg.assist && !Input.axis(hum).x && !Input.axis(hum).y && !(b.held && b.held.f === f))) { // human-controlled (assist lets the AI steer when idle)
+    if (hum != null && !((this.cfg.assist || this.cfg.autoField) && !Input.axis(hum).x && !Input.axis(hum).y && !(b.held && b.held.f === f && !this.cfg.autoField))) { // human-controlled (assist lets the AI steer when idle)
       const a = Input.axis(hum); const sp = this.fspeed(f) * 1.05; const l = hyp(a.x, a.y) || 1;
       f.vx = a.x / l * sp * (a.x || a.y ? 1 : 0); f.vy = a.y / l * sp * (a.x || a.y ? 1 : 0); f.x += f.vx * dt; f.y += f.vy * dt;
       f.x = clamp(f.x, -300, 300); f.y = clamp(f.y, -40, 420); return;
@@ -539,7 +549,8 @@ class Match {
     if (hum != null) {
       if (Input.hit(hum, 'a')) { for (const rn of this.runners) if (!rn.out && !rn.scored && !rn.needTag) { const nxt = Math.min(4, Math.floor(rn.s + 1e-6) + 1); if (nxt > rn.tgt || rn.tgt % 1 !== 0) rn.tgt = Math.max(Math.ceil(rn.tgt - 1e-6), nxt); } Sfx.play('servo'); }
       if (Input.hit(hum, 'b')) { for (const rn of this.runners) if (!rn.out && !rn.scored) { const back = Math.max(rn.minBase, rn.s % 1 === 0 ? rn.s : Math.floor(rn.s)); if (back < rn.tgt) rn.tgt = back; } Sfx.play('servo'); }
-    } else this.cpuRunners(dt);
+    }
+    if (hum == null || this.cfg.autoRun) this.cpuRunners(dt);
     const live = this.runners.filter(r => !r.out && !r.scored).sort((a, c) => c.s - a.s);
     for (let i = 0; i < live.length; i++) {
       const rn = live[i]; if (rn.delay > 0) { rn.delay -= dt; continue; }
@@ -612,7 +623,7 @@ class Match {
   }
   humanHolder(f, pad, dt) {
     const ax = Input.axis(pad); f.holdT = (f.holdT || 0) + dt; if (ax.x || ax.y) f.holdT = 0;
-    if (this.cfg.assist && f.holdT > 1.3 && !Input.held(pad, 'a')) { this.cpuHolder(f, dt); return; }
+    if ((this.cfg.autoField && f.holdT > 0.05) || (this.cfg.assist && f.holdT > 1.3)) { if (!Input.held(pad, 'a')) { this.cpuHolder(f, dt); return; } }
     if (Input.hit(pad, 'a')) {
       const a = Input.axis(pad); let base = null;
       if (a.y > 0) base = 2; else if (a.x < 0) base = 3; else if (a.x > 0) base = 1; else if (a.y < 0) base = 4;
