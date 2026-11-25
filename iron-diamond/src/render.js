@@ -4,7 +4,7 @@ const ease = k => k * k * (3 - 2 * k);
 function matchCamera(m) {
   const k = ease(m.camK), c = m.cam;
   const fx = clamp(m.focus.x, -230, 230), fy = clamp(m.focus.y, 0, 330);
-  const pc = m.pitchCam(), bp = pc ? [2.6, 70, 10] : [0, -31, 11.5], bt = pc ? [0, 0, 3.0] : [0, 40, 2.6], bf = pc ? 1300 : 860;
+  const pc = m.pitchCam(), bp = pc ? [-4.8, 90, 13.5] : [0, -31, 11.5], bt = pc ? [0.4, 0, 3.6] : [0, 40, 2.6], bf = pc ? 1150 : 860;
   const fp = [fx * 0.7, fy - 150, 112 + fy * 0.1], ft = [fx, fy + 18, 0], ff = 640;
   const sh = m.shake * 1.2;
   c.set(lerp(bp[0], fp[0], k) + rnd(-sh, sh) * 0.3, lerp(bp[1], fp[1], k), lerp(bp[2], fp[2], k) + rnd(-sh, sh) * 0.2, lerp(bt[0], ft[0], k), lerp(bt[1], ft[1], k), lerp(bt[2], ft[2], k), lerp(bf, ff, k));
@@ -53,7 +53,7 @@ function drawMatch(ctx, m) {
     const pcam = m.pitchCam();
     let sc = 1; if (pitchView && f.pos === 'C') { o.back = !pcam; o.crouch = 0.5; o.alpha = pcam ? 0.7 : 0.42; sc = pcam ? 0.6 : 0.62; y = pcam ? -5.5 : -4.5; }
     if (pitchView && f.pos === 'P' && pt) {
-      o.back = pcam; if (pcam) o.alpha = 0.92;
+      o.back = pcam;
       if (pt.stage === 'windup') o.throwArm = clamp((pt.t - (pt.wt - 0.6)) / 0.6, 0, 1) * 0.6;
       else if (pt.stage === 'flight') o.throwArm = clamp(0.6 + (pt.t - pt.t0) / 0.25 * 0.4, 0, 1);
       else if (pt.stage === 'aim') o.ball = true;
@@ -239,7 +239,7 @@ function drawHUD(ctx, m, pitchView) {
   if (pitchView && m.pt && m.state !== 'intro') {
     // batter card
     const bt = m.batter(), bs = m.sides[m.bat];
-    const TL = Game.touchLand; robotCard(ctx, TL ? W - 354 : 14, TL ? 12 : H - 98, bt, bs, 'AT BAT', `${bs.batIdx + 1}. ${bt.pos}`, [['POW', m.st(bt, 'pow')], ['CON', m.st(bt, 'con')], ['SPD', m.st(bt, 'spd')]]);
+    const TL = Game.touchLand || m.pitchCam(); robotCard(ctx, TL ? W - 354 : 14, TL ? 12 : H - 98, bt, bs, 'AT BAT', `${bs.batIdx + 1}. ${bt.pos}`, [['POW', m.st(bt, 'pow')], ['CON', m.st(bt, 'con')], ['SPD', m.st(bt, 'spd')]]);
     const pr = m.pitcher(), ps = m.sides[m.fld];
     robotCard(ctx, W - 354, TL ? 102 : H - 98, pr, ps, 'PITCHING', `VEL ${m.st(pr, 'vel')} · BRK ${m.st(pr, 'brk')}`, null, pr.battery / 100);
     if (humanFld) drawPitchRail(ctx, m, pr, ps, TL);

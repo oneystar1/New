@@ -28,25 +28,62 @@
     const sc = Game.scene, live = sc instanceof GameScene && !sc.paused && !sc.m.over;
     if (!live && !(Game.taps || []).length) Input.touchLatch.a = true;
   });
-  // touch controls
+  // touch controls: a thumbstick plus A / B / Start that size themselves to the screen
   const touchEl = document.getElementById('touch');
   if (touchEl) {
     const bind = el => {
-      const k = el.dataset.k; const on = e => { e.preventDefault(); Input.touch[k] = true; Input.touchLatch[k] = true; el.classList.add('on'); unlock(); }; const off = e => { e.preventDefault(); Input.touch[k] = false; el.classList.remove('on'); };
-      el.addEventListener('pointerdown', on); el.addEventListener('pointerup', off); el.addEventListener('pointercancel', off); el.addEventListener('pointerleave', off);
+      const k = el.dataset.k;
+      el.addEventListener('pointerdown', e => { e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch (x) { } Input.touch[k] = true; Input.touchLatch[k] = true; el.classList.add('on'); unlock(); });
+      const off = e => { e.preventDefault(); Input.touch[k] = false; el.classList.remove('on'); };
+      el.addEventListener('pointerup', off); el.addEventListener('pointercancel', off);
     };
     touchEl.querySelectorAll('[data-k]').forEach(bind);
-    // d-pad: slide between directions
-    const dpad = document.getElementById('dpad');
-    if (dpad) {
-      const set = e => { const r = dpad.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5; Input.touch.left = x < -0.17; Input.touch.right = x > 0.17; Input.touch.up = y < -0.17; Input.touch.down = y > 0.17; };
-      const clear = () => { Input.touch.left = Input.touch.right = Input.touch.up = Input.touch.down = false; };
-      dpad.addEventListener('pointerdown', e => { e.preventDefault(); dpad.setPointerCapture(e.pointerId); set(e); unlock(); });
-      dpad.addEventListener('pointermove', e => { if (e.buttons || e.pointerType === 'touch') set(e); });
-      dpad.addEventListener('pointerup', clear); dpad.addEventListener('pointercancel', clear);
-    }
+    const stick = document.getElementById('stick'), knob = document.getElementById('knob'); let sid = null;
+    const DIRS = ['left', 'right', 'up', 'down'];
+    const setV = e => {
+      const r = stick.getBoundingClientRect(), R = r.width / 2, m = R * 0.6; let dx = e.clientX - (r.left + R), dy = e.clientY - (r.top + R); const l = hyp(dx, dy);
+      if (l > m) { dx *= m / l; dy *= m / l; } knob.style.transform = `translate(${dx}px, ${dy}px)`;
+      const nx = dx / m, ny = dy / m, th = 0.38, now = { left: nx < -th, right: nx > th, up: ny < -th, down: ny > th };
+      for (const d of DIRS) { if (now[d] && !Input.touch[d]) Input.touchLatch[d] = true; Input.touch[d] = now[d]; }
+    };
+    const clear = () => { sid = null; stick.classList.remove('on'); knob.style.transform = ''; for (const d of DIRS) Input.touch[d] = false; };
+    stick.addEventListener('pointerdown', e => { e.preventDefault(); if (sid != null) return; sid = e.pointerId; try { stick.setPointerCapture(sid); } catch (x) { } stick.classList.add('on'); setV(e); unlock(); });
+    stick.addEventListener('pointermove', e => { if (e.pointerId === sid) setV(e); });
+    stick.addEventListener('pointerup', e => { if (e.pointerId === sid) clear(); }); stick.addEventListener('pointercancel', e => { if (e.pointerId === sid) clear(); });
     if (matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch');
   }
+  // lay out picture + controls: below the picture when there's room (tablets), floating over it otherwise (phones sideways)
+  const stageEl = document.getElementById('stage');
+  function layoutTouch() {
+    const B = document.body; if (!B.classList.contains('touch')) return;
+    const vw = innerWidth, vh = innerHeight, base = Math.min(vw, vh), land = vw > vh;
+    let stick = clamp(base * 0.3, 120, 260), btn = clamp(base * 0.15, 64, 132), cw = vw - 32, ch = cw * 9 / 16, overlay = false;
+    if (!land) { const room = vh - ch - 90; stick = Math.max(110, Math.min(stick, room * 0.8)); btn = Math.max(60, Math.min(btn, room * 0.4)); }
+    else {
+      ch = Math.min(vh - 8, cw * 9 / 16); cw = ch * 16 / 9; let room = vh - ch - 16;
+      if (room < stick * 0.75) { const need = stick * 0.78, ch2 = vh - need - 16; if (ch2 * 16 / 9 >= vw * 0.75) { ch = ch2; cw = ch * 16 / 9; room = need; } else overlay = true; }
+      if (!overlay) { stick = Math.min(stick, room - 6); btn = Math.min(btn, (room - 6) * 0.5); }
+    }
+    stageEl.style.width = Math.floor(cw) + 'px';
+    document.documentElement.style.setProperty('--stick', Math.round(stick) + 'px'); document.documentElement.style.setProperty('--btn', Math.round(btn) + 'px');
+    B.classList.toggle('overlay', overlay);
+  }
+  addEventListener('resize', layoutTouch); addEventListener('orientationchange', () => setTimeout(layoutTouch, 200)); layoutTouch();
+  // A / B show what they do right now
+  const la = document.getElementById('la'), lb = document.getElementById('lb'); let lastLbl = '';
+  function touchLabels() {
+    const sc = Game.scene, m = sc && sc.m; let a = 'OK', b = 'BACK';
+    if (m && !sc.paused) {
+      const hb = m.pad(m.bat) != null, hf = m.pad(m.fld) != null;
+      if (m.state === 'pitch') { if (hb) { a = 'SWING'; b = 'POWER'; } else if (hf) { a = m.pt.pickSel ? 'PICKOFF' : 'PITCH'; b = 'TYPE'; } }
+      else if (m.state === 'play') { if (hf) { a = m.ball && m.ball.held && m.ball.held.f ? 'THROW' : 'CATCH'; b = '—'; } else if (hb) { a = 'RUN'; b = 'BACK'; } }
+      else if (m.state === 'clash') { a = 'STRIKE'; b = 'HEAVY'; }
+      else if (m.state === 'replay') { a = 'SKIP'; b = '—'; }
+      else { a = '—'; b = '—'; }
+    }
+    const key = a + '|' + b; if (key !== lastLbl && la && lb) { lastLbl = key; la.textContent = a; lb.textContent = b; }
+  }
+
 
   const fsb = document.getElementById('fs');
   if (fsb) {
@@ -84,7 +121,8 @@
   function frame(now) {
     const raw = now - last; ema = ema * 0.95 + Math.min(100, raw) * 0.05;
     if (FX.high && FX.auto && document.visibilityState === 'visible' && now > 4000) { slowT = ema > 24 ? slowT + raw / 1000 : 0; if (slowT > 3) { FX.high = false; toast = 'EFFECTS LOWERED FOR SMOOTHER PLAY'; toastT = 3; } }
-    Game.touchLand = document.body.classList.contains('touch') && innerWidth > innerHeight;
+    Game.touchLand = document.body.classList.contains('overlay');
+    touchLabels();
     acc += Math.min(0.1, (now - last) / 1000); last = now;
     let n = 0;
     while (acc >= STEP && n < 5) {

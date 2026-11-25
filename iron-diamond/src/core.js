@@ -86,8 +86,9 @@ const Sfx = {
     this.rev.buffer = ir; const rg = ac.createGain(); rg.gain.value = 0.55; this.rev.connect(rg); rg.connect(this.master);
     const len = ac.sampleRate * 2; this.noiseBuf = ac.createBuffer(1, len, ac.sampleRate);
     const d = this.noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-    this.startMusic(); this.crowdBed();
+    this.startMusic(); this.unlockSpeech();
   },
+  unlockSpeech() { try { if (!window.speechSynthesis || this._spk) return; this._spk = true; const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); speechSynthesis.getVoices(); } catch (e) { } },
   toggleMute() { this.muted = !this.muted; store.set('ironDiamond.muted', this.muted); if (this.master) this.master.gain.value = this.muted ? 0 : 0.7; if (this.muted) try { speechSynthesis.cancel(); } catch (e) { } },
   out(node, wet) { node.connect(this.sfx); if (wet) { const g = this.ac.createGain(); g.gain.value = wet; node.connect(g); g.connect(this.rev); } },
   env(g, t, a, peak, d) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); },
@@ -127,12 +128,13 @@ const Sfx = {
   // crowd: noise through vowel-like formants with a soft attack, plus whistles
   swell(dur, vol, base = 1, whistles = 2) {
     if (!this.ac) return; const ac = this.ac, t = ac.currentTime;
-    for (const [f, q, k] of [[520 * base, 2.2, 1], [1150 * base, 2.5, 0.7], [2600 * base, 3, 0.35]]) {
+    for (const [f, q, k] of [[420 * base, 1.4, 1], [880 * base, 1.8, 0.45]]) {
       const src = ac.createBufferSource(); src.buffer = this.noiseBuf; src.loop = true; const fl = ac.createBiquadFilter(); fl.type = 'bandpass'; fl.frequency.value = f; fl.Q.value = q; const g = ac.createGain();
+      const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1400; fl.connect(lp);
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol * k, t + 0.35); g.gain.setValueAtTime(vol * k, t + dur * 0.45); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      src.connect(fl); fl.connect(g); this.out(g, 0.5); src.start(t, Math.random()); src.stop(t + dur + 0.05);
+      src.connect(fl); lp.connect(g); this.out(g, 0.25); src.start(t, Math.random()); src.stop(t + dur + 0.05);
     }
-    for (let i = 0; i < whistles; i++) { const f = 1700 + Math.random() * 900; this.osc('sine', f, 0.35, vol * 0.18, { when: 0.2 + Math.random() * dur * 0.5, to: f * 1.25, attack: 0.05, wet: 0.4 }); }
+    for (let i = 0; i < Math.min(1, whistles); i++) { const f = 1700 + Math.random() * 900; this.osc('sine', f, 0.35, vol * 0.18, { when: 0.2 + Math.random() * dur * 0.5, to: f * 1.25, attack: 0.05, wet: 0.4 }); }
   },
   crowdBed() {
     if (!this.ac || this._bed) return; const ac = this.ac, g = ac.createGain(); g.gain.value = 0.05; this.out(g, 0.6);
@@ -143,7 +145,7 @@ const Sfx = {
   say(text) {
     try {
       if (this.muted || (typeof Game !== 'undefined' && Game.settings && Game.settings.announcer === false) || !window.speechSynthesis) return;
-      speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.pitch = 0.35; u.rate = 1.02; u.volume = 0.9;
+      if (speechSynthesis.speaking) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.pitch = 0.35; u.rate = 1.02; u.volume = 0.9;
       const vs = speechSynthesis.getVoices(), v = vs.find(x => /en(-|_)US/i.test(x.lang) && /male|david|alex|daniel|fred/i.test(x.name)) || vs.find(x => /^en/i.test(x.lang)); if (v) u.voice = v;
       speechSynthesis.speak(u);
     } catch (e) { }
@@ -160,7 +162,7 @@ const Sfx = {
       case 'cash': this.fm(1318, 2, 0.8, 0.12, 0.07); this.fm(1760, 2, 0.8, 0.3, 0.07, { when: 0.08, wet: 0.3 }); break;
       case 'servo': this.osc('sawtooth', 260, 0.16, 0.035, { to: 640, lp: 1800, q: 5 }); this.nz(0.14, 0.02, { f: 3000, q: 3 }); break;
       // ---- pitching & hitting
-      case 'pitch': { const d = clamp(o.dur || 0.7, 0.3, 1.2); this.nz(d, 0.16, { f: 350, to: 2800, q: 1.4, attack: d * 0.7, wet: 0.15 }); this.osc('sawtooth', 120, 0.22, 0.04, { to: 340, lp: 900 }); break; }
+      case 'pitch': { const d = clamp(o.dur || 0.7, 0.3, 1.2); this.nz(d, 0.1, { f: 350, to: 2800, q: 1.4, attack: d * 0.7, wet: 0.15 }); this.osc('sawtooth', 120, 0.22, 0.04, { to: 340, lp: 900 }); break; }
       case 'plasma': { const d = clamp(o.dur || 0.7, 0.3, 1.2); this.nz(d, 0.14, { f: 500, to: 4000, q: 3, attack: d * 0.6 }); this.fm(220, 1.5, 6, d, 0.06, { attack: d * 0.5 }); this.osc('sawtooth', 160, d, 0.05, { to: 900, lp: 2400, q: 6 }); break; }
       case 'swing': this.nz(0.17, 0.12, { f: 500, to: 2200, q: 1.2, attack: 0.05 }); this.osc('sawtooth', 300, 0.1, 0.02, { to: 900, lp: 1500 }); break;
       case 'whiff': this.nz(0.14, 0.09, { f: 1600, to: 500, q: 1.1, attack: 0.03 }); break;
@@ -175,16 +177,16 @@ const Sfx = {
       case 'mitt': this.nz(0.07, 0.55, { type: 'lowpass', f: 1300, wet: 0.25 }); this.osc('sine', 190, 0.09, 0.35, { to: 85 }); this.nz(0.012, 0.25, { type: 'highpass', f: 4200 }); break;
       case 'catch': this.nz(0.05, 0.3, { type: 'lowpass', f: 1000 }); this.osc('sine', 160, 0.06, 0.16, { to: 90 }); break;
       case 'throw': this.nz(0.2, 0.08, { f: 700, to: 2400, q: 1.3, attack: 0.08 }); break;
-      case 'foul': this.nz(0.025, 0.4, { type: 'highpass', f: 2600 }); this.fm(1500, 2.76, 2, 0.12, 0.06); this.swell(0.9, 0.06, 0.8, 0); break;
+      case 'foul': this.nz(0.025, 0.4, { type: 'highpass', f: 2600 }); this.fm(1500, 2.76, 2, 0.12, 0.06); this.swell(0.8, 0.04, 0.8, 0); break;
       // ---- calls
       case 'out': this.osc('sawtooth', 220, 0.32, 0.12, { lp: 1700, lpTo: 350, wet: 0.35 }); this.osc('sawtooth', 165, 0.32, 0.1, { lp: 1700, lpTo: 350, detune: 7 }); break;
       case 'safe': this.fm(880, 3.5, 0.6, 0.45, 0.08, { wet: 0.35 }); this.fm(1320, 3.5, 0.6, 0.5, 0.06, { when: 0.07, wet: 0.35 }); break;
-      case 'run': [523, 659, 784, 1047].forEach((f, i) => this.osc('square', f, 0.14, 0.05, { when: i * 0.09, lp: 2200, wet: 0.4 })); this.swell(1.4, 0.09, 1, 2); break;
+      case 'run': [523, 659, 784, 1047].forEach((f, i) => this.osc('square', f, 0.14, 0.05, { when: i * 0.09, lp: 2200, wet: 0.4 })); this.swell(1.3, 0.06, 1, 0); break;
       case 'hr': { const ch = [[392, 494, 587], [440, 554, 659], [523, 659, 784]]; ch.forEach((c, k) => c.forEach(f => [0, 7, -7].forEach(dt => this.osc('sawtooth', f, k === 2 ? 0.9 : 0.25, 0.028, { when: k * 0.22, detune: dt, attack: 0.03, lp: 3200, lpTo: 900, wet: 0.5 }))));
-        this.swell(3.2, 0.2, 1, 5); for (let i = 0; i < 4; i++) this.nz(0.35, 0.25, { type: 'lowpass', f: 2200, to: 300, when: 0.8 + i * 0.3, wet: 0.7 }); break; }
-      case 'crowd': this.swell(1.8, 0.1, 1, 1); break;
-      case 'cheer': this.swell(1.9, 0.14, 1, 2); break;
-      case 'roar': this.swell(2.8, 0.22, 0.9, 4); break;
+        this.swell(2.8, 0.13, 1, 1); for (let i = 0; i < 4; i++) this.nz(0.35, 0.25, { type: 'lowpass', f: 2200, to: 300, when: 0.8 + i * 0.3, wet: 0.7 }); break; }
+      case 'crowd': this.swell(1.6, 0.06, 1, 0); break;
+      case 'cheer': this.swell(1.7, 0.09, 1, 1); break;
+      case 'roar': this.swell(2.4, 0.14, 0.9, 1); break;
       // ---- clash
       case 'clash': this.fm(150, 1.41, 9, 1.4, 0.22, { wet: 0.6 }); this.nz(0.5, 0.35, { type: 'lowpass', f: 3000, to: 400 }); this.osc('sawtooth', 440, 0.5, 0.05, { to: 880, lp: 2500, when: 0.1 }); break;
       case 'hit': this.fm(420, 2.3, 5, 0.16, 0.18, { wet: 0.3 }); this.nz(0.08, 0.4, { f: 1600, q: 1.5 }); this.osc('sine', 120, 0.1, 0.3, { to: 60 }); break;
@@ -205,8 +207,8 @@ const Sfx = {
         const when = next - this.ac.currentTime, bar = Math.floor(i / 16) % 4, s = i % 16, r = roots[bar];
         if (this.musicOn) {
           if (s % 4 === 0) { this.tone(55, 0.18, 'sine', 0.55, -25, when, this.music); }
-          if (s === 4 || s === 12) this.noise(0.14, 0.35, 1800, 0.7, when, 'bandpass', this.music);
-          if (s % 2 === 1) this.noise(0.03, 0.12, 8000, 1, when, 'highpass', this.music);
+          if (s === 4 || s === 12) this.noise(0.12, 0.2, 1400, 0.9, when, 'bandpass', this.music);
+          if (s % 4 === 2) this.noise(0.025, 0.04, 9000, 1, when, 'highpass', this.music);
           if (s % 2 === 0) this.tone(mtof(r - 12 + (s % 8 === 6 ? 12 : 0)), step * 1.7, 'sawtooth', 0.12, 0, when, this.music);
           const arp = [0, 7, 12, 15, 12, 7, 3, 7][s % 8];
           if (s % 2 === 0) this.tone(mtof(r + 24 + arp), step * 1.2, 'square', 0.035, 0, when, this.music);

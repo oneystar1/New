@@ -88,6 +88,7 @@ class Match {
   }
   wait(sec, fn) { this.state = 'wait'; this.timer = sec; this.next = fn; }
   startHalf() {
+    if (this.inning === 1 && this.half === 0 && !this.saidPlayBall) { this.saidPlayBall = true; Sfx.say(this.cfg.derby ? 'Home run derby!' : this.cfg.practice ? 'Welcome to training.' : 'Play ball!'); }
     if (this.cfg.derby) { this.outs = 0; this.buildFielders(); this.view = 'bat'; this.banner('HOME RUN DERBY', '#ffffff', this.sides[0].team.g, 1.6, 48, `${this.cfg.derby.outs} OUTS · ONLY HOMERS COUNT`); this.derby = { hr: 0, outs: 0, long: 0, total: 0, last: null }; return this.wait(1.6, () => this.newPitch(true)); }
     if (this.cfg.practice) { this.outs = 0; this.buildFielders(); this.view = 'bat'; return this.wait(0.3, () => this.newPitch(true)); }
     this.outs = 0; this.bases = [null, null, null]; this.balls = 0; this.strikes = 0;

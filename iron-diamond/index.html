@@ -26,36 +26,36 @@
   #help { width: 100%; max-width: 1280px; box-sizing: border-box; display: flex; flex-wrap: wrap; gap: 6px 22px; justify-content: center; font-size: 14px; font-weight: 700; color: var(--muted); }
   #help b { color: var(--fg); font-weight: 700; }
   kbd { font-family: inherit; background: #182040; border: 1px solid #34407a; border-bottom-width: 3px; border-radius: 4px; padding: 0 6px; color: #fff; font-size: 13px; }
-  #touch { display: none; width: 100%; max-width: 640px; justify-content: space-between; align-items: center; user-select: none; -webkit-user-select: none; }
-  body.touch #touch { display: flex; }
+  :root { --stick: 170px; --btn: 84px; }
+  #touch { display: none; user-select: none; -webkit-user-select: none; touch-action: none; }
+  body.touch #touch { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; width: 100%; box-sizing: border-box; gap: 12px; }
   body.touch #help { display: none; }
-  #dpad { position: relative; width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle, #141b36 0 55%, #0d1226 56%); border: 2px solid var(--line); touch-action: none; }
-  #dpad span { position: absolute; color: var(--muted); font-size: 20px; font-weight: 700; }
-  #dpad .u { left: 50%; top: 8px; transform: translateX(-50%); } #dpad .d { left: 50%; bottom: 8px; transform: translateX(-50%); }
-  #dpad .l { top: 50%; left: 12px; transform: translateY(-50%); } #dpad .r { top: 50%; right: 12px; transform: translateY(-50%); }
-  .mid { display: flex; flex-direction: column; gap: 10px; align-items: center; }
-  .btns { position: relative; width: 160px; height: 140px; }
-  #touch button { font-family: Orbitron, sans-serif; font-weight: 900; color: #fff; background: #141b36; border: 2px solid var(--line); touch-action: none; }
+  body.touch:not(.overlay) #touch { flex: 1 1 auto; align-content: center; padding-bottom: 12px; }
+  #stick { justify-self: start; position: relative; width: var(--stick); height: var(--stick); border-radius: 50%; touch-action: none;
+    background: radial-gradient(circle, rgba(70,224,255,.08) 0 28%, rgba(16,22,46,.9) 29% 100%); border: 2px solid rgba(70,224,255,.5); box-shadow: inset 0 0 30px rgba(70,224,255,.14), 0 8px 24px rgba(0,0,0,.45); }
+  #stick i { position: absolute; color: rgba(160,190,230,.55); font-style: normal; font-size: calc(var(--stick) * .11); line-height: 1; }
+  #stick .u { left: 50%; top: 6%; transform: translateX(-50%); } #stick .d { left: 50%; bottom: 6%; transform: translateX(-50%); }
+  #stick .l { top: 50%; left: 6%; transform: translateY(-50%); } #stick .r { top: 50%; right: 6%; transform: translateY(-50%); }
+  #knob { position: absolute; left: 50%; top: 50%; width: calc(var(--stick) * .44); height: calc(var(--stick) * .44); margin: calc(var(--stick) * -.22) 0 0 calc(var(--stick) * -.22); border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle at 35% 30%, #6a7cc0, #1d2547 72%); border: 2px solid #7fe8ff; box-shadow: 0 0 18px rgba(70,224,255,.5); transition: transform .08s; }
+  #stick.on #knob { transition: none; }
+  .btns { justify-self: end; display: grid; grid-template-columns: auto auto; gap: calc(var(--btn) * .14); align-items: end; }
+  #touch button { font-family: Orbitron, sans-serif; font-weight: 900; color: #fff; background: #141b36; border: 2px solid var(--line); touch-action: none; -webkit-user-select: none; user-select: none; }
   #touch button.on { background: #26305a; transform: scale(.94); }
+  .btns button { width: var(--btn); height: var(--btn); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: calc(var(--btn) * .34); line-height: 1; gap: calc(var(--btn) * .04); }
+  .btns button span { font-family: Rajdhani, sans-serif; font-size: calc(var(--btn) * .15); letter-spacing: .05em; color: #c8d2f0; }
+  .btns .b { margin-top: calc(var(--btn) * .7); border-color: var(--pink) !important; box-shadow: 0 0 16px rgba(255,61,138,.3); }
+  .btns .a { margin-bottom: calc(var(--btn) * .5); border-color: var(--accent) !important; box-shadow: 0 0 16px rgba(70,224,255,.3); }
+  .mid { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+  .mid button { border-radius: 999px; padding: .65em 1.2em; font-size: clamp(10px, calc(var(--btn) * .15), 15px); letter-spacing: .1em; white-space: nowrap; }
   #rotate { display: none; font-weight: 700; font-size: 14px; color: var(--muted); text-align: center; }
   @media (orientation: portrait) { body.touch #rotate { display: block; } }
-  body.touch #touch { max-width: 520px; }
-  .btns button { position: absolute; width: 66px; height: 66px; border-radius: 50%; font-size: 20px; }
-  .btns .a { right: 0; top: 10px; border-color: var(--accent) !important; box-shadow: 0 0 16px rgba(70,224,255,.3); }
-  .btns .b { left: 0; top: 64px; border-color: var(--pink) !important; box-shadow: 0 0 16px rgba(255,61,138,.3); }
-  .mid button { border-radius: 14px; padding: 8px 14px; font-size: 11px; letter-spacing: .1em; white-space: nowrap; }
-  @media (orientation: landscape) and (pointer: coarse) {
-    body.touch { padding: 4px; }
-    body.touch #stage { width: min(100%, calc((100dvh - 8px) * 16 / 9)); }
-    body.touch #touch { position: fixed; inset: auto 0 0 0; max-width: none; padding: 0 max(12px, env(safe-area-inset-left)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right)); box-sizing: border-box; pointer-events: none; opacity: .55; }
-    body.touch #dpad { width: 128px; height: 128px; }
-    body.touch .btns { width: 140px; height: 118px; }
-    body.touch .btns button { width: 58px; height: 58px; font-size: 18px; }
-    body.touch .btns .b { top: 56px; }
-    body.touch .mid button { padding: 6px 10px; font-size: 10px; }
-    body.touch #touch > * { pointer-events: auto; }
-    body.touch .mid { position: fixed; bottom: max(8px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); flex-direction: row; }
-  }
+  /* phones held sideways: controls float over the picture */
+  body.touch.overlay { padding: 4px; }
+  body.touch.overlay #touch { position: fixed; inset: auto 0 0 0; padding: 0 max(14px, env(safe-area-inset-left)) max(10px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-right)); pointer-events: none; }
+  body.touch.overlay #touch > * { pointer-events: auto; }
+  body.touch.overlay #stick, body.touch.overlay .btns button { opacity: .62; }
+  body.touch.overlay .mid { flex-direction: row; align-self: end; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -71,9 +71,9 @@
 </div>
 <div id="rotate">Turn your phone sideways for the big-screen view</div>
 <div id="touch">
-  <div id="dpad" aria-label="Direction pad"><span class="u">▲</span><span class="d">▼</span><span class="l">◀</span><span class="r">▶</span></div>
+  <div id="stick" aria-label="Joystick"><i class="u">▲</i><i class="d">▼</i><i class="l">◀</i><i class="r">▶</i><div id="knob"></div></div>
   <div class="mid"><button data-k="start" aria-label="Start">START</button><button id="fs" aria-label="Full screen">⤢ FULL</button></div>
-  <div class="btns"><button class="b" data-k="b" aria-label="B button">B</button><button class="a" data-k="a" aria-label="A button">A</button></div>
+  <div class="btns"><button class="b" data-k="b" aria-label="B button">B<span id="lb">BACK</span></button><button class="a" data-k="a" aria-label="A button">A<span id="la">OK</span></button></div>
 </div>
 <script src="src/core.js"></script>
 <script src="src/data.js"></script>

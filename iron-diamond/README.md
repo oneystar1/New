@@ -13,7 +13,15 @@ npm start      # then http://localhost:8080/iron-diamond/
 ![batting](../docs/screenshots/iron-diamond/batting.png)
 ![clash](../docs/screenshots/iron-diamond/clash.png)
 
-## On a phone
+## On a phone or tablet
+
+Touch screens get a thumbstick (slide your thumb; the knob follows it) and big
+A / B buttons that are labelled with what they do right now (SWING, POWER,
+PITCH, THROW, STRIKE…). Everything scales to the screen: on tablets the
+controls sit below the picture at full size; on a phone held sideways they float
+over it, translucent.
+
+
 
 Hold the phone sideways for the full-screen view; the d-pad, A, B and Start
 appear as translucent touch buttons and the HUD moves to the top of the screen.
@@ -120,16 +128,15 @@ replaced from the bench (or by a scrap drone).
 
 ## Cameras and sound
 
-- **Pitching view**: when you pitch against the CPU the camera sits over the
-  pitcher's shoulder looking in at the batter (left/right aiming is mirrored to
+- **Pitching view**: when you pitch against the CPU the camera sits behind and
+  beside the pitcher (you see his back in the lower left) looking in at the batter (left/right aiming is mirrored to
   match); batting stays behind the plate. The switch to the fielding camera is a
   quick broadcast-style cut. Settings → Pitching View can put it back behind the
   batter.
 - **Sound**: all synthesized, with a stadium reverb: a layered bat crack that
   gets louder and brighter the better you square it up, a mitt pop, a pitch
   whoosh timed to the flight, metallic FM clangs in clashes, explosions, a
-  formant crowd with whistles, and brass fanfares on homers. An optional
-  **announcer** (Settings) calls strikeouts, walks, homers, steals, clashes and
+  formant crowd with whistles, and brass fanfares on homers. The **announcer** (on by default; Settings) calls strikeouts, walks, homers, steals, clashes and
   the final out using the browser's speech voice.
 
 ## Broadcast touches

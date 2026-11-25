@@ -7,6 +7,7 @@ const Game = {
   save() { store.set('ironDiamond.settings', this.settings); Sfx.musicOn = this.settings.music; applyFx(); },
 };
 function applyFx() { const f = Game.settings.fx; FX.high = f !== 'low'; FX.auto = f === 'auto'; FX.haptics = Game.settings.haptics; }
+if (!Game.settings._v7) { Game.settings.announcer = true; Game.settings._v7 = true; store.set('ironDiamond.settings', Game.settings); }
 Sfx.musicOn = Game.settings.music; applyFx();
 const DIFF_NAMES = ['ROOKIE', 'PRO', 'LEGEND'];
 function tapZone(x, y, w, h, fn) { (Game.taps = Game.taps || []).push({ x, y, w, h, fn }); }
@@ -423,7 +424,7 @@ class SettingsScene {
       { label: 'CLASHES', value: s.clash ? 'ON' : 'OFF', ch: () => { s.clash = !s.clash; } },
       { label: 'EFFECTS', value: s.fx.toUpperCase(), ch: cyc('fx', ['auto', 'high', 'low']), help: 'AUTO lowers glow and light effects on slow phones' },
       { label: 'SOUND', value: Sfx.muted ? 'OFF' : 'ON', ch: () => Sfx.toggleMute() },
-      { label: 'ANNOUNCER', value: s.announcer ? 'ON' : 'OFF', ch: () => { s.announcer = !s.announcer; }, help: 'A stadium voice calls strikeouts, homers, steals and clashes' },
+      { label: 'ANNOUNCER', value: s.announcer ? 'ON' : 'OFF', ch: () => { s.announcer = !s.announcer; if (s.announcer) setTimeout(() => Sfx.say('Announcer on.'), 50); }, help: 'A stadium voice calls strikeouts, homers, steals and clashes' },
       { label: 'MUSIC', value: s.music ? 'ON' : 'OFF', ch: () => { s.music = !s.music; } },
       { label: 'VIBRATION', value: s.haptics ? 'ON' : 'OFF', ch: () => { s.haptics = !s.haptics; } },
       { label: 'BACK', back: true },
