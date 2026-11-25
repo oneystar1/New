@@ -2,7 +2,7 @@
 'use strict';
 const Game = {
   scene: null, t: 0,
-  settings: Object.assign({ innings: 3, diff: 1, clash: true, music: true, fx: 'auto', haptics: true, field: 'assist', run: 'auto', meter: true }, store.get('ironDiamond.settings', {})),
+  settings: Object.assign({ innings: 3, diff: 1, clash: true, music: true, fx: 'auto', haptics: true, field: 'assist', run: 'auto', meter: true, pitchView: 'pitcher', announcer: true }, store.get('ironDiamond.settings', {})),
   set(s) { this.scene = s; s.enter && s.enter(); },
   save() { store.set('ironDiamond.settings', this.settings); Sfx.musicOn = this.settings.music; applyFx(); },
 };
@@ -21,9 +21,9 @@ function drawBackdrop(ctx, t, team, dim = 0.55) {
   ctx.fillStyle = `rgba(4,6,16,${dim})`; ctx.fillRect(0, 0, W, H);
 }
 function menuList(ctx, items, sel, x, y, opts = {}) {
-  const w = opts.w || 360, h = opts.h || 46;
+  const w = opts.w || 360, h = opts.h || 46, gp = opts.gap ?? 8;
   items.forEach((it, i) => {
-    const yy = y + i * (h + 8), on = i === sel, label = typeof it === 'string' ? it : it.label, dis = it.disabled;
+    const yy = y + i * (h + gp), on = i === sel, label = typeof it === 'string' ? it : it.label, dis = it.disabled;
     ctx.save(); rrect(ctx, x - w / 2, yy, w, h, 8);
     ctx.fillStyle = on ? 'rgba(70,224,255,0.18)' : 'rgba(10,14,30,0.65)'; ctx.fill();
     ctx.strokeStyle = on ? '#46e0ff' : 'rgba(120,140,200,0.25)'; ctx.lineWidth = on ? 2 : 1; ctx.stroke(); ctx.restore();
@@ -179,7 +179,7 @@ class VsScene {
     this.t += dt;
     if (this.t > 0.6 && (Input.anyHit('start') || Input.anyHit('a'))) {
       Sfx.play('ok'); const s = Game.settings;
-      const cfg = { teams: this.teams, rosters: this.rosters, ctrl: this.ctrl, innings: s.innings, diff: s.diff, clash: s.clash, up: this.extra.up, assist: s.field === 'assist', autoField: s.field === 'auto', autoRun: s.run === 'auto', meter: s.meter };
+      const cfg = { teams: this.teams, rosters: this.rosters, ctrl: this.ctrl, innings: s.innings, diff: s.diff, clash: s.clash, up: this.extra.up, assist: s.field === 'assist', autoField: s.field === 'auto', autoRun: s.run === 'auto', meter: s.meter, pitchView: s.pitchView };
       const gs = new GameScene(cfg, this.extra.onEnd || (m => Game.set(new ResultScene(m, null)))); gs.onQuit = this.extra.onQuit; Game.set(gs);
     }
     if (Input.anyHit('b') && !this.extra.onEnd) { Sfx.play('back'); Game.set(new ModeScene()); }
@@ -418,10 +418,12 @@ class SettingsScene {
       { label: 'DIFFICULTY', value: DIFF_NAMES[s.diff], ch: d => { s.diff = (s.diff + d + 3) % 3; } },
       { label: 'FIELDING', value: s.field.toUpperCase(), ch: cyc('field', ['assist', 'auto', 'manual']), help: 'ASSIST: chases when you let go · AUTO: CPU fields, you can take over' },
       { label: 'BASE RUNNING', value: s.run.toUpperCase(), ch: cyc('run', ['auto', 'manual']), help: 'AUTO: runners take smart extra bases · A / B still override' },
+      { label: 'PITCHING VIEW', value: s.pitchView === 'pitcher' ? 'BEHIND PITCHER' : 'BEHIND BATTER', ch: cyc('pitchView', ['pitcher', 'batter']), help: 'Camera angle while you pitch against the CPU' },
       { label: 'TIMING METER', value: s.meter ? 'ON' : 'OFF', ch: () => { s.meter = !s.meter; }, help: 'Shows the swing window while you bat' },
       { label: 'CLASHES', value: s.clash ? 'ON' : 'OFF', ch: () => { s.clash = !s.clash; } },
       { label: 'EFFECTS', value: s.fx.toUpperCase(), ch: cyc('fx', ['auto', 'high', 'low']), help: 'AUTO lowers glow and light effects on slow phones' },
       { label: 'SOUND', value: Sfx.muted ? 'OFF' : 'ON', ch: () => Sfx.toggleMute() },
+      { label: 'ANNOUNCER', value: s.announcer ? 'ON' : 'OFF', ch: () => { s.announcer = !s.announcer; }, help: 'A stadium voice calls strikeouts, homers, steals and clashes' },
       { label: 'MUSIC', value: s.music ? 'ON' : 'OFF', ch: () => { s.music = !s.music; } },
       { label: 'VIBRATION', value: s.haptics ? 'ON' : 'OFF', ch: () => { s.haptics = !s.haptics; } },
       { label: 'BACK', back: true },
@@ -435,7 +437,7 @@ class SettingsScene {
   }
   draw(ctx) {
     drawBackdrop(ctx, this.t + 300, null, 0.72); glowTxt(ctx, 'SETTINGS', W / 2, 36, 32, '#ffffff', '#46e0ff');
-    const rows = this.rows(); menuList(ctx, rows, this.sel, W / 2, 62, { w: 460, h: 34 });
+    const rows = this.rows(); menuList(ctx, rows, this.sel, W / 2, 58, { w: 460, h: 30, gap: 3 });
     footer(ctx, rows[this.sel].help || '←/→ OR TAP TO CHANGE   ·   B BACK');
   }
 }

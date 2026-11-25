@@ -118,6 +118,20 @@ replaced from the bench (or by a scrap drone).
 - **Mound visit**: once per game, from the pause menu, recharges your pitcher's
   battery by 25.
 
+## Cameras and sound
+
+- **Pitching view**: when you pitch against the CPU the camera sits over the
+  pitcher's shoulder looking in at the batter (left/right aiming is mirrored to
+  match); batting stays behind the plate. The switch to the fielding camera is a
+  quick broadcast-style cut. Settings → Pitching View can put it back behind the
+  batter.
+- **Sound**: all synthesized, with a stadium reverb: a layered bat crack that
+  gets louder and brighter the better you square it up, a mitt pop, a pitch
+  whoosh timed to the flight, metallic FM clangs in clashes, explosions, a
+  formant crowd with whistles, and brass fanfares on homers. An optional
+  **announcer** (Settings) calls strikeouts, walks, homers, steals, clashes and
+  the final out using the browser's speech voice.
+
 ## Broadcast touches
 
 - **Instant replay**: home runs, walk-offs and long running catches replay at
@@ -147,7 +161,7 @@ Four robot frames:
 
 - **Striker**: balanced combat android
 - **Titan**: treaded heavy siege frame; huge power and armor, slow
-- **Vector**: hover drone; fastest runner and best glove, fragile
+- **Vector**: angular hover sentinel with a floating helm; fastest runner and best glove, fragile
 - **Raptor**: digitigrade hunter-killer; quick and vicious in a clash
 
 ## Code

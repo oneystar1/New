@@ -32,6 +32,10 @@ const Park = {
     const ring = [[-62, -10, 0], [lp[0], lp[1] - 60, 0], ...arc, [rp[0], rp[1] - 60, 0], [62, -10, 0]];
     for (let i = 0; i < ring.length - 1; i++) { tier(ring[i], ring[i + 1], FENCE_H, 30, 4, 56); tier(ring[i], ring[i + 1], 34, 54, 62, 118); }
     this.ring = ring;
+    this.homeStands = []; const bs = [[62, -10, 0], ...this.backstop, [-62, -10, 0]];
+    for (let i = 0; i < bs.length - 1; i++) { const a = bs[i], b = bs[i + 1], dx = b[0] - a[0], dy = b[1] - a[1], l = hyp(dx, dy), nx = -dy / l, ny = dx / l;
+      for (const [h0, h1, o0, o1] of [[7, 26, 3, 44], [30, 52, 50, 100]]) this.homeStands.push({ pts: [[a[0] + nx * o0, a[1] + ny * o0, h0], [b[0] + nx * o0, b[1] + ny * o0, h0], [b[0] + nx * o1, b[1] + ny * o1, h1], [a[0] + nx * o1, a[1] + ny * o1, h1]] }); }
+    const rng2 = mulberry(91); this.homeCrowd = []; for (let i = 0; i < 380; i++) { const q = this.homeStands[Math.floor(rng2() * this.homeStands.length)].pts, u = rng2(), v = rng2(); const p0 = q[0].map((c, k) => lerp(c, q[1][k], u)), p1 = q[3].map((c, k) => lerp(c, q[2][k], u)); this.homeCrowd.push({ p: p0.map((c, k) => lerp(c, p1[k], v)), ph: rng2() * TAU, c: rng2() < 0.15 }); }
     // crowd lights: random dots on the stand slopes
     const rng = mulberry(77); this.crowd = [];
     for (let i = 0; i < 1100; i++) {
@@ -47,7 +51,7 @@ const Park = {
     this.skyStars = []; for (let i = 0; i < 90; i++) this.skyStars.push([rng() * W, rng() * H * 0.5, rng()]);
     this.skyline = []; let x = 0; while (x < W + 60) { const w = 18 + rng() * 40; this.skyline.push([x, w, 30 + rng() * 80, rng()]); x += w + 2; }
   },
-  draw(ctx, cam, homeTeam, t, sb) {
+  draw(ctx, cam, homeTeam, t, sb, opt = {}) {
     this.build();
     const hz = cam.proj(cam.pos.x + cam.F[0] * 5000, cam.pos.y + cam.F[1] * 5000, 0);
     const hy = hz ? clamp(hz.y, -200, H + 200) : H / 2, th = themeOf(homeTeam);
@@ -68,6 +72,12 @@ const Park = {
       if (FX.high && (flash + ci * 977) % 1800 === 0) { ctx.fillStyle = '#ffffff'; ctx.fillRect(q.x - 1, q.y - 1, sz + 2, sz + 2); ctx.drawImage(glowSprite('#ffffff'), q.x - 9, q.y - 9, 18, 18); }
     }
     ctx.restore();
+    if (opt.homeStands) {
+      const hs = this.homeStands.map(s2 => ({ s2, d: cam.toCam(...s2.pts[0].map((c, k) => (c + s2.pts[2][k]) / 2))[2] })).sort((a, b) => b.d - a.d);
+      for (const { s2 } of hs) if (cam.fillPoly(ctx, s2.pts, s2.pts[0][2] > 20 ? standHi : standLo)) { ctx.strokeStyle = 'rgba(120,140,220,0.1)'; ctx.lineWidth = 1; ctx.stroke(); }
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (const c of this.homeCrowd) { const q = cam.proj(...c.p); if (!q) continue; const sz = clamp(q.s * 1.6, 0.8, 4), tw = 0.5 + 0.5 * Math.sin(t * 3 + c.ph); ctx.fillStyle = c.c ? hexA(homeTeam.g, 0.5 + 0.4 * tw) : `rgba(${150 + tw * 60 | 0},${160 + tw * 50 | 0},220,0.35)`; ctx.fillRect(q.x, q.y, sz, sz); } ctx.restore();
+      for (let i = 1; i < this.homeStands.length; i += 2) { const a = this.homeStands[i].pts; cam.line(ctx, a[3], a[2], hexA(homeTeam.g, 0.75), 2); }
+    }
     // neon rim on top of stands
     for (let i = 0; i < this.ring.length - 1; i++) { const a = this.stands[i * 2 + 1].pts; cam.line(ctx, a[3], a[2], hexA(homeTeam.g, 0.75), 2); }
     // cantilevered roof canopy with an LED underside and truss struts

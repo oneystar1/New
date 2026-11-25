@@ -129,23 +129,31 @@ function drawRobot(ctx, x, y, s, r, team, o = {}) {
     drawArm(nearArm * 2.0, -5.3, nearArm, 0.66, PM, 0.5);
     ctx.restore();
   } else if (cls === 'VECTOR') {
-    const hb = Math.sin(t * 3.3) * 0.18; ctx.translate(0, -hb);
-    if (!lo) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (let k = 0; k < 3; k++) { const p = (((t * 0.9 + k / 3) % 1) + 1) % 1; ctx.strokeStyle = hexA(G, 0.55 * (1 - p)); ctx.lineWidth = 0.06; ctx.beginPath(); ctx.ellipse(0, -1.05 + p * 1.0 + hb, 0.4 + p * 0.9, (0.4 + p * 0.9) * 0.28, 0, 0, TAU); ctx.stroke(); } ctx.drawImage(glowSprite(G), -0.9, -1.7, 1.8, 2.2); ctx.restore(); }
-    plate([[-0.36, -1.65], [0.36, -1.65], [0.22, -1.08], [-0.22, -1.08]], GM, 0.07); lamp(0, -1.02, 0.2, G);
+    // hover sentinel: kite-shaped armoured core, swept wing fins, a helm floating on an energy neck, jet below
+    const hb = Math.sin(t * 3.3) * 0.16; ctx.translate(0, -hb);
+    if (!lo) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (let k = 0; k < 2; k++) { const p = (((t * 1.1 + k / 2) % 1) + 1) % 1; ctx.strokeStyle = hexA(G, 0.45 * (1 - p)); ctx.lineWidth = 0.05; ctx.beginPath(); ctx.moveTo(-0.3 - p * 0.9, -0.55 + p * 0.5 + hb); ctx.lineTo(0, -0.85 + p * 0.5 + hb); ctx.lineTo(0.3 + p * 0.9, -0.55 + p * 0.5 + hb); ctx.stroke(); } ctx.restore(); }
+    plate([[-0.44, -2.3], [0.44, -2.3], [0.17, -1.35], [-0.17, -1.35]], GM, 0.07);
+    if (!lo) { const fl = 0.75 + 0.25 * Math.sin(t * 38); ctx.save(); ctx.globalCompositeOperation = 'lighter'; const jg = ctx.createLinearGradient(0, -1.35, 0, -1.35 + 1.1 * fl); jg.addColorStop(0, hexA(shade(G, 0.6), 0.95)); jg.addColorStop(1, hexA(G, 0)); ctx.fillStyle = jg; ctx.beginPath(); ctx.moveTo(-0.14, -1.35); ctx.lineTo(0.14, -1.35); ctx.lineTo(0, -1.35 + 1.1 * fl); ctx.closePath(); ctx.fill(); ctx.drawImage(glowSprite(G), -0.7, -1.9, 1.4, 1.4); ctx.restore(); }
     ctx.save(); upper();
-    const pod = (side) => { const [hx, hy] = arms(side * 1.35, -3.7, side); if (!lo) { ctx.save(); ctx.setLineDash([0.12, 0.1]); ctx.lineDashOffset = -t * 2; ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = hexA(G, 0.75); ctx.lineWidth = 0.05; ctx.beginPath(); ctx.moveTo(side * 0.95, -3.6); ctx.lineTo(hx, hy); ctx.stroke(); ctx.restore(); } ell(side * 1.12, -3.65, 0.2, 0.2, SM); plate([[hx - 0.28, hy - 0.35], [hx + 0.28, hy - 0.35], [hx + 0.2, hy + 0.3], [hx - 0.2, hy + 0.3]], SM, 0.07); glowLine([[hx - 0.15, hy + 0.1], [hx + 0.15, hy + 0.1]], 0.04); if (o.ball && side === 1) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(hx, hy + 0.4, 0.22, 0, TAU); ctx.fill(); } if (o.reach > 0.6 && side === 1) lamp(hx + 0.2, hy, 0.28, G); };
-    pod(farArm);
-    ctx.save(); ctx.beginPath(); ctx.ellipse(0, -3.35, 1.05, 1.5, 0, 0, TAU); ctx.clip();
-    ctx.fillStyle = PM; ctx.fillRect(-1.1, -4.9, 2.2, 3.2); ctx.fillStyle = DM; ctx.fillRect(0.08, -4.9, 1.1, 3.2); ctx.restore();
-    ctx.beginPath(); ctx.ellipse(0, -3.35, 1.05, 1.5, 0, 0, TAU); ctx.strokeStyle = OUT; ctx.lineWidth = 0.1; ctx.stroke(); if (hi) { ctx.strokeStyle = rim; ctx.lineWidth = 0.05; ctx.stroke(); }
-    glowLine([[0.04, -4.8], [0.04, -1.95]], 0.045, 0.9);
-    ctx.strokeStyle = OUT; ctx.lineWidth = 0.34; ctx.beginPath(); ctx.ellipse(0, -3.05, 1.2, 0.3, 0, 0, TAU); ctx.stroke(); ctx.strokeStyle = SM; ctx.lineWidth = 0.22; ctx.stroke();
-    if (!lo) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = hexA(G, 0.85); ctx.lineWidth = 0.05; ctx.beginPath(); ctx.ellipse(0, -3.05, 1.2, 0.3, 0, t * 2, t * 2 + 2.2); ctx.stroke(); ctx.restore(); }
-    if (!back) { ell(0, -3.95, 0.46, 0.46, '#070a12'); if (!lo) { ctx.save(); ctx.strokeStyle = hexA(G, 0.6); ctx.lineWidth = 0.04; for (let k = 0; k < 6; k++) { const an = t * 1.5 + k * TAU / 6; ctx.beginPath(); ctx.arc(0, -3.95, 0.36, an, an + 0.6); ctx.stroke(); } ctx.restore(); } ell(0, -3.95, 0.24, 0.24, glass(-4.2, -3.7), false); lamp(0, -3.95, 0.16); }
-    else { backNum(-3.7, 0.62); for (let i = 0; i < 3; i++) glowLine([[-0.5, -2.7 + i * 0.18], [0.5, -2.7 + i * 0.18]], 0.035, 0.7); }
-    cap(0, -4.8, 0, -5.45, 0.08, '#8b94a8'); lamp(0, -5.5, 0.11 + 0.04 * Math.sin(t * 6), G);
-    for (const side of [-1, 1]) { const f = [[side * 0.78, -4.25], [side * 1.32, -4.95], [side * 0.98, -3.9]]; plate(f, SM, 0.07); glowLine([f[0], f[1]], 0.035, 0.8); }
-    pod(nearArm);
+    const wing = (side) => { const w = [[side * 0.8, -4.7], [side * 1.95, -5.65], [side * 1.7, -4.95], [side * 1.25, -4.2], [side * 0.9, -4.05]]; plate(w, SM); glowLine([[side * 0.88, -4.68], [side * 1.86, -5.56]], 0.04); plate([[side * 1.2, -4.75], [side * 1.6, -5.1], [side * 1.45, -4.6]], PM, 0.05); };
+    wing(farArm); drawArm(farArm * 0.95, -4.5, farArm, 0.26, PM, 0.2);
+    plate([[-1.0, -4.85], [1.0, -4.85], [0.84, -3.7], [0, -2.15], [-0.84, -3.7]], PM);
+    if (!back) {
+      plate([[-0.64, -4.7], [0.64, -4.7], [0.52, -3.86], [0, -2.85], [-0.52, -3.86]], SM, 0.07);
+      traces([[[0, -3.8], [0, -3.0]], [[-0.24, -4.15], [-0.62, -4.5]], [[0.24, -4.15], [0.62, -4.5]]]);
+      hexCore(0, -4.08, 0.24);
+    } else {
+      plate([[-0.7, -4.75], [0.7, -4.75], [0.5, -3.6], [0, -2.6], [-0.5, -3.6]], DM, 0.07);
+      backNum(-4.15, 0.55); thruster(-0.36, -3.45, 0.22); thruster(0.36, -3.45, 0.22);
+    }
+    // energy neck and floating helm
+    glowLine([[0, -4.86], [0, -5.28]], 0.06, 1);
+    if (!lo) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = hexA(G, 0.7); ctx.lineWidth = 0.035; for (let k = 0; k < 2; k++) { const yy = -4.95 - k * 0.17 - ((t * 0.6) % 0.17); ctx.beginPath(); ctx.ellipse(0, yy, 0.22, 0.05, 0, 0, TAU); ctx.stroke(); } ctx.restore(); }
+    const hy2 = Math.sin(t * 4.2) * 0.04;
+    plate([[-0.44, -5.3 + hy2], [0.44, -5.3 + hy2], [0.52, -5.78 + hy2], [0.24, -6.22 + hy2], [-0.24, -6.22 + hy2], [-0.52, -5.78 + hy2]], PM);
+    if (!back) visor(-0.4, -5.86 + hy2, 0.8, 0.26); else glowLine([[-0.22, -5.7 + hy2], [0.22, -5.7 + hy2]], 0.04);
+    plate([[-0.07, -6.2 + hy2], [0.07, -6.2 + hy2], [0, -6.62 + hy2]], SM, 0.05); lamp(0, -6.62 + hy2, 0.07 + 0.03 * Math.sin(t * 6), G);
+    wing(nearArm); drawArm(nearArm * 0.95, -4.5, nearArm, 0.26, PM, 0.2);
     ctx.restore();
   } else { // RAPTOR
     const hipY = -3.25, tailSide = back ? 1 : -1;

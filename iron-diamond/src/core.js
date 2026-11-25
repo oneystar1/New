@@ -71,77 +71,127 @@ const Input = {
 
 // ---------------------------------------------------------------- audio (all synthesized)
 const Sfx = {
-  ac: null, master: null, music: null, muted: store.get('ironDiamond.muted', false), musicOn: true, _seq: null,
+  ac: null, master: null, music: null, sfx: null, rev: null, muted: store.get('ironDiamond.muted', false), musicOn: true, _seq: null,
   init() {
     if (this.ac) { if (this.ac.state === 'suspended') this.ac.resume(); return; }
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    this.ac = new AC();
-    this.master = this.ac.createGain(); this.master.gain.value = this.muted ? 0 : 0.6;
-    const comp = this.ac.createDynamicsCompressor(); this.master.connect(comp); comp.connect(this.ac.destination);
-    this.music = this.ac.createGain(); this.music.gain.value = 0.22; this.music.connect(this.master);
-    const len = this.ac.sampleRate; this.noiseBuf = this.ac.createBuffer(1, len, this.ac.sampleRate);
+    const ac = this.ac = new AC();
+    this.master = ac.createGain(); this.master.gain.value = this.muted ? 0 : 0.7;
+    const comp = ac.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 4; this.master.connect(comp); comp.connect(ac.destination);
+    this.sfx = ac.createGain(); this.sfx.gain.value = 0.9; this.sfx.connect(this.master);
+    this.music = ac.createGain(); this.music.gain.value = 0.16; this.music.connect(this.master);
+    // stadium reverb from a generated impulse: a big open bowl
+    this.rev = ac.createConvolver(); const rl = Math.floor(ac.sampleRate * 2.2), ir = ac.createBuffer(2, rl, ac.sampleRate);
+    for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < rl; i++) { const k = i / rl; d[i] = (Math.random() * 2 - 1) * Math.pow(1 - k, 2.6) * (i < 400 ? i / 400 : 1); } }
+    this.rev.buffer = ir; const rg = ac.createGain(); rg.gain.value = 0.55; this.rev.connect(rg); rg.connect(this.master);
+    const len = ac.sampleRate * 2; this.noiseBuf = ac.createBuffer(1, len, ac.sampleRate);
     const d = this.noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
     this.startMusic(); this.crowdBed();
   },
-  toggleMute() { this.muted = !this.muted; store.set('ironDiamond.muted', this.muted); if (this.master) this.master.gain.value = this.muted ? 0 : 0.6; },
+  toggleMute() { this.muted = !this.muted; store.set('ironDiamond.muted', this.muted); if (this.master) this.master.gain.value = this.muted ? 0 : 0.7; if (this.muted) try { speechSynthesis.cancel(); } catch (e) { } },
+  out(node, wet) { node.connect(this.sfx); if (wet) { const g = this.ac.createGain(); g.gain.value = wet; node.connect(g); g.connect(this.rev); } },
+  env(g, t, a, peak, d) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); },
+  // oscillator voice with optional pitch glide
+  osc(type, f, dur, vol, o = {}) {
+    const ac = this.ac, t = ac.currentTime + (o.when || 0), v = ac.createOscillator(), g = ac.createGain();
+    v.type = type; v.frequency.setValueAtTime(f, t); if (o.to) v.frequency.exponentialRampToValueAtTime(Math.max(20, o.to), t + (o.glide || dur)); if (o.detune) v.detune.value = o.detune;
+    this.env(g, t, o.attack || 0.004, vol, dur); v.connect(g);
+    if (o.lp) { const fl = ac.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.setValueAtTime(o.lp, t); if (o.lpTo) fl.frequency.exponentialRampToValueAtTime(o.lpTo, t + dur); fl.Q.value = o.q || 1; g.connect(fl); this.out(fl, o.wet); } else this.out(g, o.wet);
+    v.start(t); v.stop(t + (o.attack || 0.004) + dur + 0.05);
+  },
+  // filtered noise with an optional frequency sweep
+  nz(dur, vol, o = {}) {
+    const ac = this.ac, t = ac.currentTime + (o.when || 0), src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    src.buffer = this.noiseBuf; f.type = o.type || 'bandpass'; f.frequency.setValueAtTime(o.f || 1500, t); if (o.to) f.frequency.exponentialRampToValueAtTime(o.to, t + dur); f.Q.value = o.q || 1;
+    this.env(g, t, o.attack || 0.002, vol, dur); src.connect(f); f.connect(g); this.out(g, o.wet); src.start(t, Math.random() * 1.5); src.stop(t + (o.attack || 0.002) + dur + 0.05);
+  },
+  // FM pair: inharmonic ratios make metal (clangs, pings, bells)
+  fm(fc, ratio, index, dur, vol, o = {}) {
+    const ac = this.ac, t = ac.currentTime + (o.when || 0), car = ac.createOscillator(), mod = ac.createOscillator(), mg = ac.createGain(), g = ac.createGain();
+    car.frequency.value = fc; mod.frequency.value = fc * ratio; mg.gain.setValueAtTime(fc * index, t); mg.gain.exponentialRampToValueAtTime(fc * 0.05 + 1, t + dur);
+    mod.connect(mg); mg.connect(car.frequency); this.env(g, t, o.attack || 0.002, vol, dur); car.connect(g); this.out(g, o.wet);
+    car.start(t); mod.start(t); car.stop(t + dur + 0.05); mod.stop(t + dur + 0.05);
+  },
+  // legacy helpers (used by the music sequencer)
   tone(f, dur, type = 'square', vol = 0.2, slide = 0, when = 0, dest) {
-    if (!this.ac) return; const t = this.ac.currentTime + when;
-    const o = this.ac.createOscillator(), g = this.ac.createGain();
+    if (!this.ac) return; const t = this.ac.currentTime + when, o = this.ac.createOscillator(), g = this.ac.createGain();
     o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, f + slide), t + dur);
-    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
-    o.connect(g); g.connect(dest || this.master); o.start(t); o.stop(t + dur + 0.02);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0008, t + dur); o.connect(g); g.connect(dest || this.sfx); o.start(t); o.stop(t + dur + 0.02);
   },
   noise(dur, vol = 0.3, freq = 2000, q = 1, when = 0, type = 'bandpass', dest) {
-    if (!this.ac) return; const t = this.ac.currentTime + when;
-    const s = this.ac.createBufferSource(); s.buffer = this.noiseBuf;
-    const f = this.ac.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
-    const g = this.ac.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
-    s.connect(f); f.connect(g); g.connect(dest || this.master); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
+    if (!this.ac) return; const t = this.ac.currentTime + when, s = this.ac.createBufferSource(); s.buffer = this.noiseBuf;
+    const f = this.ac.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q; const g = this.ac.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+    s.connect(f); f.connect(g); g.connect(dest || this.sfx); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
   },
   buzz(ms) { try { if (navigator.vibrate && FX.haptics !== false) navigator.vibrate(ms); } catch (e) { } },
-  swell(dur, vol, freq) { // crowd cheer: noise with a soft attack
-    if (!this.ac) return; const t = this.ac.currentTime, src = this.ac.createBufferSource(); src.buffer = this.noiseBuf; src.loop = true;
-    const f = this.ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 0.6; const g = this.ac.createGain();
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.25); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
-    src.connect(f); f.connect(g); g.connect(this.master); src.start(t, Math.random()); src.stop(t + dur + 0.05);
+  // crowd: noise through vowel-like formants with a soft attack, plus whistles
+  swell(dur, vol, base = 1, whistles = 2) {
+    if (!this.ac) return; const ac = this.ac, t = ac.currentTime;
+    for (const [f, q, k] of [[520 * base, 2.2, 1], [1150 * base, 2.5, 0.7], [2600 * base, 3, 0.35]]) {
+      const src = ac.createBufferSource(); src.buffer = this.noiseBuf; src.loop = true; const fl = ac.createBiquadFilter(); fl.type = 'bandpass'; fl.frequency.value = f; fl.Q.value = q; const g = ac.createGain();
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol * k, t + 0.35); g.gain.setValueAtTime(vol * k, t + dur * 0.45); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(fl); fl.connect(g); this.out(g, 0.5); src.start(t, Math.random()); src.stop(t + dur + 0.05);
+    }
+    for (let i = 0; i < whistles; i++) { const f = 1700 + Math.random() * 900; this.osc('sine', f, 0.35, vol * 0.18, { when: 0.2 + Math.random() * dur * 0.5, to: f * 1.25, attack: 0.05, wet: 0.4 }); }
   },
-  crowdBed() { // constant low murmur under everything
-    if (!this.ac || this._bed) return; const src = this.ac.createBufferSource(); src.buffer = this.noiseBuf; src.loop = true;
-    const f = this.ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 650; f.Q.value = 0.5; const g = this.ac.createGain(); g.gain.value = 0.035;
-    src.connect(f); f.connect(g); g.connect(this.master); src.start(); this._bed = g;
+  crowdBed() {
+    if (!this.ac || this._bed) return; const ac = this.ac, g = ac.createGain(); g.gain.value = 0.05; this.out(g, 0.6);
+    for (const f of [380, 900]) { const src = ac.createBufferSource(); src.buffer = this.noiseBuf; src.loop = true; const fl = ac.createBiquadFilter(); fl.type = 'bandpass'; fl.frequency.value = f; fl.Q.value = 0.8; src.connect(fl); fl.connect(g); src.start(); }
+    const lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = 0.13; lg.gain.value = 0.018; lfo.connect(lg); lg.connect(g.gain); lfo.start(); this._bed = g;
   },
-  play(name) {
+  // stadium announcer through the browser's speech engine, pitched down and robotic
+  say(text) {
+    try {
+      if (this.muted || (typeof Game !== 'undefined' && Game.settings && Game.settings.announcer === false) || !window.speechSynthesis) return;
+      speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.pitch = 0.35; u.rate = 1.02; u.volume = 0.9;
+      const vs = speechSynthesis.getVoices(), v = vs.find(x => /en(-|_)US/i.test(x.lang) && /male|david|alex|daniel|fred/i.test(x.name)) || vs.find(x => /^en/i.test(x.lang)); if (v) u.voice = v;
+      speechSynthesis.speak(u);
+    } catch (e) { }
+  },
+  play(name, o = {}) {
     const hap = { bat: 18, hit: 25, heavy: 45, boom: [60, 40, 90], clash: 30, hr: [30, 40, 30, 40, 60] }[name]; if (hap) this.buzz(hap);
     if (!this.ac) return;
     switch (name) {
-      case 'move': this.tone(660, 0.05, 'square', 0.06); break;
-      case 'ok': this.tone(520, 0.06, 'square', 0.1); this.tone(1040, 0.1, 'square', 0.08, 0, 0.05); break;
-      case 'back': this.tone(300, 0.1, 'square', 0.08, -120); break;
-      case 'pitch': this.noise(0.25, 0.12, 3000, 0.6, 0, 'highpass'); this.tone(220, 0.2, 'sawtooth', 0.05, 400); break;
-      case 'plasma': this.tone(180, 0.6, 'sawtooth', 0.12, 900); this.noise(0.5, 0.1, 5000, 2); break;
-      case 'mitt': this.noise(0.08, 0.35, 900, 1.5); this.tone(140, 0.08, 'sine', 0.25); break;
-      case 'bat': this.noise(0.12, 0.6, 2400, 0.8); this.tone(1400, 0.08, 'triangle', 0.25, -600); this.tone(90, 0.15, 'sine', 0.4); break;
-      case 'foul': this.noise(0.06, 0.3, 1800, 1); break;
-      case 'swing': this.noise(0.18, 0.12, 1200, 0.5, 0, 'bandpass'); this.tone(300, 0.12, 'sawtooth', 0.04, 500); break;
-      case 'catch': this.noise(0.06, 0.25, 700, 1.5); break;
-      case 'throw': this.noise(0.15, 0.1, 2500, 0.7); break;
-      case 'step': this.tone(90 + Math.random() * 30, 0.04, 'square', 0.03); break;
-      case 'out': this.tone(392, 0.12, 'square', 0.12); this.tone(262, 0.25, 'square', 0.12, 0, 0.12); break;
-      case 'safe': this.tone(523, 0.1, 'square', 0.12); this.tone(784, 0.2, 'square', 0.12, 0, 0.1); break;
-      case 'run': [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.15, 'square', 0.1, 0, i * 0.08)); break;
-      case 'hr': [392, 523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.25, 'sawtooth', 0.1, 0, i * 0.09)); this.noise(1.5, 0.15, 800, 0.3, 0.2, 'lowpass'); break;
-      case 'crowd': this.noise(1.6, 0.12, 900, 0.4, 0, 'bandpass'); break;
-      case 'clash': this.tone(110, 0.5, 'sawtooth', 0.25, -60); this.noise(0.4, 0.3, 600, 1); this.tone(880, 0.3, 'square', 0.08, -400, 0.1); break;
-      case 'hit': this.noise(0.1, 0.5, 1500, 1.2); this.tone(160, 0.12, 'square', 0.18, -80); break;
-      case 'heavy': this.noise(0.25, 0.7, 500, 0.9); this.tone(80, 0.3, 'sawtooth', 0.3, -40); break;
-      case 'block': this.tone(1200, 0.06, 'square', 0.12); this.noise(0.05, 0.2, 4000, 2); break;
-      case 'whiff': this.noise(0.12, 0.08, 2000, 0.6); break;
-      case 'boom': this.noise(1.2, 0.9, 400, 0.6, 0, 'lowpass'); this.tone(60, 0.9, 'sawtooth', 0.4, -30); this.noise(0.6, 0.5, 2500, 0.5, 0.05); break;
-      case 'buzz': this.tone(110, 0.35, 'sawtooth', 0.15); break;
-      case 'cash': this.tone(1318, 0.08, 'square', 0.1); this.tone(1760, 0.15, 'square', 0.1, 0, 0.07); break;
-      case 'cheer': this.swell(1.8, 0.32, 1100); break;
-      case 'roar': this.swell(2.6, 0.45, 900); break;
-      case 'servo': this.tone(240, 0.15, 'sawtooth', 0.04, 200); break;
+      // ---- interface
+      case 'move': this.osc('sine', 1250, 0.035, 0.07); this.nz(0.012, 0.05, { type: 'highpass', f: 5000 }); break;
+      case 'ok': this.osc('sine', 880, 0.09, 0.1); this.osc('sine', 1320, 0.16, 0.09, { when: 0.06, wet: 0.2 }); break;
+      case 'back': this.osc('sine', 660, 0.08, 0.08); this.osc('sine', 440, 0.12, 0.07, { when: 0.05 }); break;
+      case 'buzz': this.osc('square', 150, 0.09, 0.08, { lp: 900 }); this.osc('square', 150, 0.12, 0.08, { lp: 900, when: 0.13 }); break;
+      case 'cash': this.fm(1318, 2, 0.8, 0.12, 0.07); this.fm(1760, 2, 0.8, 0.3, 0.07, { when: 0.08, wet: 0.3 }); break;
+      case 'servo': this.osc('sawtooth', 260, 0.16, 0.035, { to: 640, lp: 1800, q: 5 }); this.nz(0.14, 0.02, { f: 3000, q: 3 }); break;
+      // ---- pitching & hitting
+      case 'pitch': { const d = clamp(o.dur || 0.7, 0.3, 1.2); this.nz(d, 0.16, { f: 350, to: 2800, q: 1.4, attack: d * 0.7, wet: 0.15 }); this.osc('sawtooth', 120, 0.22, 0.04, { to: 340, lp: 900 }); break; }
+      case 'plasma': { const d = clamp(o.dur || 0.7, 0.3, 1.2); this.nz(d, 0.14, { f: 500, to: 4000, q: 3, attack: d * 0.6 }); this.fm(220, 1.5, 6, d, 0.06, { attack: d * 0.5 }); this.osc('sawtooth', 160, d, 0.05, { to: 900, lp: 2400, q: 6 }); break; }
+      case 'swing': this.nz(0.17, 0.12, { f: 500, to: 2200, q: 1.2, attack: 0.05 }); this.osc('sawtooth', 300, 0.1, 0.02, { to: 900, lp: 1500 }); break;
+      case 'whiff': this.nz(0.14, 0.09, { f: 1600, to: 500, q: 1.1, attack: 0.03 }); break;
+      case 'bat': {
+        const q = o.q == null ? 0.7 : o.q;
+        if (o.kind === 'bunt') { this.osc('triangle', 620, 0.06, 0.18); this.nz(0.05, 0.2, { type: 'lowpass', f: 1400 }); break; }
+        this.nz(0.03, 0.5 + q * 0.5, { type: 'highpass', f: 2600 }); this.nz(0.09, 0.35 + q * 0.4, { f: 1700 + q * 900, q: 2.2, wet: 0.35 });
+        this.fm(1700 + q * 800, 2.76, 2 + q * 2, 0.18 + q * 0.2, 0.08 + q * 0.12, { wet: 0.4 }); this.osc('sine', 130, 0.14, 0.35 + q * 0.2, { to: 55 });
+        this.osc('sawtooth', 900, 0.07, 0.04, { to: 2600, lp: 4000 }); if (q > 0.8) this.nz(0.6, 0.12, { type: 'lowpass', f: 900, when: 0.04, wet: 0.6 });
+        break;
+      }
+      case 'mitt': this.nz(0.07, 0.55, { type: 'lowpass', f: 1300, wet: 0.25 }); this.osc('sine', 190, 0.09, 0.35, { to: 85 }); this.nz(0.012, 0.25, { type: 'highpass', f: 4200 }); break;
+      case 'catch': this.nz(0.05, 0.3, { type: 'lowpass', f: 1000 }); this.osc('sine', 160, 0.06, 0.16, { to: 90 }); break;
+      case 'throw': this.nz(0.2, 0.08, { f: 700, to: 2400, q: 1.3, attack: 0.08 }); break;
+      case 'foul': this.nz(0.025, 0.4, { type: 'highpass', f: 2600 }); this.fm(1500, 2.76, 2, 0.12, 0.06); this.swell(0.9, 0.06, 0.8, 0); break;
+      // ---- calls
+      case 'out': this.osc('sawtooth', 220, 0.32, 0.12, { lp: 1700, lpTo: 350, wet: 0.35 }); this.osc('sawtooth', 165, 0.32, 0.1, { lp: 1700, lpTo: 350, detune: 7 }); break;
+      case 'safe': this.fm(880, 3.5, 0.6, 0.45, 0.08, { wet: 0.35 }); this.fm(1320, 3.5, 0.6, 0.5, 0.06, { when: 0.07, wet: 0.35 }); break;
+      case 'run': [523, 659, 784, 1047].forEach((f, i) => this.osc('square', f, 0.14, 0.05, { when: i * 0.09, lp: 2200, wet: 0.4 })); this.swell(1.4, 0.09, 1, 2); break;
+      case 'hr': { const ch = [[392, 494, 587], [440, 554, 659], [523, 659, 784]]; ch.forEach((c, k) => c.forEach(f => [0, 7, -7].forEach(dt => this.osc('sawtooth', f, k === 2 ? 0.9 : 0.25, 0.028, { when: k * 0.22, detune: dt, attack: 0.03, lp: 3200, lpTo: 900, wet: 0.5 }))));
+        this.swell(3.2, 0.2, 1, 5); for (let i = 0; i < 4; i++) this.nz(0.35, 0.25, { type: 'lowpass', f: 2200, to: 300, when: 0.8 + i * 0.3, wet: 0.7 }); break; }
+      case 'crowd': this.swell(1.8, 0.1, 1, 1); break;
+      case 'cheer': this.swell(1.9, 0.14, 1, 2); break;
+      case 'roar': this.swell(2.8, 0.22, 0.9, 4); break;
+      // ---- clash
+      case 'clash': this.fm(150, 1.41, 9, 1.4, 0.22, { wet: 0.6 }); this.nz(0.5, 0.35, { type: 'lowpass', f: 3000, to: 400 }); this.osc('sawtooth', 440, 0.5, 0.05, { to: 880, lp: 2500, when: 0.1 }); break;
+      case 'hit': this.fm(420, 2.3, 5, 0.16, 0.18, { wet: 0.3 }); this.nz(0.08, 0.4, { f: 1600, q: 1.5 }); this.osc('sine', 120, 0.1, 0.3, { to: 60 }); break;
+      case 'heavy': this.fm(170, 1.73, 10, 0.45, 0.24, { wet: 0.45 }); this.nz(0.25, 0.5, { type: 'lowpass', f: 1200, to: 200 }); this.osc('sine', 70, 0.3, 0.45, { to: 32 }); break;
+      case 'block': this.fm(2300, 3.1, 1.6, 0.16, 0.1, { wet: 0.4 }); this.nz(0.03, 0.2, { type: 'highpass', f: 4500 }); break;
+      case 'pop': this.nz(0.3, 0.3, { type: 'lowpass', f: 2600, to: 260, wet: 0.7 }); this.nz(0.04, 0.2, { type: 'highpass', f: 3000 }); break;
+      case 'boom': this.nz(1.5, 0.9, { type: 'lowpass', f: 3500, to: 120, wet: 0.6 }); this.osc('sine', 62, 0.9, 0.6, { to: 28 }); for (let i = 0; i < 6; i++) this.nz(0.05, 0.25, { type: 'highpass', f: 2500, when: 0.1 + Math.random() * 0.9 }); break;
     }
   },
   startMusic() {

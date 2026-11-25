@@ -4,7 +4,7 @@ const ease = k => k * k * (3 - 2 * k);
 function matchCamera(m) {
   const k = ease(m.camK), c = m.cam;
   const fx = clamp(m.focus.x, -230, 230), fy = clamp(m.focus.y, 0, 330);
-  const bp = [0, -31, 11.5], bt = [0, 40, 2.6], bf = 860;
+  const pc = m.pitchCam(), bp = pc ? [2.6, 70, 10] : [0, -31, 11.5], bt = pc ? [0, 0, 3.0] : [0, 40, 2.6], bf = pc ? 1300 : 860;
   const fp = [fx * 0.7, fy - 150, 112 + fy * 0.1], ft = [fx, fy + 18, 0], ff = 640;
   const sh = m.shake * 1.2;
   c.set(lerp(bp[0], fp[0], k) + rnd(-sh, sh) * 0.3, lerp(bp[1], fp[1], k), lerp(bp[2], fp[2], k) + rnd(-sh, sh) * 0.2, lerp(bt[0], ft[0], k), lerp(bt[1], ft[1], k), lerp(bt[2], ft[2], k), lerp(bf, ff, k));
@@ -41,7 +41,7 @@ function replayCamera(vm, rp) {
 function drawMatch(ctx, m) {
   if (m.state === 'replay' && m.replay) return drawReplay(ctx, m);
   const cam = m.isReplay ? replayCameraCached : matchCamera(m), home = m.sides[1].team, t = m.time;
-  Park.draw(ctx, cam, home, t, (c, w, h, tt) => drawBigBoard(c, w, h, m, tt));
+  Park.draw(ctx, cam, home, t, (c, w, h, tt) => drawBigBoard(c, w, h, m, tt), { homeStands: !m.isReplay && m.pitchCam() && m.camK < 0.5 });
   const ents = [];
   const fieldSide = m.sides[m.fld], batSide = m.sides[m.bat];
   const boost = lerp(1, 1.9, ease(m.camK));
@@ -50,9 +50,10 @@ function drawMatch(ctx, m) {
   // fielders
   for (const f of m.fielders) {
     let x = f.x, y = f.y; const o = { t: t + f.hx * 0.01, run: hyp(f.vx, f.vy) > 1 ? 1 : 0, back: f.vy > 4, lean: clamp(f.vx / 30, -1, 1) };
-    let sc = 1; if (pitchView && f.pos === 'C') { o.back = true; o.crouch = 0.5; o.alpha = 0.42; sc = 0.62; y = -4.5; }
+    const pcam = m.pitchCam();
+    let sc = 1; if (pitchView && f.pos === 'C') { o.back = !pcam; o.crouch = 0.5; o.alpha = pcam ? 0.7 : 0.42; sc = pcam ? 0.6 : 0.62; y = pcam ? -5.5 : -4.5; }
     if (pitchView && f.pos === 'P' && pt) {
-      o.back = false;
+      o.back = pcam; if (pcam) o.alpha = 0.92;
       if (pt.stage === 'windup') o.throwArm = clamp((pt.t - (pt.wt - 0.6)) / 0.6, 0, 1) * 0.6;
       else if (pt.stage === 'flight') o.throwArm = clamp(0.6 + (pt.t - pt.t0) / 0.25 * 0.4, 0, 1);
       else if (pt.stage === 'aim') o.ball = true;
@@ -64,7 +65,7 @@ function drawMatch(ctx, m) {
   // batter, runners
   if (pitchView && pt) {
     const bt = m.batter(), bx = m.batterX();
-    ents.push({ x: bx, y: 0, z: 0, r: bt, team: batSide.team, o: { t, back: true }, batter: true, side: batSide });
+    ents.push({ x: bx, y: 0, z: 0, r: bt, team: batSide.team, o: { t, back: !m.pitchCam() }, batter: true, side: batSide });
     for (let i = 0; i < 3; i++) if (m.bases[i]) { const st = pt.steal && pt.steal.r === m.bases[i] ? pt.steal : null; if (st) { const p2 = basePos(i + 1 + st.prog); ents.push({ x: p2.x, y: p2.y, z: 0, r: m.bases[i], team: batSide.team, o: { t, run: 1, back: true, lean: 0.4 }, side: batSide }); continue; } const lead = pt.stealPlan && pt.stealPlan.from === i + 1 ? 10 : 4; const B = BASES[i + 1], N = BASES[(i + 2) % 4]; const d = hyp(N.x - B.x, N.y - B.y); ents.push({ x: B.x + (N.x - B.x) / d * lead, y: B.y + (N.y - B.y) / d * lead, z: 0, r: m.bases[i], team: batSide.team, o: { t, back: false, crouch: lead > 4 ? 0.45 : 0.2, lean: lead > 4 ? -0.3 : 0 }, side: batSide }); }
   } else if (m.runners) {
     for (const rn of m.runners) { if (rn.out || rn.scored) continue; const p = basePos(rn.s); const dir = rn.tgt >= rn.s ? 1 : -1; const seg = Math.min(3, Math.floor(rn.s)); const a = BASES[seg], b = BASES[seg + 1]; const vy = (b.y - a.y) * dir, vx = (b.x - a.x) * dir; const moving = rn.s !== rn.tgt, slide = moving && rn.tgt % 1 === 0 && Math.abs(rn.tgt - rn.s) * 90 < 7 && rn.tgt > rn.s; ents.push({ x: p.x, y: p.y, z: 0, r: rn.r, team: batSide.team, o: { t: t + rn.start, run: moving && !slide ? 1 : 0, crouch: slide ? 0.7 : 0, back: moving ? vy > 0 : false, lean: slide ? clamp(vx / 40, -1, 1) * 1.2 + 0.3 : moving ? clamp(vx / 80, -1, 1) : 0 }, side: batSide }); }
@@ -110,6 +111,7 @@ function drawMatch(ctx, m) {
   if (m.fb && m.time - m.fb.t < 1.1 && pitchView) { const k = (m.time - m.fb.t) / 1.1, q = cam.proj(0, 0, 4.6); if (q) { ctx.globalAlpha = 1 - k * k; glowTxt(ctx, m.fb.text, q.x, q.y - k * 30, 26, '#ffffff', m.fb.color); ctx.globalAlpha = 1; } }
   drawThemeFx(ctx, home, t, cam);
   Game.bloom && Game.bloom();
+  if (m.cutFlash > 0) { ctx.fillStyle = `rgba(255,255,255,${m.cutFlash * 2.2})`; ctx.fillRect(0, 0, W, H); }
   // vignette
   const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.85); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.5)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
   if (!m.isReplay) { drawHUD(ctx, m, pitchView); drawTicker(ctx, m); }
@@ -171,7 +173,7 @@ function drawZone(ctx, cam, m) {
   const pt = m.pt;
   const c = [[-ZONE_X + 0.12, 0, ZONE_Z0], [ZONE_X - 0.12, 0, ZONE_Z0], [ZONE_X - 0.12, 0, ZONE_Z1], [-ZONE_X + 0.12, 0, ZONE_Z1]];
   const humanBat = m.pad(m.bat) != null;
-  ctx.save(); ctx.globalAlpha = humanBat ? 0.9 : 0.45;
+  ctx.save(); ctx.globalAlpha = humanBat || m.pitchCam() ? 0.9 : 0.45;
   for (let i = 0; i < 4; i++) cam.line(ctx, c[i], c[(i + 1) % 4], 'rgba(160,240,255,0.55)', 1.5);
   ctx.restore();
   // sweet-spot rings: contact (solid), power (dashed gold), bunt (filled green while squared)
