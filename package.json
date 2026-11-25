@@ -9,7 +9,8 @@
     "sprites": "python3 tools/build_sprites.py",
     "test": "node tests/sim.test.mjs",
     "smoke": "node tests/smoke.mjs",
-    "test:mq": "node tests/marshmallow/run.mjs"
+    "test:mq": "node tests/marshmallow/run.mjs",
+    "test:id": "node tests/iron-diamond/run.cjs"
   },
   "license": "MIT"
 }

@@ -1,5 +1,9 @@
 # Poké Ball Park
 
+> Also in this repo: **[Iron Diamond](iron-diamond/README.md)**, a robot-baseball
+> game with close plays settled by fights (`/iron-diamond/`), and
+> [Marshmallow Quest](marshmallow-quest/README.md).
+
 A Pokémon baseball game that plays like **Ken Griffey Jr. Presents Major League
 Baseball** on the SNES: a behind-the-pitcher batting view with a pitch-steering
 pitcher and a timing-based swing, an overhead fielding view where you run the

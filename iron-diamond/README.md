@@ -1,0 +1,82 @@
+# Iron Diamond
+
+Robot baseball with a fight on every close play: an original game in the spirit of
+the old NES robot-baseball games, rebuilt with modern vector graphics, a 3D night
+ballpark, 12 clubs and four modern robot frames.
+
+No build step, no dependencies. Serve the repo over HTTP and open `iron-diamond/`:
+
+```sh
+npm start      # then http://localhost:8080/iron-diamond/
+```
+
+![batting](../docs/screenshots/iron-diamond/batting.png)
+![clash](../docs/screenshots/iron-diamond/clash.png)
+
+## Modes
+
+- **Exhibition**: 1 player vs CPU, 2 players head to head, or CPU vs CPU to watch.
+- **Gauntlet**: pick a club and beat 5 opponents plus a final, with 3 continues.
+  Armor damage carries over between matches. Earn credits for wins, runs,
+  strikeouts and destroyed bots, then spend them in the **Garage** on repairs,
+  rebuilding scrapped bots and club-wide upgrades (power, contact, speed, fight,
+  arm, plating). Progress saves in the browser.
+- **Settings**: 3/5/7/9 innings, Rookie/Pro/Legend difficulty, clashes on/off, sound, music.
+
+## Controls
+
+| Action | Player 1 | Player 2 | Gamepad / touch |
+|---|---|---|---|
+| Move / aim / shift | `W A S D` | arrows | d-pad / stick |
+| **A**: swing, pitch, throw, strike | `J` / `Space` | `,` | A |
+| **B**: power swing, pitch type, retreat, heavy | `K` | `.` | B |
+| Start / pause | `Enter` | `Backspace` | Start |
+| Mute | `M` | | |
+
+**Batting.** Shift left/right so the glowing ring covers the pitch. A is a contact
+swing, B a power swing (smaller window, harder hit), Down+A bunts. Swing early to
+pull, late to go the other way; high pitches fly, low pitches bounce.
+
+**Pitching.** Aim with the d-pad, B cycles Fastball / Curve / Slider / Changeup /
+Plasma, A throws. Hold left/right to steer the ball in flight. Every pitch drains the
+pitcher's power cell (Plasma drains 14). From the pause menu you can bring in your
+reliever.
+
+**Fielding.** You run the fielder nearest the ball. A yellow ring marks where a fly
+ball will land. With the ball, hold a direction and press A to throw (→ 1st, ↑ 2nd,
+← 3rd, ↓ home; no direction picks the smart play), or run onto the base or into
+the runner yourself.
+
+**Running.** Runners go on grounders and wait on fly balls. A sends everyone
+another base, B sends them back.
+
+**Clash.** A close play at a base becomes a 9-second brawl in a holo-ring: ←/→
+move, A strike, B heavy (breaks guard), Down guards. If the runner wins, they're
+safe; if the fielder wins, the runner is out. When time runs out, whoever dealt more
+damage wins. Damage is permanent, and a bot that hits 0 armor is **destroyed** and
+replaced from the bench (or by a scrap drone).
+
+## The league
+
+Twelve clubs, each with its own colours, emblem, frame mix and strengths: Neo Tokyo
+Ronin, Detroit Ironworks, Nova Vegas Voltage, Lunar Base Eclipse, Mars Colony Dust
+Devils, Atlantis Abyss, Silicon Valley Kernels, Arctic Circuit Glaciers, Cairo Sphinx
+Protocol, Berlin Blitz, Rio Jaguar Units, Sydney Solar Flares.
+
+Four robot frames:
+
+- **Striker**: balanced combat android
+- **Titan**: treaded heavy siege frame; huge power and armor, slow
+- **Vector**: hover drone; fastest runner and best glove, fragile
+- **Raptor**: digitigrade hunter-killer; quick and vicious in a clash
+
+## Code
+
+`src/core.js` (input, synth audio, 3D camera), `data.js` (clubs, frames, rosters),
+`robots.js` (vector robot renderer), `stadium.js` (ballpark), `match.js` (rules,
+physics, AI), `clash.js`, `render.js` (match view + HUD), `ui.js` (menus, Gauntlet),
+`main.js` (loop). Test hooks: `?demo=1&speed=8` plays CPU vs CPU fast-forwarded.
+
+```sh
+npm run test:id   # plays 3 full CPU games headlessly and checks the menu flow
+```
