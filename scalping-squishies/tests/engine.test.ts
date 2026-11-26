@@ -346,3 +346,19 @@ describe('collector digest', () => {
     expect(collectorDigest(s, T0, 12)).toBe('1 trade offer waiting · your wanted post is still up · 12 days left in the season · streak shield recharging · 1 dupe to flip.');
   });
 });
+
+describe('achievements for the newer systems', () => {
+  it('trade, wanted, shield, streak and seasonal-set achievements unlock from their stats', async () => {
+    const { ACHIEVEMENTS } = await import('../src/engine/data/achievements');
+    const by = (id: string) => ACHIEVEMENTS.find((a) => a.id === id)!;
+    const s = initialState(T0);
+    expect(by('a_trade1').check(s)).toBe(false);
+    s.stats.tradesDone = 1; expect(by('a_trade1').check(s)).toBe(true);
+    s.stats.wantedFulfilled = 1; expect(by('a_wanted').check(s)).toBe(true);
+    s.stats.shieldSaves = 1; expect(by('a_shield').check(s)).toBe(true);
+    s.dailyStreak = 30; expect(by('a_streak30').check(s)).toBe(true);
+    expect(by('a_seasonset').check(s)).toBe(false);
+    s.stats.seasonSetsDone = 1; expect(by('a_seasonset').check(s)).toBe(true);
+    expect(new Set(ACHIEVEMENTS.map((a) => a.id)).size).toBe(ACHIEVEMENTS.length);
+  });
+});

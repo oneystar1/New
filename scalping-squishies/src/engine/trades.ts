@@ -20,6 +20,9 @@ export interface TradeOffer {
   getVariant: Variant;
   /** Came from your wanted post (steeper price). */
   wanted?: boolean;
+  /** Portrait kind and seed for the collector's face. */
+  portrait?: 'grandpa' | 'karen' | 'reseller' | 'trader';
+  seed?: number;
 }
 
 export interface TradeBoard {
@@ -28,12 +31,12 @@ export interface TradeBoard {
   done: number[];
 }
 
-const COLLECTORS: { name: string; icon: string; lines: string[] }[] = [
-  { name: 'Nana Pat', icon: '👵', lines: ['"I have three of these and no grandkids left to give them to."', '"My page is missing one. Yours has extras. We are both adults."'] },
-  { name: 'Group Admin Brenda', icon: '📱', lines: ['"Trade only, no cash, keep it in the group."', '"I need this one for a giveaway I am not running."'] },
-  { name: 'Dalton', icon: '🧢', lines: ['"It\'s for my kid." It is not for his kid.', '"Straight swap, no shipping, meet at the gas station."'] },
-  { name: 'Retired guy who is just curious', icon: '👴', lines: ['"Which one is the valuable one? Never mind. Swap?"', '"I bought the wrong one for my grandson. Twice."'] },
-  { name: 'the_other_reseller', icon: '🤝', lines: ['"Even trade, bro. Don\'t check the comps."', '"I have a spare. You have a spare. Math."'] },
+const COLLECTORS: { name: string; icon: string; portrait: 'grandpa' | 'karen' | 'reseller' | 'trader'; seed: number; lines: string[] }[] = [
+  { name: 'Nana Pat', icon: '👵', portrait: 'grandpa', seed: 3, lines: ['"I have three of these and no grandkids left to give them to."', '"My page is missing one. Yours has extras. We are both adults."'] },
+  { name: 'Group Admin Brenda', icon: '📱', portrait: 'karen', seed: 11, lines: ['"Trade only, no cash, keep it in the group."', '"I need this one for a giveaway I am not running."'] },
+  { name: 'Dalton', icon: '🧢', portrait: 'reseller', seed: 7, lines: ['"It\'s for my kid." It is not for his kid.', '"Straight swap, no shipping, meet at the gas station."'] },
+  { name: 'Retired guy who is just curious', icon: '👴', portrait: 'grandpa', seed: 21, lines: ['"Which one is the valuable one? Never mind. Swap?"', '"I bought the wrong one for my grandson. Twice."'] },
+  { name: 'the_other_reseller', icon: '🤝', portrait: 'trader', seed: 5, lines: ['"Even trade, bro. Don\'t check the comps."', '"I have a spare. You have a spare. Math."'] },
 ];
 
 const rarityIndex = (r: Rarity) => RARITY_ORDER.indexOf(r);
@@ -91,7 +94,7 @@ export function rollTrades(s: GameState, now: number, rand: () => number): boole
         const c = COLLECTORS[Math.floor(rand() * COLLECTORS.length)];
         usedGive.add(d.key);
         usedGet.add(want.id);
-        offers.push({ id: 1, collector: c.name, icon: c.icon, line: `"Saw your wanted post. I have the ${want.name}. It costs extra. You know why."`, giveKey: d.key, giveQty: qty, getItemId: want.id, getVariant: 'standard', wanted: true });
+        offers.push({ id: 1, collector: c.name, icon: c.icon, portrait: c.portrait, seed: c.seed, line: `"Saw your wanted post. I have the ${want.name}. It costs extra. You know why."`, giveKey: d.key, giveQty: qty, getItemId: want.id, getVariant: 'standard', wanted: true });
       }
     }
   } else if (w && (s.shelf[w.itemId] ?? 0) > 0) {
@@ -110,7 +113,7 @@ export function rollTrades(s: GameState, now: number, rand: () => number): boole
     const c = COLLECTORS[Math.floor(rand() * COLLECTORS.length)];
     usedGive.add(d.key);
     usedGet.add(getKey);
-    offers.push({ id: offers.length + 1, collector: c.name, icon: c.icon, line: c.lines[Math.floor(rand() * c.lines.length)], giveKey: d.key, giveQty: qty, getItemId: want.item.id, getVariant: want.variant });
+    offers.push({ id: offers.length + 1, collector: c.name, icon: c.icon, portrait: c.portrait, seed: c.seed, line: c.lines[Math.floor(rand() * c.lines.length)], giveKey: d.key, giveQty: qty, getItemId: want.item.id, getVariant: want.variant });
   }
   s.trades = { date: key, offers, done: [], wanted: s.trades.wanted };
   return true;
@@ -126,7 +129,7 @@ export function acceptTrade(s: GameState, id: number): PullView | null {
   s.shelf[getKey] = (s.shelf[getKey] ?? 0) + 1;
   s.trades.done.push(id);
   s.stats.tradesDone += 1;
-  if (s.trades.wanted?.itemId === o.getItemId) s.trades.wanted = null;
+  if (s.trades.wanted?.itemId === o.getItemId) { s.trades.wanted = null; s.stats.wantedFulfilled += 1; }
   return { item: ITEM_BY_ID[o.getItemId], variant: o.getVariant };
 }
 

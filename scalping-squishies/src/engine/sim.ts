@@ -304,6 +304,9 @@ export function tick(s: GameState, dt: number, now: number, rand: () => number =
   const season = tickSeason(s, now, rand);
   if (season.started) res.seasonStarted = season.started.id;
   if (season.ended) res.seasonEnded = { id: season.ended.season.id, clout: season.ended.clout };
+  // Seasonal sets completed (for achievements): count of done sets across seasons.
+  const setsDone = seasonSets(s).filter((r) => r.done).length;
+  if (setsDone > s.stats.seasonSetsDone) s.stats.seasonSetsDone = setsDone;
   // Trade board rolls once a day from whatever dupes are on the shelf.
   rollTrades(s, now, rand);
   // Hustle Pass seasons rotate on the calendar; premium carries only for seasons actually bought.
@@ -657,6 +660,7 @@ export function claimDaily(s: GameState, now: number): { reward: Reward; day: nu
     s.dailyStreak += 1;
     s.streakShieldUsedOn = todayKey(now);
     shielded = true;
+    s.stats.shieldSaves += 1;
   } else s.dailyStreak = 1;
   s.lastDailyClaim = todayKey(now);
   const day = ((s.dailyStreak - 1) % DAILY_REWARDS.length) + 1;

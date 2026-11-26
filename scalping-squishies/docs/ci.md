@@ -6,7 +6,7 @@ with a message naming them, it never half-deploys.
 
 | Workflow | Trigger | Does |
 | --- | --- | --- |
-| `scalping-squishies-ci.yml` | push / PR touching `scalping-squishies/` | typecheck, 67 engine tests, 6 server tests, build, headless phone-viewport smoke test, deploy `dist/` to GitHub Pages |
+| `scalping-squishies-ci.yml` | push / PR touching `scalping-squishies/` | typecheck, engine and server tests, balance guardrails, preflight report, build, two headless smoke passes (main flow; season splash and trade board), framed listing screenshots, deploy `dist/` to GitHub Pages |
 | `scalping-squishies-server.yml` | push touching `server/` or `fly.toml` | server tests, then `server/deploy.sh` to Fly.io when `FLY_API_TOKEN` is set |
 | `scalping-squishies-ios.yml` | manual run, or a tag `ss-ios-v*` | builds the Capacitor shell on a macOS runner, signs with fastlane match, uploads to TestFlight |
 

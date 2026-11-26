@@ -7,6 +7,7 @@ import { STORE_BY_ID, STORES } from '../engine/data/stores';
 import { formatCash } from '../engine/math';
 import type { ItemFamily, Variant } from '../engine/types';
 import { Sprite } from '../art/Sprite';
+import { Portrait } from '../art/Portrait';
 import { SEASON_BY_ID } from '../engine/data/seasons';
 import { visibleSeasonItems } from '../engine/season';
 import { tradeableDupes } from '../engine/trades';
@@ -107,7 +108,7 @@ export function ShelfTab() {
             const can = have >= o.giveQty + 1;
             return (
               <div className="card" key={o.id}>
-                <div className="row"><span style={{ fontSize: 22 }}>{o.icon}</span><div className="grow"><b>{o.collector}</b>{o.wanted && <span className="tag select" style={{ marginLeft: 6 }}>📌 your post</span>}<div className="sub">{o.line}</div></div></div>
+                <div className="row">{o.portrait ? <Portrait kind={o.portrait} size={40} seed={o.seed ?? 0} /> : <span style={{ fontSize: 22 }}>{o.icon}</span>}<div className="grow"><b>{o.collector}</b>{o.wanted && <span className="tag select" style={{ marginLeft: 6 }}>📌 your post</span>}<div className="sub">{o.line}</div></div></div>
                 <div className="row mt" style={{ alignItems: 'center', gap: 10 }}>
                   <div className="center" style={{ flex: 1 }}>
                     <Sprite id={giveItem.id} size={44} variant={give.variant} />

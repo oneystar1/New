@@ -9,14 +9,18 @@ Mark done with the date. Add anything noticed during a cycle.
 | # | Area | Item | Size | Added |
 | --- | --- | --- | --- | --- |
 
-| 24 | retention | Achievements for the new systems: first trade, wanted post fulfilled, full seasonal set, streak shield saved a streak | small | 2026-11-24 |
-| 25 | polish | Trade board: show the collector's portrait instead of an emoji, reuse the Portrait art | small | 2026-11-24 |
-| 26 | launch | Smoke test: cover the Shelf trades segment and the season splash under `?season=dohlidays` in a second short pass | small | 2026-11-24 |
+
+| 27 | retention | Con Weekend leaderboard: show the top three handles in the camp line flavor ("DeadstockDrew is three ahead of you") when the backend is reachable | half day | 2026-11-26 |
+| 28 | polish | Shelf: a "complete this page" hint on each store page listing the cheapest route (pull odds vs trade board vs event shop) | small | 2026-11-26 |
+| 29 | launch | Android: `npx cap add android` workflow mirror of the iOS one, gated on Play secrets, so the second platform is a secrets drop | half day | 2026-11-26 |
 
 ## Done
 
 | # | Area | Item | Done |
 | --- | --- | --- | --- |
+| 26 | launch | Smoke test: cover the Shelf trades segment and the season splash under `?season=dohlidays` in a second short pass | 2026-11-26 |
+| 25 | polish | Trade board: show the collector's portrait instead of an emoji, reuse the Portrait art | 2026-11-26 |
+| 24 | retention | Achievements for the new systems: first trade, wanted post fulfilled, full seasonal set, streak shield saved a streak | 2026-11-26 |
 | 20 | launch | Preflight: verify the App Store Connect product list against shop.ts through the ASC API once the key exists (script `npm run asc:products` ready; the live comparison runs once the ASC key secrets exist) | 2026-11-24 |
 | 23 | retention | Weekly "collector digest" notification on iOS: trades waiting, season days left, streak shield state | 2026-11-24 |
 | 22 | polish | Comeback crate: tap-through "what changed" lines into the relevant tab (season → Hunt, trades → Shelf) | 2026-11-24 |

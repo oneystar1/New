@@ -329,6 +329,12 @@ export interface Stats {
   kidsSnatched: number;
   momsArgued: number;
   bans: number;
+  /** Wanted posts a collector fulfilled. */
+  wantedFulfilled: number;
+  /** Times the streak shield saved a streak. */
+  shieldSaves: number;
+  /** Seasonal sets completed (any season). */
+  seasonSetsDone: number;
 }
 
 export interface GameState {

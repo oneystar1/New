@@ -91,6 +91,9 @@ export function initialState(now = Date.now()): GameState {
       kidsSnatched: 0,
       momsArgued: 0,
       bans: 0,
+      wantedFulfilled: 0,
+      shieldSaves: 0,
+      seasonSetsDone: 0,
     },
     settings: { sfx: true, haptics: true, notation: 'short' },
   };

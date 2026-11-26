@@ -403,3 +403,9 @@ backgrounding so it never stacks: trade offers waiting, a standing wanted
 post, days left in a live season, streak shield state, dupes to flip.
 The comeback card's "what changed" lines are buttons that claim the
 crate and open the relevant tab.
+
+**Achievements for the newer systems.** Even Swap (first trade),
+Collector's Collector (25 trades), Saw Your Post (a wanted post
+fulfilled), Life Happens (the streak shield saved a streak), Thirty
+Mornings (30-day streak), Limited Time Only (a seasonal set completed).
+Trade board collectors show their portraits.

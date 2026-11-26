@@ -20,7 +20,8 @@
     "icons": "node tools/icons.mjs",
     "shots:store": "node tools/store-shots.mjs",
     "preflight": "node tools/preflight.mjs",
-    "asc:products": "node tools/asc-products.mjs"
+    "asc:products": "node tools/asc-products.mjs",
+    "smoke:season": "node tests/smoke-season.mjs"
   },
   "license": "MIT",
   "dependencies": {

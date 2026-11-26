@@ -56,6 +56,10 @@ jobs:
         env:
           PLAYWRIGHT_PATH: playwright
         run: npm run smoke
+      - name: Smoke test, second pass (season splash and trade board)
+        env:
+          PLAYWRIGHT_PATH: playwright
+        run: npm run smoke:season
       - uses: actions/upload-artifact@v4
         if: always()
         with:

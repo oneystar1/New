@@ -63,5 +63,11 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'a_coffee', name: 'Cold Brew Hero', blurb: 'Buy coffee for the line 5 times.', icon: '☕', clout: 15, check: (s) => s.stats.coffeeRounds >= 5 },
   { id: 'a_tickets', name: 'Ticket Master', blurb: 'Grab 10 numbered tickets in time.', icon: '🎟️', clout: 20, check: (s) => s.stats.ticketsGrabbed >= 10 },
   { id: 'a_spots', name: 'Spot Dealer', blurb: 'Sell your place in line 3 times. For a taquito.', icon: '🌯', clout: 10, check: (s) => s.stats.spotsSold >= 3 },
+  { id: 'a_trade1', name: 'Even Swap', blurb: 'Complete a trade on the board.', icon: '🔄', clout: 10, check: (s) => s.stats.tradesDone >= 1 },
+  { id: 'a_trade25', name: 'Collector\'s Collector', blurb: 'Complete 25 trades.', icon: '🤝', clout: 30, check: (s) => s.stats.tradesDone >= 25 },
+  { id: 'a_wanted', name: 'Saw Your Post', blurb: 'Have a wanted post fulfilled.', icon: '📌', clout: 15, check: (s) => s.stats.wantedFulfilled >= 1 },
+  { id: 'a_shield', name: 'Life Happens', blurb: 'Let the streak shield save a streak.', icon: '🛡️', clout: 10, check: (s) => s.stats.shieldSaves >= 1 },
+  { id: 'a_streak30', name: 'Thirty Mornings', blurb: 'Reach a 30-day login streak.', icon: '📅', clout: 40, check: (s) => s.dailyStreak >= 30 },
+  { id: 'a_seasonset', name: 'Limited Time Only', blurb: 'Complete a seasonal set.', icon: '🎁', clout: 40, check: (s) => s.stats.seasonSetsDone >= 1 },
   { id: 'a_hour', name: 'Just One More Cycle', blurb: 'Play for a total of one hour.', icon: '⏳', clout: 10, check: (s) => s.stats.playSeconds >= 3600 },
 ];
