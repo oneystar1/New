@@ -80,6 +80,25 @@ const R3D = { ok: false, frame: 0, rigs: new Map() };
   // world (feet, z-up) -> rig local (three axes, rig facing +Z) given the rig transform
   function toLocal(rig, wx, wy, wz) { const p = V(wx, wz, -wy).sub(rig.root.position).divideScalar(rig.root.scale.x); return rotY(p, -rig.root.rotation.y); }
   function dirLocal(rig, dx, dy, dz) { return rotY(V(dx, dz, -dy), -rig.root.rotation.y).normalize(); }
+  // ---------------------------------------------------------------- batting (body space)
+  // local frame: +Y up, +Z toward the plate, +X*hand toward the pitcher. Keyframes keep the bat clear of the helmet:
+  // load over the rear shoulder -> launch -> flat through the zone -> extension -> wrap over the lead shoulder.
+  const SW_KEYS = [
+    [0.00, [-0.78, 5.0, 0.45], [-0.45, 0.85, -0.25]],
+    [0.22, [-0.45, 4.25, 0.95], [-0.82, 0.42, -0.42]],
+    [0.45, [0.2, 3.0, 1.05], [0.18, -0.06, 0.98]],
+    [0.68, [0.7, 3.7, 0.95], [0.92, 0.22, 0.3]],
+    [1.00, [0.9, 5.0, 0.3], [-0.3, 0.5, -0.82]],
+  ];
+  function batPose(kind, p, h) {
+    if (kind === 'bunt') return { grip: V(0.55 * h, 3.6, 1.0), dir: V(0.12 * h, 0.12, 1).normalize(), spread: 1.05 };
+    const q = p == null ? 0 : clamp(p, 0, 1); let i = 0; while (i < SW_KEYS.length - 2 && q > SW_KEYS[i + 1][0]) i++;
+    const A = SW_KEYS[i], B = SW_KEYS[i + 1], u0 = clamp((q - A[0]) / (B[0] - A[0]), 0, 1), u = u0 * u0 * (3 - 2 * u0);
+    const g = V(lerp(A[1][0], B[1][0], u) * h, lerp(A[1][1], B[1][1], u), lerp(A[1][2], B[1][2], u));
+    const d = V(lerp(A[2][0], B[2][0], u) * h, lerp(A[2][1], B[2][1], u), lerp(A[2][2], B[2][2], u)).normalize();
+    return { grip: g, dir: d, spread: 0.36 };
+  }
+  function SVb(rig, n, v) { const sm = rig.sm || (rig.sm = {}); const pv = sm[n]; if (!pv || rig.snap) { sm[n] = v.clone(); return v; } const now = performance.now(), dt = Math.min(0.1, sm[n + 't'] ? (now - sm[n + 't']) / 1000 : 0.016); sm[n + 't'] = now; pv.lerp(v, 1 - Math.exp(-dt * 14)); return pv.clone(); }
   // ---------------------------------------------------------------- posing
   function pose(rig, o) {
     const { P, D } = rig, cls = rig.r.cls, t = o.t || 0, k = o.kind || 'idle';
@@ -98,8 +117,9 @@ const R3D = { ok: false, frame: 0, rigs: new Map() };
       const stride = k === 'bat' ? clamp((p - 0.05) / 0.3, 0, 1) * 0.45 : 0;
       footL = V(hand * (1.15 + stride), 0, 0.05); footR = V(-hand * 1.1, 0, 0.05);
       // load: shoulders coiled away from the pitcher, then rotate through the swing
-      twist = k === 'bunt' ? -hand * 1.2 : -hand * lerp(0.35, -1.25, clamp((p - 0.2) / 0.5, 0, 1));
-      if (o.grip && o.dir) { bat = { grip: toLocal(rig, ...o.grip), dir: dirLocal(rig, ...o.dir) }; }
+      twist = k === 'bunt' ? hand * 1.05 : -hand * lerp(0.35, -1.25, clamp((p - 0.2) / 0.5, 0, 1));
+      bat = batPose(k, o.p, hand);
+      if (o.p == null || k === 'bunt') { bat.grip = SVb(rig, 'bg', bat.grip); bat.dir = SVb(rig, 'bd', bat.dir).normalize(); } else { rig.sm && (rig.sm.bg = bat.grip.clone(), rig.sm.bd = bat.dir.clone()); }
     }
     if (k === 'pitch' || k === 'throw') {
       const p = o.p || 0, gl = -hand; // glove side
@@ -134,7 +154,7 @@ const R3D = { ok: false, frame: 0, rigs: new Map() };
       if (thr === 'R') { handR = th; handL = gv; } else { handL = th; handR = gv; }
       holdBall = (k === 'pitch' && p < 0.62) || (k === 'throw' && p < 0.55);
     }
-    if (bat) { const g2 = bat.grip.clone().addScaledVector(bat.dir, 0.38); if (hand > 0) { handR = bat.grip; handL = g2; } else { handL = bat.grip; handR = g2; } }
+    if (bat) { const g2 = bat.grip.clone().addScaledVector(bat.dir, bat.spread); if (hand > 0) { handL = bat.grip; handR = g2; } else { handR = bat.grip; handL = g2; } } // bottom hand = lead hand
     if (!handL) handL = relax(shL, sL); if (!handR) handR = relax(shR, sR);
     if (!bat) { handL = SV('hL', handL); handR = SV('hR', handR); } else { sm.hL = handL.clone(); sm.hR = handR.clone(); }
     if (holdBall && !bat && !(k === 'pitch' || k === 'throw')) { handR = chest.clone().add(V(-0.4, -0.8, 0.8)); }

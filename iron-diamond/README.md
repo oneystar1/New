@@ -134,8 +134,10 @@ camera as the stadium and composited into the picture. Each robot is a
 procedural rig: a pose function places hips, knees, shoulders and hands (arms
 solved with two-bone IK), then armour plates, gauntlets, thigh guards, helmets,
 visors, backpacks and thrusters are laid between those joints every frame.
-Poses: a side-on batting stance with a two-handed grip and a swing that follows
-the same bat path the hit detection uses, bunt, pitching windup and release,
+Poses: a side-on batting stance with a two-handed grip (lead hand on the knob)
+and a swing keyframed in the robot's own body space (load over the rear
+shoulder, launch, flat through the zone, extension, wrap over the lead shoulder)
+so the bat never passes through the helmet, a squared-around bunt, pitching windup and release,
 fielder throws, running, ready crouch, catcher squat and runners' leads. Menu
 portraits and the clash ring still use the 2D renderer. **Settings → Robot
 Models** switches the field back to 2D for older devices, and the game falls
@@ -155,11 +157,26 @@ back to 2D on its own if WebGL isn't available.
 - **Sound**: all synthesized, with a stadium reverb: a layered bat crack that
   gets louder and brighter the better you square it up, a mitt pop, a pitch
   whoosh timed to the flight, metallic FM clangs in clashes, explosions, a
-  formant crowd with whistles, and brass fanfares on homers. The **announcer** (on by default; Settings) is a set of recorded lines (rendered
-  offline with the espeak-ng voice, stored as small MP3s in `src/voice.js`) played
-  through Web Audio with a PA-style echo, so it works wherever the sound effects
-  do; it calls strikeouts, walks, homers, steals, clashes, walk-offs and the final
-  out, and ducks the music while it talks.
+  brass fanfares on homers.
+- **Broadcast booth** (on by default; Settings → Announcer): two recorded voices,
+  a play-by-play caller and a color analyst, about 200 lines rendered offline with
+  espeak-ng and stored as small MP3s in `src/voice.js`. The caller handles the big
+  calls (strikeouts, homers, steals, clashes, walk-offs), describes plays (base
+  hits, gappers, deep drives, routine grounders, diving catches, double plays),
+  sets the scene (full count, bases loaded, inning intros, score updates spoken as
+  "Neo Tokyo three, Detroit two", built from city and number clips), and the
+  analyst adds color between pitches. `src/booth.js` queues lines by priority:
+  big calls cut in, play descriptions follow, color only fills silence and is
+  rate-limited, and stale lines are dropped so it never talks over itself.
+- **Crowd** (`Crowd` in `src/booth.js`): the home crowd roots for the bottom-half
+  team and has an excitement level driven by the game. Cheers and groans are
+  synthesized voices (detuned "throats" through vowel formants) rather than
+  noise, so there's no hiss: "ooh" on deep flies, cheers and applause for home
+  hits, strikeouts and great catches, groans when the visitors score, boos on a
+  hit batter, a stomp-stomp-clap chant with two strikes, an organ "charge" when
+  the home team gets runners in scoring position, organ riffs between innings,
+  and a roar with stomping on a home homer or walk-off. On screen the fans jump,
+  wave team colors, start a wave and flash cameras as the excitement rises.
 
 ## Broadcast touches
 

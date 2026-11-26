@@ -65,17 +65,19 @@ const Park = {
     // crowd dots
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     const flash = Math.floor(t * 6) * 131; let ci = 0;
+    const hyp0 = typeof Crowd !== 'undefined' ? Crowd.hype : 0, jp = typeof Crowd !== 'undefined' ? Crowd.jump : 0, fq = Math.round(1800 - 1500 * Math.min(1, hyp0 + jp * 0.5)), wave = typeof Crowd !== 'undefined' ? Crowd.wave : -1;
+    const hop = (c) => { const a = Math.atan2(c.p[1], c.p[0]); const w = wave >= 0 ? Math.max(0, 1 - Math.abs(((a - (Math.PI - wave * Math.PI)) + 9 * Math.PI) % TAU - Math.PI) * 3) * 5 : 0; return (hyp0 * 1.6 + jp * 3.2) * Math.max(0, Math.sin(t * 9 + c.ph * 3)) + w; };
     for (const c of this.crowd) {
-      ci++; const q = cam.proj(c.p[0], c.p[1], c.p[2]); if (!q || q.x < -5 || q.x > W + 5 || q.y < -5 || q.y > H + 5) continue;
-      const sz = clamp(q.s * 1.6, 0.8, 4); const tw = 0.5 + 0.5 * Math.sin(t * 3 + c.ph);
-      ctx.fillStyle = c.c ? hexA(homeTeam.g, 0.5 + 0.4 * tw) : `rgba(${150 + tw * 60 | 0},${160 + tw * 50 | 0},220,0.35)`; ctx.fillRect(q.x, q.y, sz, sz);
-      if (FX.high && (flash + ci * 977) % 1800 === 0) { ctx.fillStyle = '#ffffff'; ctx.fillRect(q.x - 1, q.y - 1, sz + 2, sz + 2); ctx.drawImage(glowSprite('#ffffff'), q.x - 9, q.y - 9, 18, 18); }
+      ci++; const q = cam.proj(c.p[0], c.p[1], c.p[2] + hop(c)); if (!q || q.x < -5 || q.x > W + 5 || q.y < -5 || q.y > H + 5) continue;
+      const sz = clamp(q.s * 1.6, 0.8, 4); const tw = 0.5 + 0.5 * Math.sin(t * (3 + hyp0 * 6) + c.ph), fan = c.c || (hyp0 + jp > 0.45 && (ci % 4) === 0);
+      ctx.fillStyle = fan ? hexA(homeTeam.g, 0.5 + 0.4 * tw) : `rgba(${150 + tw * 60 | 0},${160 + tw * 50 | 0},220,${0.35 + hyp0 * 0.2})`; ctx.fillRect(q.x, q.y, sz, sz);
+      if (FX.high && (flash + ci * 977) % fq === 0) { ctx.fillStyle = '#ffffff'; ctx.fillRect(q.x - 1, q.y - 1, sz + 2, sz + 2); ctx.drawImage(glowSprite('#ffffff'), q.x - 9, q.y - 9, 18, 18); }
     }
     ctx.restore();
     if (opt.homeStands) {
       const hs = this.homeStands.map(s2 => ({ s2, d: cam.toCam(...s2.pts[0].map((c, k) => (c + s2.pts[2][k]) / 2))[2] })).sort((a, b) => b.d - a.d);
       for (const { s2 } of hs) if (cam.fillPoly(ctx, s2.pts, s2.pts[0][2] > 20 ? standHi : standLo)) { ctx.strokeStyle = 'rgba(120,140,220,0.1)'; ctx.lineWidth = 1; ctx.stroke(); }
-      ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (const c of this.homeCrowd) { const q = cam.proj(...c.p); if (!q) continue; const sz = clamp(q.s * 1.6, 0.8, 4), tw = 0.5 + 0.5 * Math.sin(t * 3 + c.ph); ctx.fillStyle = c.c ? hexA(homeTeam.g, 0.5 + 0.4 * tw) : `rgba(${150 + tw * 60 | 0},${160 + tw * 50 | 0},220,0.35)`; ctx.fillRect(q.x, q.y, sz, sz); } ctx.restore();
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (const c of this.homeCrowd) { const q = cam.proj(c.p[0], c.p[1], c.p[2] + hop(c)); if (!q) continue; const sz = clamp(q.s * 1.6, 0.8, 4), tw = 0.5 + 0.5 * Math.sin(t * 3 + c.ph); ctx.fillStyle = c.c ? hexA(homeTeam.g, 0.5 + 0.4 * tw) : `rgba(${150 + tw * 60 | 0},${160 + tw * 50 | 0},220,0.35)`; ctx.fillRect(q.x, q.y, sz, sz); } ctx.restore();
       for (let i = 1; i < this.homeStands.length; i += 2) { const a = this.homeStands[i].pts; cam.line(ctx, a[3], a[2], hexA(homeTeam.g, 0.75), 2); }
     }
     // neon rim on top of stands

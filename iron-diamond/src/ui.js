@@ -425,7 +425,7 @@ class SettingsScene {
       { label: 'ROBOT MODELS', value: (s.models || '3d').toUpperCase(), ch: () => { s.models = s.models === '2d' ? '3d' : '2d'; }, help: '3D models on the field; 2D is lighter for older devices' },
       { label: 'EFFECTS', value: s.fx.toUpperCase(), ch: cyc('fx', ['auto', 'high', 'low']), help: 'AUTO lowers glow and light effects on slow phones' },
       { label: 'SOUND', value: Sfx.muted ? 'OFF' : 'ON', ch: () => Sfx.toggleMute() },
-      { label: 'ANNOUNCER', value: s.announcer ? 'ON' : 'OFF', ch: () => { s.announcer = !s.announcer; if (s.announcer) setTimeout(() => Sfx.say('Announcer on.'), 50); }, help: 'A stadium voice calls strikeouts, homers, steals and clashes' },
+      { label: 'ANNOUNCER', value: s.announcer ? 'ON' : 'OFF', ch: () => { s.announcer = !s.announcer; if (s.announcer) setTimeout(() => Sfx.say('Announcer on.'), 50); }, help: 'Two-voice booth: play-by-play calls plus color commentary' },
       { label: 'MUSIC', value: s.music ? 'ON' : 'OFF', ch: () => { s.music = !s.music; } },
       { label: 'VIBRATION', value: s.haptics ? 'ON' : 'OFF', ch: () => { s.haptics = !s.haptics; } },
       { label: 'BACK', back: true },

@@ -146,20 +146,22 @@ const Sfx = {
     if (this.voice || typeof VOICE_CLIPS === 'undefined' || !this.ac) return; this.voice = {};
     for (const k in VOICE_CLIPS) { try { const bin = atob(VOICE_CLIPS[k]), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); this.ac.decodeAudioData(u.buffer, b => { this.voice[k] = b; }, () => { }); } catch (e) { } }
   },
-  say(text) {
-    if (this.muted || !this.ac || (typeof Game !== 'undefined' && Game.settings && Game.settings.announcer === false)) return;
-    this.loadVoice(); const key = this.VOICE_KEYS[text] || (/feet/i.test(text) ? 'gone' : null), buf = key && this.voice && this.voice[key]; if (!buf) return;
+  say(text) { // big calls go through the booth queue (interrupts color commentary)
+    const key = this.VOICE_KEYS[text] || (/feet/i.test(text) ? 'gone' : null); if (!key) return;
+    if (typeof Booth !== 'undefined') Booth.line([key], 3); else this.clip(key, this.ac && this.ac.currentTime);
+  },
+  // play one recorded clip at audio time `when`; PA chain for the caller, drier booth mic for the analyst
+  clip(key, when, booth) {
+    if (this.muted || !this.ac) return null; this.loadVoice(); const buf = this.voice && this.voice[key]; if (!buf) return null;
     try {
-      const ac = this.ac, t = ac.currentTime; if (this._vsrc) try { this._vsrc.stop(); } catch (e) { }
-      const src = ac.createBufferSource(); src.buffer = buf; src.playbackRate.value = 0.94; this._vsrc = src;
-      const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 200; const pk = ac.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = 2600; pk.gain.value = 5; pk.Q.value = 0.9;
-      const g = ac.createGain(); g.gain.value = 1.5; src.connect(hp); hp.connect(pk); pk.connect(g); this.out(g, 0.55);
-      const dl = ac.createDelay(1); dl.delayTime.value = 0.17; const fb = ac.createGain(); fb.gain.value = 0.28; const eg = ac.createGain(); eg.gain.value = 0.33;
-      g.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(eg); eg.connect(this.sfx);
-      if (this.music) { this.music.gain.cancelScheduledValues(t); this.music.gain.setTargetAtTime(0.06, t, 0.05); this.music.gain.setTargetAtTime(0.16, t + buf.duration / 0.94 + 0.2, 0.3); }
-      src.start(t); src.stop(t + buf.duration / 0.94 + 0.05);
-      setTimeout(() => { try { dl.disconnect(); fb.disconnect(); } catch (e) { } }, (buf.duration + 2) * 1000);
-    } catch (e) { }
+      const ac = this.ac, t = Math.max(when || 0, ac.currentTime), rate = booth ? 1 : 0.94, dur = buf.duration / rate;
+      const src = ac.createBufferSource(); src.buffer = buf; src.playbackRate.value = rate;
+      const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = booth ? 140 : 200; const pk = ac.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = booth ? 3000 : 2600; pk.gain.value = booth ? 3 : 5; pk.Q.value = 0.9;
+      const g = ac.createGain(); g.gain.value = booth ? 1.35 : 1.5; src.connect(hp); hp.connect(pk); pk.connect(g); this.out(g, booth ? 0.12 : 0.55);
+      if (!booth) { const dl = ac.createDelay(1); dl.delayTime.value = 0.17; const fb = ac.createGain(); fb.gain.value = 0.28; const eg = ac.createGain(); eg.gain.value = 0.33; g.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(eg); eg.connect(this.sfx); setTimeout(() => { try { dl.disconnect(); fb.disconnect(); } catch (e) { } }, (dur + 2.5 + (t - ac.currentTime)) * 1000); }
+      if (this.music) { this.music.gain.cancelScheduledValues(t); this.music.gain.setTargetAtTime(0.06, t, 0.05); this.music.gain.setTargetAtTime(0.16, t + dur + 0.3, 0.3); }
+      src.start(t); src.stop(t + dur + 0.05); return { src, dur };
+    } catch (e) { return null; }
   },
   play(name, o = {}) {
     const hap = { bat: 18, hit: 25, heavy: 45, boom: [60, 40, 90], clash: 30, hr: [30, 40, 30, 40, 60] }[name]; if (hap) this.buzz(hap);
