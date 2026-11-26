@@ -188,6 +188,7 @@ const audio={ctx:null,muted:false,music:{track:null,next:0,step:0,timer:null},si
     else if(m==='cave'){if(Math.random()<0.35)this.tone(1800+Math.random()*900,0.25,'sine',0.02,-600);gap=0.8+Math.random()*1.6;}
     else if(m==='grotto'){if(Math.random()<0.6)this.tone(240+Math.random()*120,0.08,'sine',0.02,160);gap=0.4+Math.random()*0.8;}
     else if(m==='peaks'||m==='glacier'){this.noise(1.2,0.012+Math.random()*0.01,300);gap=1.0+Math.random()*0.6;}
+    else if(m==='sky'){this.noise(1.6,0.016+Math.random()*0.012,240);gap=0.7+Math.random()*0.5;}
     else if(m==='coast'){this.noise(1.8,0.014,200);gap=1.6+Math.random()*0.8;}
     else if(m==='castle'||m==='wreck'){if(Math.random()<0.4)this.tone(55+Math.random()*10,0.6,'triangle',0.015,-10);gap=1.5+Math.random()*1.5;}
     else gap=2;this.ambNext=now+gap;},
@@ -227,6 +228,11 @@ const TRACKS={
     [['C5','-','E5','-','G5','-','A5','-','G5','-','-','-','E5','-','-','-'],['C3','.','G3','.','C3','.','G3','.','A2','.','E3','.','A2','.','E3','.']],
     [['D5','-','F5','-','A5','-','F5','-','G5','-','E5','-','C5','-','D5','-'],['F3','.','C4','.','F3','.','C4','.','G3','.','D3','.','G3','.','D3','.']],
     [['E5','-','G5','-','C6','-','-','-','G5','-','E5','-','C5','-','-','-'],['C3','.','G3','.','E3','.','G3','.','C3','.','G2','.','C3','.','.','.']]]},
+  sky:{bpm:120,lead:'triangle',drums:false,pat:[
+    [['C5','E5','G5','C6','G5','E5','C5','-','D5','F5','A5','D6','A5','F5','D5','-'],['C3','.','.','.','G3','.','.','.','D3','.','.','.','A3','.','.','.']],
+    [['E5','G5','B5','E6','B5','G5','E5','-','F5','A5','C6','F6','C6','A5','F5','-'],['E3','.','.','.','B3','.','.','.','F3','.','.','.','C3','.','.','.']],
+    [['G5','-','A5','-','B5','-','C6','-','D6','-','-','-','B5','-','-','-'],['G3','.','.','.','D3','.','.','.','G3','.','.','.','D3','.','.','.']],
+    [['C6','-','-','-','G5','-','-','-','E5','-','-','-','-','-','-','-'],['C3','.','.','.','G2','.','.','.','C3','.','.','.','.','.','.','.']]]},
   peaks:{bpm:96,lead:'triangle',drums:false,pat:[
     [['E5','-','-','-','B4','-','-','-','D5','-','-','-','A4','-','-','-'],['E3','.','.','.','B2','.','.','.','G3','.','.','.','D3','.','.','.']],
     [['G5','-','-','-','F#5','-','-','-','E5','-','-','-','-','-','-','-'],['C3','.','.','.','G2','.','.','.','D3','.','.','.','A2','.','.','.']],
@@ -326,6 +332,10 @@ const MARSHALPAL=Object.assign({},PAL,{X:'#1a2a5a',r:'#8fc0ff',O:'#bfefff',Y:'#f
 const MARSHAL=[spr(['......XrX.......','.....XrOrX......','.....XrYrX......','....kSSSSSk.....','...kSSSSSSSk....','...kSszzzzSk....','...kSsOYYOSk....','...kSszzzzSk....','..kkksSSSskkk...','.kCCkSSSSSkMMk..','.kccksSSSskMmk..','.kCCksSSSskMMk..','..kkkzSSSzkkk...','....ksz.zsk.....','....kss.ssk.....','....kkk.kkk.....'],MARSHALPAL),spr(['.......Xr.......','.....XrOrX......','.....XrYOX......','....kSSSSSk.....','...kSSSSSSSk....','...kSszzzzSk....','...kSsOYYOSk....','...kSszzzzSk....','..kkksSSSskkk...','.kCCkSSSSSkMMk..','.kccksSSSskMmk..','.kCCksSSSskMMk..','..kkkzSSSzkkk...','...ksz...zsk....','...kss...ssk....','...kkk...kkk....'],MARSHALPAL)];const MARSHAL_L=MARSHAL.map(flipX);
 const CRAB=[spr(['................','..XX........XX..','.XOOX......XOOX.','XOYYOX....XOYYOX','XOYYOX....XOYYOX','.XOOXXXXXXXXOOX.','..XXOOOOOOOOXX..','..XOOKOOOOKOOX..','.XOOOOOOOOOOOOX.','.XOYOOOOOOOOYOX.','.XOOOOOOOOOOOOX.','..XXOOOOOOOOXX..','..X.XX.XX.XX.X..','..X..X.X..X..X..','................','................'],Object.assign({},PAL,{X:'#5a2a0a',O:'#e07a1a',Y:'#ffb347',K:'#1a0d12'})),
   spr(['................','..XX........XX..','.XOOX......XOOX.','XOYYOX....XOYYOX','.XOOX......XOOX.','.XOOXXXXXXXXOOX.','..XXOOOOOOOOXX..','..XOOKOOOOKOOX..','.XOOOOOOOOOOOOX.','.XOYOOOOOOOOYOX.','.XOOOOOOOOOOOOX.','..XXOOOOOOOOXX..','..XX.XX.XX.XX...','...X.X.X.X.X....','................','................'],Object.assign({},PAL,{X:'#5a2a0a',O:'#e07a1a',Y:'#ffb347',K:'#1a0d12'}))];const CRAB_L=CRAB.map(flipX);
+const GULL=[spr(['................','................','......XXX.......','.....XiiiXXX....','....XiiiiiiiXX..','XX..XiKiiiiiiiOX','.XXXiiiiiiiiiiX.','..XiiiiiiiiiiX..','..XSSSiiiiiiX...','...XSSSiiiiX....','....XXXiiiX.....','.......XXX......','.......X.X......','......XO.XO.....','................','................'],Object.assign({},PAL,{X:'#2a2a3c',i:'#ffffff',S:'#b8bcd0',O:'#ff8c1a',K:'#1a0d12'})),
+  spr(['................','................','......XXX.......','.....XiiiXXX....','....XiiiiiiiXX..','....XiKiiiiiiiOX','..XXXiiiiiiiiX..','XXiiiiiiiiiiiX..','.XSSSiiiiiiiX...','..XXSSSiiiiX....','....XXXiiiX.....','.......XXX......','.......X.X......','......XO.XO.....','................','................'],Object.assign({},PAL,{X:'#2a2a3c',i:'#ffffff',S:'#b8bcd0',O:'#ff8c1a',K:'#1a0d12'}))];
+const CRUMB=[spr(['................','................','.....XXXXX......','...XXddddXXX....','..XdddOddddddX..','.XddddddddYddX..','.XdOdddddddddX..','.XddddddddddOX..','.XdddYddddddddX.','..XdddddOdddX...','..XXdddddddXX...','....XXXXXXX.....','................','................','................','................'],Object.assign({},PAL,{X:'#1a0d12',d:'#4a2a14',O:'#ff8c1a',Y:'#ffd23f'})),
+  spr(['................','................','.....XXXXX......','...XXddddXXX....','..XdddddddddX...','.XdddYdddddOdX..','.XdddddddddddX..','.XdOddddddddddX.','.XdddddddYdddX..','..XddddOddddX...','..XXdddddddXX...','....XXXXXXX.....','................','................','................','................'],Object.assign({},PAL,{X:'#1a0d12',d:'#4a2a14',O:'#ff8c1a',Y:'#ffd23f'}))];
 const JELLY=[spr(['................','.....XXXXXX.....','...XXOOOOOOXX...','..XOOOYYYYOOOX..','..XOOYKYYKYOOX..','..XOOOYYYYOOOX..','..XXOOOOOOOOXX..','...X.X.X.X.X....','...X.X.X.X.X....','....X...X.X.....','................','................','................','................','................','................'],Object.assign({},PAL,{X:'#8a4a1a',O:'#f0a040',Y:'#ffd98a',K:'#1a0d12'})),
   spr(['................','................','.....XXXXXX.....','...XXOOOOOOXX...','..XOOOYYYYOOOX..','..XOOYKYYKYOOX..','..XXOOOOOOOOXX..','....X.X.X.X.....','...X.X.X.X.X....','...X...X...X....','................','................','................','................','................','................'],Object.assign({},PAL,{X:'#8a4a1a',O:'#f0a040',Y:'#ffd98a',K:'#1a0d12'}))];
 const KRAKEN=[spr(['........XXXXXXXX........','......XXOOOOOOOOXX......','.....XOOOOOOOOOOOOX.....','....XOOOOOOOOOOOOOOX....','...XOOOOOOOOOOOOOOOOX...','...XOOOYYYOOOOYYYOOOX...','...XOOYKKYOOOOYKKYOOX...','...XOOYKKYOOOOYKKYOOX...','...XOOOYYYOOOOYYYOOOX...','...XOOOOOOOOOOOOOOOOX...','...XOOOOOOOKKOOOOOOOX...','....XOOOOOKOOKOOOOOX....','....XOOOOOOOOOOOOOOX....','.....XXOOOOOOOOOOXX.....','......XXXXOOOOXXXX......','..XX.....XOOOOX.....XX..','.XOOX...XOOOOOOX...XOOX.','XOOOOX.XOOOOOOOOX.XOOOOX','XOOOOXXOOOOXXOOOOXXOOOOX','.XOOOOOOOOX..XOOOOOOOOX.','..XOOOOOOX....XOOOOOOX..','...XXXXXX......XXXXXX...','........................','........................'],Object.assign({},PAL,{X:'#3a1a4a',O:'#8a4aa0',Y:'#ffd98a',K:'#1a0d12'})),
@@ -410,8 +420,9 @@ function drawLogo(cx,cy,t){if(!logoCache){const c=document.createElement('canvas
   const f=(t>>3)&1;for(let i=0;i<5;i++){const fx=cx-36+i*18+(f?1:0),fy=cy+26-((t>>2)+i*3)%3;drawFlame(fx,fy-6,6,(f+i)&1,0.9);}
   ctx.drawImage(logoCache,cx-120,cy);}
 // ---------- auto-tiled terrain ----------
-const SOLID=new Set(['t','~','r','R','#','L','H','D','@','B','q','P','Y']);
-const GROUP={t:'t','~':'~',r:'r',R:'R','#':'#',c:'c',p:'p',L:'L',H:'H',s:'~',q:'t',P:'P',i:'i',Y:'Y',d:'d'};
+const SOLID=new Set(['t','~','r','R','#','L','H','D','@','B','q','P','Y','O']);
+const FALL=new Set(['A']);
+const GROUP={t:'t','~':'~',r:'r',R:'R','#':'#',c:'c',p:'p',L:'L',H:'H',s:'~',q:'t',P:'P',i:'i',Y:'Y',d:'d',C:'C',O:'O'};
 const tileCache={};
 function tileAt(i,j){const m=G.map;i=Math.max(0,Math.min(m.w-1,i));j=Math.max(0,Math.min(m.h-1,j));return m.t[j][i];}
 function maskFor(i,j){const ch=tileAt(i,j),g=GROUP[ch];if(!g)return 0;let k=0;if(GROUP[tileAt(i,j-1)]===g)k|=1;if(GROUP[tileAt(i+1,j)]===g)k|=2;if(GROUP[tileAt(i,j+1)]===g)k|=4;if(GROUP[tileAt(i-1,j)]===g)k|=8;return k;}
@@ -468,6 +479,13 @@ function tile(ch,mask,frame,v){const key=ch+mask+frame+v;if(tileCache[key])retur
     case '@':px('#b8803e',0,0,16,16);px('#96632c',0,7,16,1);px('#3a2214',1,2,14,12);px('#8a5a2a',2,3,12,10);px('#d6b08a',3,4,10,8);px('#ffb6d9',6,7,4,2);px('#ffd23f',7,6,2,1);break;
     case 'S':px('#b8803e',0,0,16,16);px('#96632c',0,7,16,1);px('#3a2214',3,9,10,5);px('#8a5a2a',4,10,8,3);px('#3a2214',4,4,8,6);px('#c0303c',5,5,6,4);break;
     case 'g':px('#8f88a2',0,0,16,16);px('#3a2214',1,1,14,14);px('#d6a63a',2,2,12,12);px('#f4d26a',3,3,4,4);px('#a8701a',6,6,4,4);break;
+    case 'A':{px(frame?'#7fb6ea':'#7cb3e8',0,0,16,16);px('#8fc4f2',0,v*5,16,1);px('#9ccdf5',3+v*4,6+v*3,6,1);px('#9ccdf5',9-v*3,12,4,1);if(v===2)px('#a8d6f8',2,2,3,1);break;}
+    case 'C':{px('#eef2ff',0,0,16,16);for(let i=0;i<5;i++)px('#e0e6f8',rnd()*16|0,rnd()*16|0,3,1);for(let i=0;i<3;i++)px('#ffffff',rnd()*14|0,rnd()*14|0,2,1);
+      if(!N){px('#ffffff',0,0,16,2);px('#ffffff',2,2,3,1);px('#ffffff',9,2,4,1);}if(!S){px('#c7d0ea',0,13,16,3);px('#aab6d8',0,15,16,1);px('#aab6d8',1,14,3,1);px('#aab6d8',9,14,4,1);}
+      if(!Wt){px('#ffffff',0,0,1,16);px('#d8dff4',1,3,1,10);}if(!E){px('#c7d0ea',15,0,1,16);px('#d8dff4',14,2,1,10);}break;}
+    case 'E':{px('#c98a4a',0,0,16,16);px('#a86c32',0,0,16,1);px('#a86c32',0,15,16,1);px('#a86c32',0,7,16,1);px('#e8b060',2+v*3,3,3,1);px('#e8b060',8-v*2,10,4,1);px('#8a5a2a',12,4,1,1);px('#8a5a2a',4,12,1,1);px('#e8b060',1,1,1,1);break;}
+    case 'O':{px('#8a3a2a',0,0,16,16);px('#5a2418',0,3,16,1);px('#5a2418',0,7,16,1);px('#5a2418',0,11,16,1);px('#5a2418',0,15,16,1);px('#5a2418',5,0,1,3);px('#5a2418',11,4,1,3);px('#5a2418',3,8,1,3);px('#5a2418',9,12,1,3);px('#a84a36',1,1,3,1);px('#a84a36',7,5,3,1);px('#a84a36',12,9,3,1);
+      if(!S){px('#3a1a10',0,14,16,2);}break;}
     default:px('#ff00ff',0,0,16,16);
   }
   tileCache[key]=c;return c;}
@@ -660,7 +678,24 @@ MAPS.home=interior('Puff\'s Home',3,null,{ox:38,oy:48,objs:[{type:'bed',x:8,y:1,
   m.enemies.push({kind:'ember',x:30,y:30});
   m.hard=[{kind:'snowslime',x:26,y:24},{kind:'icebat',x:8,y:8}];
   for(let k=0;k<30;k++){const i=2+(rnd()*40|0),j=2+(rnd()*32|0);if(m.t[j][i]==='n')m.objs.push({type:'tuft',x:i,y:j,snow:true});}
+  rect(m,21,2,3,1,'C');m.t[3][22]='n';m.t[4][22]='n';m.t[5][22]='n';m.t[6][22]='n';m.objs.push({type:'warp',x:22,y:2,to:'sky',tx:6,ty:26,dir:1,w:1,h:1,needsItem:'mitten'});
+  m.objs.push({type:'sign',x:23,y:3,text:"UPDRAFT. A warm wind climbs from this cloud to the SKY BAKERY. It only lifts a Puff who cannot freeze on the way up."});
   m.spawn={x:42,y:18};MAPS.peaks=m;}
+// ---- Sky Bakery 40x30: cloud platforms over open air, crust planks, gusting wind, the Oven Lord's door ----
+{const m=newMap(40,30,'A');m.name='Sky Bakery';m.music='sky';m.heat=0.5;m.wall='O';
+  rect(m,2,24,10,5,'C');rect(m,12,26,6,1,'E');rect(m,18,23,8,6,'C');rect(m,21,16,1,7,'E');rect(m,16,10,12,6,'C');rect(m,6,12,10,1,'E');rect(m,2,8,4,8,'C');
+  rect(m,14,0,16,4,'O');rect(m,18,4,9,2,'C');rect(m,22,6,1,4,'E');rect(m,26,25,4,1,'E');rect(m,30,22,8,6,'C');rect(m,33,16,1,6,'E');rect(m,30,10,8,6,'C');
+  m.wind=[{x:12,y:25,w:6,h:3,dx:0,dy:1,gusty:true,ph:0},{x:20,y:16,w:3,h:7,dx:1,dy:0,gusty:true,ph:2},{x:6,y:11,w:10,h:3,dx:0,dy:-1,gusty:true,ph:4},{x:21,y:6,w:3,h:4,dx:-1,dy:0,gusty:true,ph:1},{x:26,y:24,w:4,h:3,dx:0,dy:-1,gusty:true,ph:3},{x:32,y:16,w:3,h:6,dx:1,dy:0,gusty:true,ph:5}];
+  m.objs.push({type:'warp',x:6,y:28,to:'peaks',tx:22,ty:3,dir:0,w:1,h:1});
+  m.objs.push({type:'sign',x:9,y:25,text:"SKY BAKERY. The wind here has opinions: wait for the lull, then cross. Clouds hold a marshmallow. Open sky does not."});
+  m.objs.push({type:'sign',x:19,y:24,text:"Burnt crumbs roll the clouds and never fall off. Hit them, or let them pass."});
+  m.objs.push({type:'ovendoor',x:22,y:3});m.objs.push({type:'sign',x:25,y:5,text:"THE GREAT OVEN. Scratched into the brick: 'PREHEATING. DO NOT OPEN.'"});
+  m.objs.push({type:'chest',id:'topcloud',x:3,y:9,item:'topcloud'});m.objs.push({type:'chest',id:'skyfrost',x:35,y:11,item:'frost3'});
+  for(const[x,y]of[[4,27],[24,24],[26,11],[17,14],[31,26],[36,23],[31,13]])m.objs.push({type:'coin',x,y});m.objs.push({type:'jar',x:34,y:14});m.objs.push({type:'jar',x:4,y:14});
+  [[20,25],[23,27],[32,24],[35,23]].forEach(p=>m.enemies.push({kind:'crumb',x:p[0],y:p[1]}));
+  [[20,12],[25,13],[33,12],[8,12]].forEach(p=>m.enemies.push({kind:'gull',x:p[0],y:p[1]}));
+  m.hard=[{kind:'gull',x:4,y:10},{kind:'crumb',x:24,y:12}];
+  m.spawn={x:6,y:26};MAPS.sky=m;}
 // ---- Sugar Glacier 30x20: ice slide puzzle, then the Frost Marshal ----
 {const m=newMap(30,20,'r');m.name='Sugar Glacier';m.music='cave';m.heat=0.8;m.cold=true;m.wall='r';
   rect(m,11,14,9,5,'n');m.t[19][15]='n';m.objs.push({type:'warp',x:15,y:19,to:'peaks',tx:7,ty:14,dir:0,w:1,h:1});m.objs.push({type:'campfire',x:17,y:16});
@@ -748,6 +783,8 @@ function mkEnemy(e){const base={type:'enemy',kind:e.kind,x:e.x*T+3,y:e.y*T+3,w:1
     case 'snowslime':Object.assign(base,{hp:3,speed:0,heat:0,radius:0,cold:0.3,w:12,h:9,x:e.x*T+2,y:e.y*T+5});break;
     case 'icebat':Object.assign(base,{hp:1,speed:0.9,heat:0,radius:0,cold:0.25,fly:true,w:12,h:8,x:e.x*T+2,y:e.y*T+4,ang:Math.random()*6.28});break;
     case 'crab':Object.assign(base,{hp:4,speed:0.9,heat:0.5,radius:18,flame:false,crab:true,w:14,h:10,x:e.x*T+1,y:e.y*T+4});break;
+    case 'gull':Object.assign(base,{hp:2,speed:1.0,heat:0.3,radius:12,flame:false,fly:true,w:12,h:8,x:e.x*T+2,y:e.y*T+4,ang:Math.random()*6});break;
+    case 'crumb':Object.assign(base,{hp:2,speed:1.3,heat:0.5,radius:14,flame:true,w:12,h:9,x:e.x*T+2,y:e.y*T+5,vx:Math.random()<0.5?1.3:-1.3,vy:0});break;
     case 'jelly':Object.assign(base,{hp:2,speed:0.35,heat:0.6,radius:20,flame:false,fly:true,w:12,h:8,x:e.x*T+2,y:e.y*T+4,ang:Math.random()*6.28});break;
     case 'tent':Object.assign(base,{hp:1,speed:0,heat:0,radius:0,flame:false,tent:true,w:12,h:10,x:e.x*T+2,y:e.y*T+4,st:0});break;
     case 'kraken':Object.assign(base,{hp:10+(hard()?3:0),maxhp:10+(hard()?3:0),speed:0,heat:0,radius:0,flame:false,mini:true,boss3:true,w:22,h:20,x:e.x*T-3,y:e.y*T+6,phase:0,sub:false});break;
@@ -759,7 +796,7 @@ function mkEnemy(e){const base={type:'enemy',kind:e.kind,x:e.x*T+3,y:e.y*T+3,w:1
     case 'boss':Object.assign(base,{hp:9+(hard()?3:0),maxhp:9+(hard()?3:0),speed:0.9,heat:1.6,radius:46,w:22,h:22,x:e.x*T-3,y:e.y*T+2,boss:true,flame:true,phase:0,spit:0});break;}
   base.baseSpeed=base.speed;base.maxhp=base.maxhp||base.hp;return base;}
 function loadMap(name,tx,ty,dir){const m=MAPS[name];G.map=m;G.mapName=name;G.visited[name]=true;
-  m.objs=m.objs.filter(o=>!o.drop);G.ents=[];G.shots=[];G.fx=[];G.amb=[];G.patches=[];G.steam=[];G.goo=[];G.frozen={};G.ash=[];P.spearOut=null;P.carried=null;P.vault=0;P.hop=null;P.squeeze=null;P.dotUsed=false;P.slide=null;
+  m.objs=m.objs.filter(o=>!o.drop);G.ents=[];G.shots=[];G.fx=[];G.amb=[];G.patches=[];G.steam=[];G.goo=[];G.frozen={};G.ash=[];P.spearOut=null;P.carried=null;P.vault=0;P.hop=null;P.squeeze=null;P.dotUsed=false;P.slide=null;P.falling=0;
   if(G.gauntlet&&name!=='castle')G.gauntlet=null;
   if(G.ngplus&&m.ngplus){for(const e of m.ngplus)m.enemies.includes(e)||0;}
   if(G.ngplus&&m.ngPatches)for(const[x,y]of m.ngPatches)G.patches.push({x,y,ttl:1e9});
@@ -770,10 +807,10 @@ function loadMap(name,tx,ty,dir){const m=MAPS[name];G.map=m;G.mapName=name;G.vis
   if(name==='glacier'&&!G.flags.marshalDead)G.flags.trig_marshal=false;if(name==='wreck'&&!G.flags.krakenDead)G.flags.trig_kraken=false;G.lastTide=tideHigh();
   if(name==='castle'&&!G.flags.bossDead)G.flags.trig_taunt=false; // the Pyre Lord waits in the throne room until you walk in
   if(cooled){for(const o of m.objs){if(o.type==='torch')o.out=true;}for(let j=0;j<m.h;j++)for(let i=0;i<m.w;i++)if(m.t[j][i]==='L')G.frozen[i+','+j]=1e9;m.cooledNow=true;}else if(name==='castle'){for(const o of m.objs){if(o.type==='torch')delete o.out;}m.cooledNow=false;}
-  if((name==='cave'||name==='castle'||name==='grotto')&&tx===m.spawn.x&&ty===m.spawn.y)G.checkpoint={map:name,x:tx,y:ty};
+  if((name==='cave'||name==='castle'||name==='grotto'||name==='sky')&&tx===m.spawn.x&&ty===m.spawn.y)G.checkpoint={map:name,x:tx,y:ty};
   if(name==='castle'&&G.flags.eastDoor){const b=m.objs.find(o=>o.type==='block');b.x=34;b.y=26;}if(name==='wreck'&&G.flags.wreckDoor){const b=m.objs.find(o=>o.type==='block');b.x=24;b.y=12;}if(name==='grotto'&&G.flags.grottoEastDoor){const b=m.objs.find(o=>o.type==='block');b.x=22;b.y=15;}
   G.flags.bossFight=G.ents.some(e=>e.boss);
-  P.x=tx*T+3;P.y=ty*T+3;P.dir=dir==null?P.dir:dir;P.kb.x=P.kb.y=0;P.atk=0;P.roll=0;P.wasToasted=P.toast/P.cap>=0.5;refreshSolids();
+  P.x=tx*T+3;P.y=ty*T+3;P.safe={x:P.x,y:P.y};P.dir=dir==null?P.dir:dir;P.kb.x=P.kb.y=0;P.atk=0;P.roll=0;P.wasToasted=P.toast/P.cap>=0.5;refreshSolids();
   G.F=G.follower?{id:G.follower,x:P.x,y:P.y+12,w:10,h:10,toast:0,trail:[],parked:false,frame:0}:null;
   if(m.interior){G.lastHome={map:name,x:tx,y:ty};}
   audio.play(G.flags.bossFight&&name==='castle'?'boss':(cooled?'village':m.music));
@@ -835,7 +872,7 @@ function attackBox(){const r=P.atkType==='spear'?26:16;const cx=P.x+P.w/2,cy=P.y
 function dirVec(d){return[[0,1],[0,-1],[-1,0],[1,0]][d];}
 function facingTile(n=1){let i=Math.floor((P.x+P.w/2)/T),j=Math.floor((P.y+P.h/2)/T);const d=dirVec(P.dir);return{i:i+d[0]*n,j:j+d[1]*n};}
 function objAt(i,j,type){return G.map.objs.find(o=>(!type||o.type===type)&&i>=o.x&&i<o.x+(o.w||1)&&j>=o.y&&j<o.y+(o.h||1)&&(o.type!=='npc'||npcVisible(o)));}
-function surfaceAt(){const ch=G.map.t[Math.floor((P.y+P.h)/T)]?.[Math.floor((P.x+P.w/2)/T)];if(ch==='w'||ch==='@'||ch==='S')return'wood';if(ch==='_'||ch==='x'||ch==='c'||ch==='g'||ch==='o')return'stone';if(ch==='p')return'path';if(ch==='s')return'water';return'grass';}
+function surfaceAt(){const ch=G.map.t[Math.floor((P.y+P.h)/T)]?.[Math.floor((P.x+P.w/2)/T)];if(ch==='w'||ch==='@'||ch==='S'||ch==='E')return'wood';if(ch==='_'||ch==='x'||ch==='c'||ch==='g'||ch==='o')return'stone';if(ch==='p')return'path';if(ch==='s')return'water';return'grass';}
 function tileFree(i,j){const m=G.map;const ch=m.t[j]?.[i];if(ch==null)return false;if(SOLID.has(ch)&&!(ch==='L'&&G.frozen[i+','+j]>0))return false;return !m.solidObj[i+','+j];}
 function giveCap(n){const from=P.cap;P.cap+=n;P.toast=Math.max(0,P.toast-0.3);G.capAnim={from,to:P.cap,t:0};audio.sfx('grow');for(let k=0;k<12;k++)G.fx.push({x:P.x+5,y:P.y+5,vx:Math.cos(k/12*6.28)*1.4,vy:Math.sin(k/12*6.28)*1.4-0.5,life:26,col:k%2?'#fffaf0':'#ffd23f'});}
 function toastRatio(){return P.toast/P.cap;}
@@ -851,6 +888,7 @@ function interact(){const f=facingTile();let o=objAt(f.i,f.j);
     else if(o.item==='frost5'){G.items.frost+=5;say(["Five FROST JARS, cold as a cellar. Press V (ITEM) to throw one three steps ahead."],null,'ITEM');}
     else if(o.item==='bigjar2'){giveCap(0.3);say(["Puff found a tub of GROTTO GLAZE! The TOAST meter is longer."],null,'ITEM');}
     else if(o.item==='topgold'){giveTopping('gold','CHEST');return true;}
+    else if(o.item==='topcloud'){giveTopping('cloud','CHEST');return true;}
     else if(o.item==='compass'){G.items.compass=true;say(["Puff found the CAPTAIN'S COMPASS! Out in the open, an arrow on the screen edge points toward your current goal."],null,'ITEM');}
     else if(o.item==='mitten'){G.items.mitten=true;say(["Puff found the MITTEN CHARM! The cold can't stiffen him any more, and icy monsters barely sting."],null,'ITEM');}
     else if(o.item==='boots'){G.items.boots=true;say(["Puff found the SUGAR BOOTS! Rolls recover twice as fast and go a little farther."],null,'ITEM');}
@@ -863,6 +901,7 @@ function interact(){const f=facingTile();let o=objAt(f.i,f.j);
     const best=G.best!=null?'Best time: '+fmtTime(G.best)+'.':'No time set yet.';
     ask('GAUNTLET: Magma Toad, then the Pyre Lord. '+best,['Begin','Not now'],i=>{if(i===0)startGauntlet();});return true;}
   if(o.type==='trophy'){say([o.what==='toadDead'?"A deflated Magma Toad, mounted on a plaque. It still smells faintly of sulfur.":"The Pyre Lord's crown of flame, snuffed and bronzed. The buddies polish it on weekends."],null,'TROPHY');return true;}
+  if(o.type==='ovendoor'){say(["An iron OVEN DOOR, hot to the touch. Scratched into the metal: 'PREHEATING. DO NOT OPEN.' Something enormous breathes on the other side."],null,'OVEN');return true;}
   if(o.type==='badges'){G.showBadges=true;G.badgePage=0;audio.sfx('menu');clearActions();return true;}
   if(o.type==='portrait'){say([`A portrait of ${BUDDY_NAMES[o.who]}, painted the day they came home.`],null,'PORTRAIT');return true;}
   if(o.type==='campfire'){say(["A crackling campfire. Standing close toasts you slowly, and nothing here bites. Useful if you WANT to be brown."],null,'CAMPFIRE');return true;}
@@ -896,7 +935,10 @@ function tryPush(dx,dy){const f=facingTile();const b=objAt(f.i,f.j,'block');if(!
   return true;}
 function trySqueeze(){const f=facingTile();if(G.map.t[f.j]?.[f.i]!=='q')return false;const f2=facingTile(2);if(!tileFree(f2.i,f2.j))return false;
   P.squeeze={t:0,dur:hasFollower('squish')?16:40,fx:P.x,fy:P.y,tx:f2.i*T+3,ty:f2.j*T+3};clearActions();audio.sfx('squeeze');tip('squeeze','Narrow gaps: Puff squeezes through on his own. Squish makes it quick.');return true;}
+function windAt(px,py){const w=G.map.wind;if(!w)return null;const i=Math.floor(px/T),j=Math.floor(py/T);for(const r of w){if(i>=r.x&&i<r.x+r.w&&j>=r.y&&j<r.y+r.h)return r;}return null;}
+function windStrength(w){return w.gusty?Math.max(0,Math.sin(G.t/70+(w.ph||0))):0.6;}
 function updatePlayer(){
+  if(P.falling){P.falling--;if(P.falling<=0){const s=P.safe||{x:G.map.spawn.x*T+3,y:G.map.spawn.y*T+3};P.x=s.x;P.y=s.y;P.hurt=45;P.toast=Math.min(P.cap,P.toast+0.12);P.lastHurt={cause:'a long fall',t:G.t};P.kb.x=P.kb.y=0;audio.sfx('hit');G.shake=3;tip('fall','Open sky does not hold a marshmallow. Cross planks during a lull in the wind.');}return;}
   if(P.hurt>0)P.hurt--;if(P.rollCd>0)P.rollCd--;if(P.soggy>0)P.soggy--;if(P.bossCool>0)P.bossCool--;
   const tt=toastRatio()>=0.5;if(tt!==P.wasToasted){P.wasToasted=tt;refreshSolids();}
   if(P.carried){const b=P.carried;if(b.dead||b.gone||P.carryT++>120||(P.carryT>8&&(justPressed('a')||justPressed('b')||justPressed('c')))){const t=nearestFree(Math.floor((P.x+5)/T),Math.floor((P.y+5)/T));P.x=t.i*T+3;P.y=t.j*T+3;P.carried=null;P.hurt=30;audio.sfx('hop');}
@@ -934,18 +976,23 @@ function updatePlayer(){
     const ox=P.x,oy=P.y;slideMove(P,dx*spd,dy*spd);P.anim++;P.idle=0;if(P.anim%8===0){P.frame=(P.frame+1)%4;audio.step(surfaceAt());}
     if(P.x===ox&&P.y===oy){const d=dirVec(P.dir);if(!tryPush(d[0],d[1])){P.pushT=0;if(trySqueeze())return;}}else P.pushT=0;
     if(toastRatio()>0.8&&++P.gooT%10===0)G.goo.push({x:P.x+2,y:P.y+8,ttl:240});}
+  // wind pushes Puff across the clouds unless he wears the Cloud Glaze; open air drops him
+  if(G.map.wind&&!P.hop&&!P.vault&&!P.carried&&!P.squeeze){const w=windAt(P.x+5,P.y+5);if(w&&!hasTop('cloud')){const st=windStrength(w);if(st>0.05){moveEnt(P,w.dx*st*0.9,0);moveEnt(P,0,w.dy*st*0.9);}}}
+  if(!P.hop&&!P.vault&&!P.carried&&!P.squeeze){const fi=Math.floor((P.x+5)/T),fj=Math.floor((P.y+5)/T);const fch=G.map.t[fj]?.[fi];
+    if(FALL.has(fch)){P.falling=36;P.slide=null;P.roll=0;P.atk=0;P.charge=0;audio.sfx('hop');}else if(!windAt(P.x+5,P.y+5))P.safe={x:P.x,y:P.y};}
   else{P.anim=0;P.idle++;P.pushT=0;}
   if(justPressed('c')&&P.rollCd===0){startRoll(dx,dy);return;}
   if(justPressed('a')){if(!interact()&&G.flags.sword){P.atk=P.soggy?22:14;P.atkType='sword';audio.sfx('sword');hitThings();}}
   if(justPressed('item'))useItem();
   const ci=Math.floor((P.x+P.w/2)/T),cj=Math.floor((P.y+P.h/2)/T);
   P.prompt=null;{const f=facingTile();let o=objAt(f.i,f.j);if(!o){for(const[a,b2]of[[0,1],[0,-1],[1,0],[-1,0]]){const sg=objAt(ci+a,cj+b2,'sign');if(sg){o=sg;break;}}}
-    const usable=o&&((o.type==='sign')||(o.type==='npc')||(o.type==='chest'&&!G.opened[o.id])||o.type==='bed'||(o.type==='shelf'&&!G.flags[o.id])||o.type==='pedestal'||(o.type==='trophy'&&G.flags[o.what])||(o.type==='portrait'&&G.freed[o.who])||o.type==='badges'||o.type==='campfire'||o.type==='block');
+    const usable=o&&((o.type==='sign')||(o.type==='npc')||(o.type==='chest'&&!G.opened[o.id])||o.type==='bed'||(o.type==='shelf'&&!G.flags[o.id])||o.type==='pedestal'||(o.type==='trophy'&&G.flags[o.what])||(o.type==='portrait'&&G.freed[o.who])||o.type==='badges'||o.type==='ovendoor'||o.type==='campfire'||o.type==='block');
     if(usable)P.prompt={x:o.x*T+((o.w||1)*T)/2,y:o.y*T-(o.type==='bed'?6:0),push:o.type==='block'};}
   // shallow water: instant cool-down, soggy for a while
   if(G.map.t[cj]?.[ci]==='s'&&!P.soggy){P.toast=0;P.soggy=600;audio.sfx('splash');puff(P.x+5,P.y+8,'#8fc0ff',10);tip('water','SOGGY: fire cannot toast you for a while, but the sword swings slowly.');}
   if(toastRatio()>=0.5)tip('toasty','Half toasted: slower but tougher. Embers lose interest, and flame curtains let you pass.');
   for(const o of G.map.objs){if(o.type!=='warp')continue;if(o.needs&&!G.flags[o.needs])continue;
+    if(o.needsItem&&!G.items[o.needsItem]){if(ci>=o.x&&ci<o.x+(o.w||1)&&cj>=o.y&&cj<o.y+(o.h||1)&&!G.msg&&(!o.warned||G.t-o.warned>180)){o.warned=G.t;say(["The updraft swirls around Puff, lifts him an inch, and drops him. Too cold up there without the MITTEN CHARM."]);}continue;}
     if(ci>=o.x&&ci<o.x+(o.w||1)&&cj>=o.y&&cj<o.y+(o.h||1)){if(!o.silent)audio.sfx('door');const warp=o;startFade(()=>{loadMap(warp.to,warp.tx,warp.ty,warp.dir);saveGame();},warp.dir);return;}}
   for(const o of G.map.objs){if(o.type==='trigger'&&!G.flags['trig_'+o.id]&&ci>=o.x&&ci<o.x+o.w&&cj>=o.y&&cj<o.y+o.h){G.flags['trig_'+o.id]=true;fireTrigger(o.id);}}
   for(const o of G.map.objs){if((o.type==='jar'||o.type==='sprinkle'||o.type==='seal'||o.type==='coin')&&!o.got&&(o.drop||!G.taken[takenKey(o)])&&ci===o.x&&cj===o.y){
@@ -967,7 +1014,7 @@ const BADGES=[
   {id:'marshal',name:'Thawed Out',desc:'Melt the Frost Marshal.',col:'#8fc0ff',cond:()=>!!G.flags.marshalDead},
   {id:'kraken',name:'Deep Fried',desc:'Sink the Kraken.',col:'#8fc0ff',cond:()=>!!G.flags.krakenDead},
   {id:'seals',name:'Sealed Deal',desc:'Find all six Seals.',col:'#ffd23f',cond:()=>G.seals>=6},
-  {id:'explorer',name:'Cartographer',desc:'Set foot in every region.',col:'#8fe38f',cond:()=>['cave','castle','grotto','peaks','glacier','coast','wreck'].every(k=>G.visited[k])},
+  {id:'explorer',name:'Cartographer',desc:'Set foot in every region.',col:'#8fe38f',cond:()=>['cave','castle','grotto','peaks','glacier','coast','wreck','sky'].every(k=>G.visited[k])},
   {id:'fighter',name:'Fire Fighter',desc:'Douse 100 monsters.',col:'#ff8c3a',cond:()=>stat('kills')>=100},
   {id:'hoarder',name:'Sprinkle Hoarder',desc:'Pick up 250 sprinkles.',col:'#ffd23f',cond:()=>stat('coins')>=250},
   {id:'dressed',name:'Fully Dressed',desc:'Fill every topping slot.',col:'#d6a63a',cond:()=>{const t=tops();return !!(t.eq.crust&&t.eq.glaze&&t.eq.sprinkle);}},
@@ -975,7 +1022,8 @@ const BADGES=[
   {id:'white',name:'Still White',desc:'Win without melting once.',col:'#fffaf0',cond:()=>G.cleared&&G.deaths===0},
   {id:'toasty',name:'Toasty',desc:'Melt ten times. It happens.',col:'#8a5a2a',cond:()=>G.deaths>=10},
   {id:'runner',name:'Gauntlet Runner',desc:'Finish the boss gauntlet.',col:'#ffd23f',cond:()=>G.best!=null},
-  {id:'second',name:'Second Helping',desc:'Start New Game+.',col:'#b9a5c6',cond:()=>!!G.ngplus}];
+  {id:'second',name:'Second Helping',desc:'Start New Game+.',col:'#b9a5c6',cond:()=>!!G.ngplus},
+  {id:'sky',name:'Head in the Clouds',desc:'Ride the updraft to the sky.',col:'#8fc0ff',cond:()=>!!G.visited.sky}];
 function stat(k){return (G.stats&&G.stats[k])||0;}
 function bump(k,n=1){G.stats=G.stats||{melts:{},causes:{},time:{}};G.stats[k]=(G.stats[k]||0)+n;}
 function badgeCount(){return BADGES.filter(b=>G.badges&&G.badges[b.id]).length;}
@@ -1067,7 +1115,7 @@ function freeBuddy(o){G.freed[o.id]=true;audio.sfx('free');refreshSolids();
   say(lines,null,o.name);saveGame();}
 
 // ---------- update: enemies, hazards, heat ----------
-const CAUSE_NAMES={ember:'Ember lunge',blue:'blue flame',knight:'Torch Knight',candle:'Candle Knight',slime:'fire slime',bat:'fire bat',snail:'lava snail',toad:'Magma Toad',boss:'Pyre Lord'};
+const CAUSE_NAMES={gull:'Sugar Gull',crumb:'Burnt Crumb',ember:'Ember lunge',blue:'blue flame',knight:'Torch Knight',candle:'Candle Knight',slime:'fire slime',bat:'fire bat',snail:'lava snail',toad:'Magma Toad',boss:'Pyre Lord'};
 function hurtPlayer(amt,from,kb=3.5,cause){if(P.hurt||P.roll||P.carried||P.hop||P.vault)return;
   P.lastHurt={cause:cause||(from&&from.kind?CAUSE_NAMES[from.kind]:'fireball'),t:G.t};
   if(P.soggy)amt*=0.3;if(toastRatio()>0.5)amt*=0.6;
@@ -1109,7 +1157,7 @@ function updateEnemy(e){const tg=target(e);const d=dist(e,tg);e.st++;const calm=
       e.x+=Math.cos(e.ang)*0.5+Math.sin(e.life/40)*0.3;e.y+=Math.sin(e.ang*1.3)*0.4;e.x=Math.max(16,Math.min(G.map.w*T-32,e.x));e.y=Math.max(16,Math.min(G.map.h*T-32,e.y));
       if(overlap(e,P)&&!P.roll){e.state='flare';e.st=0;hurtPlayer(0.12,e,2,'Will-o-Wisp');audio.sfx('douse',e);}
       if(nightAmount()<0.5||G.mapName!=='overworld'){e.dead=20;}break;}
-    case 'bat':case 'icebat':{e.ang+=0.08;const carrying=P.carried===e;
+    case 'bat':case 'icebat':case 'gull':{e.ang+=0.08;const carrying=P.carried===e;
       if(carrying){e.x+=Math.cos(e.ang)*1.6;e.y+=Math.sin(e.ang*1.7)*1.2;}
       else if(e.state==='wander'){const a=Math.atan2(tg.y-e.y,tg.x-e.x);e.x+=Math.cos(e.ang)*0.9+(d<110&&!calm?Math.cos(a)*0.25:0);e.y+=Math.sin(e.ang*1.7)*0.7+(d<110&&!calm?Math.sin(a)*0.25:0);
         if(d<70&&!calm&&(Math.abs(tg.x-e.x)<6||Math.abs(tg.y-e.y)<6)&&e.st>60){e.state='dive';e.st=0;const b=Math.atan2(tg.y-e.y,tg.x-e.x);e.vx=Math.cos(b)*2.6;e.vy=Math.sin(b)*2.6;}}
@@ -1124,6 +1172,10 @@ function updateEnemy(e){const tg=target(e);const d=dist(e,tg);e.st++;const calm=
       else if(e.state==='side'){const dy=tg.y-e.y;const dx=tg.x-e.x;if(Math.abs(dy)>6)moveEnt(e,0,Math.sign(dy)*e.speed*0.8);else if(Math.abs(dx)>40)moveEnt(e,Math.sign(dx)*e.speed,0);else if(e.st>30){e.state='windup';e.st=0;e.sw=dx<0?-1:1;}if(d>140){e.state='wander';}}
       else if(e.state==='windup'){if(e.st>18){e.state='lunge';e.st=0;e.vx=e.sw*2.4;e.vy=0;}}
       else if(e.state==='lunge'){if(!moveEnt(e,e.vx,0)||e.st>14){e.state='side';e.st=0;}}break;}
+    case 'crumb':{ // rolls in straight lines across the cloud and turns back at every edge
+      if(e.vx===0&&e.vy===0)e.vx=1.3;const nx=e.x+e.vx,ny=e.y+e.vy;const ci=Math.floor((nx+e.w/2)/T),cj=Math.floor((ny+e.h/2)/T);
+      if(FALL.has(G.map.t[cj]?.[ci])||!moveEnt(e,e.vx,e.vy)){if(e.st>6){e.vx=-e.vx;e.vy=-e.vy;e.st=0;if(Math.random()<0.3){const t=e.vx;e.vx=e.vy;e.vy=t;}}}
+      break;}
     case 'jelly':{e.ang+=0.05;if(!calm&&d<90){const a=Math.atan2(tg.y-e.y,tg.x-e.x);e.x+=Math.cos(a)*e.speed;e.y+=Math.sin(a)*e.speed;}else{e.x+=Math.cos(e.ang)*0.4;e.y+=Math.sin(e.ang*1.3)*0.3;}
       e.x=Math.max(16,Math.min(G.map.w*T-32,e.x));e.y=Math.max(16,Math.min(G.map.h*T-32,e.y));break;}
     case 'tent':{if(e.st>30&&e.st<40&&overlap(e,P))hurtPlayer(0.15,e,3,'Kraken tentacle');if(e.st>80){e.dead=10;}break;}
@@ -1221,6 +1273,8 @@ function updateAmbience(){const m=G.map;const cx=G.cam.x,cy=G.cam.y;
   // Will-o'-Wisps drift over the pond and woods after dark
   if(G.mapName==='overworld'&&nightAmount()>0.5&&G.t%240===0&&G.ents.filter(e=>e.wisp&&!e.dead).length<4){const spots=[[10,34],[14,41],[20,30],[30,26],[8,20],[36,18]];const s=spots[Math.random()*spots.length|0];G.ents.push(mkEnemy({kind:'wisp',x:s[0],y:s[1]}));}
   if(G.mapName==='overworld'&&cy<40*T&&G.t%14===0){const k=Math.random()*3|0;G.amb.push({kind:'leaf',s:k,x:cx+Math.random()*W,y:cy-8,vx:0.3+Math.random()*0.4,vy:0.35+Math.random()*0.3,life:400,ph:Math.random()*6});}
+  if(G.map.wind&&G.t%2===0){for(const w of G.map.wind){const st=windStrength(w);if(st<0.1||Math.random()>st*0.6)continue;G.amb.push({kind:'gust',x:w.x*T+Math.random()*w.w*T,y:w.y*T+Math.random()*w.h*T,vx:w.dx*(1.5+st*2.5),vy:w.dy*(1.5+st*2.5),life:18+Math.random()*12,ph:0});}}
+  if(G.mapName==='sky'&&G.t%12===0){G.amb.push({kind:'snow',x:cx-8,y:cy+Math.random()*(H-HUD),vx:0.8+Math.random()*0.5,vy:0.05,life:400,ph:Math.random()*6});}
   if((G.mapName==='peaks')&&G.t%6===0){G.amb.push({kind:'snow',x:cx+Math.random()*W,y:cy-6,vx:0.2,vy:0.5+Math.random()*0.4,life:500,ph:Math.random()*6});}
   if(G.mapName==='castle'&&G.t%10===0){G.amb.push({kind:'dust',x:cx+Math.random()*W,y:cy+Math.random()*(H-HUD),vx:(Math.random()-0.5)*0.1,vy:-0.05-Math.random()*0.08,life:300,ph:Math.random()*6});}
   if(G.t%6===0){const i0=Math.floor(cx/T),j0=Math.floor(cy/T);for(let j=j0;j<j0+13;j++)for(let i=i0;i<i0+17;i++){if(m.t[j]?.[i]==='L'&&!(G.frozen[i+','+j]>0)&&Math.random()<0.08)G.amb.push({kind:'heat',x:i*T+Math.random()*16,y:j*T+8,vx:0,vy:-0.4,life:40,ph:Math.random()*6});}}
@@ -1251,7 +1305,8 @@ const TOPPINGS={
   mint:{slot:'glaze',name:'Mint Glaze',desc:'Cold creeps in half as fast.'},
   gold:{slot:'sprinkle',name:'Gold Sprinkles',desc:'Monsters drop 25% more sprinkles.'},
   fire:{slot:'sprinkle',name:'Fire Sprinkles',desc:'Sword hits flames +1.'},
-  star:{slot:'sprinkle',name:'Star Sprinkles',desc:'Rolls go 20% farther.'}};
+  star:{slot:'sprinkle',name:'Star Sprinkles',desc:'Rolls go 20% farther.'},
+  cloud:{slot:'glaze',name:'Cloud Glaze',desc:'Wind cannot push Puff.'}};
 function tops(){if(!G.toppings)G.toppings={owned:{},eq:{crust:null,glaze:null,sprinkle:null}};return G.toppings;}
 function hasTop(id){const t=tops();return t.eq[TOPPINGS[id].slot]===id;}
 function giveTopping(id,who){const t=tops();t.owned[id]=true;audio.sfx('item');const d=TOPPINGS[id];
@@ -1346,6 +1401,7 @@ function drawMap(){const m=G.map,cx=Math.round(G.cam.x),cy=Math.round(G.cam.y);c
       case 'shelf':ctx.drawImage(SHELF,ox,oy-6);if(!G.flags[o.id]){ctx.drawImage(SEAL,ox,oy-20,16,16);lights.push({x:ox+8,y:oy-12,r:12});}break;
       case 'pedestal':ctx.drawImage(PEDESTAL,ox,oy);if(G.cleared){ctx.fillStyle='rgba(143,192,255,'+(0.4+Math.sin(G.t/8)*0.2)+')';ctx.fillRect(ox+5,oy+3,6,2);lights.push({x:ox+8,y:oy+4,r:16});}break;
       case 'bed':ctx.drawImage(BED,ox,oy);break;
+      case 'ovendoor':{ctx.fillStyle='#2a2230';ctx.fillRect(ox-6,oy-10,28,26);ctx.fillStyle='#4a4058';ctx.fillRect(ox-5,oy-9,26,24);ctx.fillStyle='#1a0d12';ctx.fillRect(ox-3,oy-7,22,20);ctx.fillStyle=(G.t>>3&1)?'#ff8c1a':'#ffb347';ctx.fillRect(ox-2,oy-6,20,1);ctx.fillRect(ox-2,oy+12,20,1);ctx.fillRect(ox-2,oy-6,1,19);ctx.fillRect(ox+17,oy-6,1,19);ctx.fillStyle='#d6a63a';ctx.fillRect(ox+12,oy+2,3,3);lights.push({x:ox+8,y:oy+3,r:24});break;}
       case 'badges':{ctx.fillStyle='#3a2214';ctx.fillRect(ox+1,oy+2,30,13);ctx.fillStyle='#6b4322';ctx.fillRect(ox+2,oy+3,28,11);let k=0;for(const b of BADGES){const got=G.badges&&G.badges[b.id];drawBadgeIcon(ox+3+(k%8)*3.5,oy+4+Math.floor(k/8)*5,got?b.col:'#4a3324',3);k++;}
         if(badgeCount()>0)lights.push({x:ox+16,y:oy+8,r:14});break;}
       case 'portrait':{ctx.fillStyle='#3a2214';ctx.fillRect(ox+2,oy+3,12,12);ctx.fillStyle='#d6a63a';ctx.fillRect(ox+3,oy+4,10,10);if(G.freed[o.who]){ctx.fillStyle='#6b4322';ctx.fillRect(ox+4,oy+5,8,8);ctx.save();ctx.translate(ox+8,oy+9);ctx.scale(0.5,0.5);drawMallow(-8,-8,0,0,0,'happy');ctx.restore();}else{ctx.fillStyle='#8a6a3a';ctx.fillRect(ox+4,oy+5,8,8);}break;}
@@ -1384,6 +1440,7 @@ function drawAmbience(){const cx=Math.round(G.cam.x),cy=Math.round(G.cam.y);
   for(const a of G.amb){const x=Math.round(a.x-cx),y=Math.round(a.y-cy);
     if(a.kind==='leaf')ctx.drawImage(LEAF[a.s],x,y);
     else if(a.kind==='snow'){ctx.fillStyle='rgba(255,255,255,0.85)';ctx.fillRect(x,y,2,2);}
+    else if(a.kind==='gust'){ctx.strokeStyle='rgba(255,255,255,'+Math.min(0.7,a.life/20)+')';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-a.vx*3,y-a.vy*3);ctx.stroke();}
     else if(a.kind==='dust'){ctx.fillStyle='rgba(255,230,200,'+(0.25+Math.sin(a.ph)*0.15)+')';ctx.fillRect(x,y,1,1);}
     else{ctx.fillStyle='rgba(255,255,255,'+(a.life/40*0.35)+')';ctx.fillRect(x,y,1,2);}}}
 function drawEnemy(e,x,y,f){const fl=e.flash>0;if(fl){ctx.save();ctx.filter='brightness('+(reduced()?1.5:2+2*(1-e.hp/e.maxhp)).toFixed(1)+')';}
@@ -1398,6 +1455,8 @@ function drawEnemy(e,x,y,f){const fl=e.flash>0;if(fl){ctx.save();ctx.filter='bri
     case 'snowslime':{const z=e.z||0;drawShadow(x+6,y+9,12-z*0.4);ctx.drawImage(SNOWSLIME[e.state==='hop'?1:f],x-2,y-7-z);break;}
     case 'icebat':{drawShadow(x+6,y+14,8);ctx.drawImage(ICEBAT[(G.t>>2)&1],x-2,y-4+Math.sin(G.t/5)*1.5);break;}
     case 'crab':{drawShadow(x+7,y+11,14);ctx.drawImage((e.face<0?CRAB_L:CRAB)[e.state==='lunge'?1:f],x-1+shakeX,y-5);break;}
+    case 'gull':{drawShadow(x+6,y+14,10);ctx.drawImage(GULL[(G.t>>2)&1],x-2,y-6+Math.sin(G.t/6)*1.5);break;}
+    case 'crumb':{drawShadow(x+6,y+9,12);ctx.drawImage(CRUMB[(G.t>>2)&1],x-2+shakeX,y-6);lights.push({x:x+6,y:y+2,r:12});break;}
     case 'jelly':{drawShadow(x+6,y+12,8);ctx.drawImage(JELLY[(G.t>>3)&1],x-2,y-4+Math.sin(G.t/6)*1.5);break;}
     case 'tent':{const up=Math.min(1,e.st/30);ctx.drawImage(TENT[e.st>30&&e.st<50?1:0],x-2,y-6-up*2);if(e.st<30){ctx.fillStyle='rgba(143,192,255,'+(0.6-up*0.4)+')';ctx.fillRect(x-2,y+6,16,3);}break;}
     case 'kraken':{if(e.sub){ctx.fillStyle='rgba(143,192,255,0.6)';for(let k=0;k<3;k++)ctx.fillRect(x+2+k*7+((G.t>>3)&1),y+6+((G.t+k*5)>>4&1)*2,4,2);}else{drawShadow(x+11,y+20,26);ctx.drawImage(KRAKEN[f],x-1,y-6+Math.sin(G.t/9)*1.5);}break;}
@@ -1418,6 +1477,7 @@ function drawEnts(){const cx=Math.round(G.cam.x),cy=Math.round(G.cam.y);const f=
     if(e.type==='player'){if(P.hurt&&(G.t&2)&&!reduced())continue;
       if(P.melting){const k=P.melting/90;ctx.fillStyle=toastColor(1);ctx.fillRect(x-4-(1-k)*4|0,y+10,18+(1-k)*8|0,5);ctx.save();ctx.translate(x+5,y+15);ctx.scale(1,Math.max(0.05,k));ctx.translate(-x-5,-y-15);drawMallow(x-3,y-3,0,0,1,'sad');ctx.restore();continue;}
       if(P.carried)continue;
+      if(P.falling){const k=Math.max(0.05,P.falling/36);ctx.save();ctx.translate(x+5,y+8);ctx.scale(k,k);ctx.rotate((1-k)*2);ctx.translate(-x-5,-y-8);drawMallow(x-3,y-3,0,0,P.toast,'sad');ctx.restore();continue;}
       drawShadow(x+5,y+13,12-(P.z||0)*0.4);const tint=P.frozen?'frozen':P.cold>0.5?'frozen':P.soggy?'soggy':undefined;
       if(P.squeeze){const k=Math.sin(P.squeeze.t/P.squeeze.dur*Math.PI);ctx.save();ctx.translate(x+5,y+13);ctx.scale(1+k*0.6,1-k*0.6);ctx.translate(-x-5,-y-13);drawMallow(x-3,y-3,P.dir,0,P.toast,'sad',0,tint);ctx.restore();continue;}
       if(P.hop){drawMallow(x-3,y-3-(P.z||0),0,0,P.toast,'happy',0,tint);continue;}
@@ -1488,7 +1548,7 @@ function drawPortrait(who,x,y,mood){const f=PORTRAIT_FACE[who];const sp=who==='P
   else if(sp===BOSS[0]){ctx.drawImage(sp,0,0,32,18,x-4,y+1,28,16);}else if(sp===MARSHAL[0]){ctx.drawImage(sp,0,0,16,9,x+2,y+2,16,9);ctx.drawImage(sp,0,9,16,7,x+2,y+11,16,7);}else if(sp===KRAKEN[0]){ctx.drawImage(sp,2,0,20,14,x,y+3,20,14);}
   else if(sp){ctx.drawImage(sp,x+2,y+2);}else{ctx.drawImage(SEAL,x+2,y+2,16,16);}
   ctx.restore();}
-function facedWho(w){return !!w&&!/^(GATE|NG\+|PEDESTAL|SHELF|TROPHY|PORTRAIT|CAMPFIRE|LAMP|SEAL|GAUNTLET|TIDE|BLOCK|Dot)$/.test(w);}
+function facedWho(w){return !!w&&!/^(GATE|NG\+|PEDESTAL|SHELF|TROPHY|PORTRAIT|CAMPFIRE|LAMP|SEAL|GAUNTLET|TIDE|BLOCK|OVEN|Dot)$/.test(w);}
 function drawMsg(){if(!G.msg)return;const bx=8,bh=48,by=H-HUD-bh-4;drawBox(bx,by,W-16,bh);const hasFace=facedWho(G.msg.who);const tx0=hasFace?bx+32:bx+8;
   if(hasFace)drawPortrait(G.msg.who,bx+6,by+6,moodFor(G.msg.lines.join(' ')));
   if(G.msg.who){const nw=G.msg.who.length*8+8;ctx.fillStyle='#ffb347';ctx.fillRect(bx+6,by-6,nw,11);ctx.fillStyle='#1a0d12';ctx.fillRect(bx+7,by-5,nw-2,9);text(G.msg.who,bx+10,by-4,'#ffb347');}
@@ -1513,6 +1573,7 @@ function questList(){const fc=freedCount();const main={id:'main',name:'Free the 
     {id:'coast',name:'Caramel Coast',area:'coast',status:G.items.compass?'done':G.visited.coast?'active':'new',line:G.items.compass?'The Kraken sleeps. Captain\'s Compass claimed.':G.visited.coast?'Cross the pools at low tide and board the Sugarplum.':'East of the woods. Hot sand, hotter crabs, and a wreck in the shallows.'},
     {id:'grotto',name:'Glaze Grotto',area:'grotto',status:G.items.boots?'done':G.visited.grotto?'active':G.flags.spear?'new':'locked',line:G.items.boots?'Sugar Boots claimed.':G.visited.grotto?'Freeze a path to the island for the Sugar Boots.':'A flame seals stairs east of the pond. The spear can douse it.'},
     {id:'peaks',name:'Frosted Peaks',area:'peaks',status:G.items.mitten?'done':G.visited.peaks?'active':'new',line:G.items.mitten?'The Frost Marshal is sugar dust. Mitten Charm claimed.':G.visited.peaks?'Slide to the plate in Sugar Glacier and face the Frost Marshal.':'West past the pond. Cold enough to stiffen a marshmallow.'},
+    {id:'sky',name:'Sky Bakery',area:'sky',status:tops().owned.cloud?'done':G.visited.sky?'active':G.items.mitten?'new':'locked',line:tops().owned.cloud?'Cloud Glaze claimed. The Great Oven is still preheating.':G.visited.sky?'Cross the planks between gusts. Something glints on the west cloud.':'An updraft on the Peaks, north of the glacier, lifts a warm marshmallow skyward.'},
     {id:'home',name:'Everyone home',area:'village',status:fc>=5?'done':fc?'active':'new',line:`${Math.min(fc,5)} of 5 buddies back in Donut Village. Visit them, or ask one along.`},
     {id:'gauntlet',name:'Boss gauntlet',area:'keep',status:G.best!=null?'done':G.cleared?'active':'locked',line:G.best!=null?'Best time '+fmtTime(G.best)+'. Beat it?':G.cleared?'The trophy room pedestal awaits.':'Finish the main quest first.'}];
   return q.filter(x=>x.status!=='locked');}
@@ -1555,15 +1616,15 @@ function pauseHeader(tab){const touch=document.body.classList.contains('touch');
   text((tab==='map'?'[MAP]':' MAP ')+' '+(tab==='quests'?'[QUESTS]':' QUESTS '),W/2,6,'#fffaf0','center');text((touch?'ROLL':'C')+': TOPPINGS   A: QUIT   <> TABS',W/2,16,'#b9a5c6','center');}
 function drawPause(){ctx.fillStyle='rgba(23,17,28,0.88)';ctx.fillRect(0,0,W,H-HUD);pauseHeader('map');
   // schematic map of Sugarfield
-  const areas={village:{x:76,y:150,w:104,h:22,n:'Donut Village'},woods:{x:76,y:110,w:104,h:30,n:'Toasty Woods'},cave:{x:184,y:114,w:68,h:22,n:'Cinder Cave'},keep:{x:92,y:66,w:72,h:34,n:'Ember Keep'},grotto:{x:2,y:114,w:72,h:22,n:'Glaze Grotto'},peaks:{x:2,y:66,w:84,h:30,n:'Frosted Peaks'},coast:{x:184,y:150,w:68,h:22,n:'Caramel Coast'}};
-  const vis={village:true,woods:G.visited.overworld,cave:G.visited.cave,keep:G.visited.castle,grotto:G.visited.grotto,peaks:G.visited.peaks||G.visited.glacier,coast:G.visited.coast||G.visited.wreck};
-  ctx.fillStyle='#4a3756';ctx.fillRect(127,100,2,52);ctx.fillRect(180,124,6,2);ctx.fillRect(72,124,4,2);ctx.fillRect(180,160,4,2);
+  const areas={village:{x:76,y:150,w:104,h:22,n:'Donut Village'},woods:{x:76,y:110,w:104,h:30,n:'Toasty Woods'},cave:{x:184,y:114,w:68,h:22,n:'Cinder Cave'},keep:{x:92,y:66,w:72,h:34,n:'Ember Keep'},grotto:{x:2,y:114,w:72,h:22,n:'Glaze Grotto'},peaks:{x:2,y:66,w:84,h:30,n:'Frosted Peaks'},coast:{x:184,y:150,w:68,h:22,n:'Caramel Coast'},sky:{x:2,y:36,w:84,h:24,n:'Sky Bakery'}};
+  const vis={village:true,woods:G.visited.overworld,cave:G.visited.cave,keep:G.visited.castle,grotto:G.visited.grotto,peaks:G.visited.peaks||G.visited.glacier,coast:G.visited.coast||G.visited.wreck,sky:G.visited.sky};
+  ctx.fillStyle='#4a3756';ctx.fillRect(127,100,2,52);ctx.fillRect(43,60,2,6);ctx.fillRect(180,124,6,2);ctx.fillRect(72,124,4,2);ctx.fillRect(180,160,4,2);
   for(const k in areas){const a=areas[k];const on=vis[k];ctx.fillStyle=on?'#2e2440':'#1e1826';ctx.fillRect(a.x,a.y,a.w,a.h);ctx.fillStyle=on?'#ffb347':'#4a3756';ctx.fillRect(a.x,a.y,a.w,1);ctx.fillRect(a.x,a.y+a.h-1,a.w,1);ctx.fillRect(a.x,a.y,1,a.h);ctx.fillRect(a.x+a.w-1,a.y,1,a.h);
     if(on){ctx.font='8px "Press Start 2P", monospace';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillStyle='#e9d6c4';ctx.save();ctx.translate(a.x+a.w/2,a.y+a.h/2-3);ctx.scale(0.75,0.75);ctx.fillText(a.n,0,0);ctx.restore();}
     else text('?',a.x+a.w/2,a.y+a.h/2-4,'#4a3756','center');
     if(goalArea()===k&&(G.t>>4&1)){ctx.fillStyle='#ffd23f';ctx.fillRect(a.x+a.w-7,a.y-3,5,5);ctx.fillStyle='#ff3b1f';ctx.fillRect(a.x+a.w-6,a.y-2,3,3);}
     const side=questList().filter(q=>q.id!=='main'&&q.area===k&&q.status!=='done');if(side.length&&on){ctx.fillStyle='#1a0d12';ctx.fillRect(a.x+2,a.y-4,8,9);ctx.fillStyle=side.some(q=>q.status==='active')?'#ffd23f':'#8fc0ff';ctx.fillRect(a.x+3,a.y-3,6,7);ctx.fillStyle='#1a0d12';ctx.fillRect(a.x+5,a.y-2,2,3);ctx.fillRect(a.x+5,a.y+2,2,1);}}
-  const here=G.map.interior||(G.mapName==='overworld'&&P.y>40*T)?'village':G.mapName==='overworld'?'woods':G.mapName==='cave'?'cave':G.mapName==='grotto'?'grotto':(G.mapName==='peaks'||G.mapName==='glacier')?'peaks':(G.mapName==='coast'||G.mapName==='wreck')?'coast':'keep';const a=areas[here];
+  const here=G.map.interior||(G.mapName==='overworld'&&P.y>40*T)?'village':G.mapName==='overworld'?'woods':G.mapName==='cave'?'cave':G.mapName==='grotto'?'grotto':G.mapName==='sky'?'sky':(G.mapName==='peaks'||G.mapName==='glacier')?'peaks':(G.mapName==='coast'||G.mapName==='wreck')?'coast':'keep';const a=areas[here];
   drawMallow(a.x+2,a.y+a.h-14,0,0,P.toast/P.cap,'ok');
   wrap(G.goal,29).slice(0,3).forEach((l,i)=>text(l,W/2,28+i*10,'#fffaf0','center'));
   text('Buddies '+freedCount()+'/6 Seals '+G.seals+'/6 Melted '+G.deaths+'x',W/2,178,'#b9a5c6','center');

@@ -4,7 +4,7 @@ fs.writeFileSync(TMP,html);const b=await chromium.launch();const pg=await b.newP
 await pg.goto('file://'+TMP);await pg.waitForTimeout(400);await pg.evaluate(()=>{G.menu=menuItems().findIndex(i=>i.id==='new');});await pg.keyboard.press('Enter');await pg.waitForTimeout(300);await pg.keyboard.press('Enter');await pg.waitForTimeout(400);
 const log=await pg.evaluate(()=>{const out={};const run=n=>{for(let i=0;i<n;i++)step();};const press=k=>{pressed[k]=1;pressedT[k]=performance.now();};G.flags.sword=true;G.flags.spear=true;G.msg=null;
   // 1. no badges at start; wall object exists in Puff's home and is interactable
-  out.noneAtStart=badgeCount()===0&&BADGES.length===16;
+  out.noneAtStart=badgeCount()===0&&BADGES.length===17;
   loadMap('home',8,1,0);G.msg=null;out.wallObj=!!objAt(8,0,'badges')&&!!objAt(9,0,'badges');P.x=8*16+3;P.y=1*16+3;P.dir=1;interact();out.pageOpens=G.showBadges===true;render();
   out.pageCloses=(()=>{press('a');run(1);return !G.showBadges;})();
   // 2. earning: free a buddy, the periodic check awards Reunion with a banner

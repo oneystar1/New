@@ -117,10 +117,18 @@ in the grotto, wind on the Peaks, surf on the coast, a low rumble in the keep.
 FLASH on the title (Auto/Reduced/Normal) honors reduced-motion preferences.
 Credits skip after three seconds and New Game offers to skip a seen intro.
 
-The BADGE WALL in Puff's home tracks sixteen achievements (first buddy,
+The SKY BAKERY floats above the Frosted Peaks. An updraft north of the
+glacier lifts Puff once he has the Mitten Charm. Cloud platforms hold him,
+open sky does not: step off a plank and he falls back to his last safe spot,
+a little more toasted. Gusts blow across every plank and die down in a lull,
+so cross on the lull. Sugar Gulls dive, Burnt Crumbs roll the clouds and
+turn at every edge. The Cloud Glaze topping on the west cloud makes Puff
+immune to wind. The Great Oven at the top is still preheating.
+
+The BADGE WALL in Puff's home tracks seventeen achievements (first buddy,
 each boss, all seals, every region, 100 monsters doused, 250 sprinkles,
 full toppings, a night's sleep, a no-melt clear, ten melts, the gauntlet,
-New Game+). Earning one shows a banner; face the wall to page through them.
+New Game+, reaching the sky). Earning one shows a banner; face the wall to page through them.
 Badges carry into New Game+. Saves carry a version and migrate forward.
 
 Difficulty cycles Normal, Hard, Easy (70% heat, cooling never pauses, one
