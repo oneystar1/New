@@ -22,10 +22,10 @@ const log=await pg.evaluate(()=>{const out={};const run=n=>{for(let i=0;i<n;i++)
   P.x=4*16+3;P.y=26*16+3;P.hurt=0;G.ents=[];const c=mkEnemy({kind:'crumb',x:24,y:25});c.vx=1.3;G.ents.push(c);let offCloud=false;for(let i=0;i<300;i++){step();const ci=Math.floor((c.x+c.w/2)/16),cj=Math.floor((c.y+c.h/2)/16);if(FALL.has(MAPS.sky.t[cj]?.[ci]))offCloud=true;}out.crumbStays=!offCloud&&!c.gone;
   const g=mkEnemy({kind:'gull',x:20,y:12});G.ents.push(g);const gx=g.x;run(30);out.gullMoves=g.x!==gx&&g.fly===true;G.ents=[];
   // 6. oven door talks; chest gives the Cloud Glaze
-  P.x=22*16+3;P.y=4*16+3;P.dir=1;G.msg=null;interact();out.oven=!!G.msg&&G.msg.who==='OVEN';G.msg=null;G.msgQ=[];
+  P.x=22*16+3;P.y=4*16+3;P.dir=1;G.msg=null;interact();out.oven=!!G.choice&&/Open/.test(JSON.stringify(G.choice));G.choice=null;G.msg=null;G.msgQ=[];
   const ch=MAPS.sky.objs.find(o=>o.id==='topcloud');P.x=3*16+3;P.y=10*16+3;P.dir=1;delete tops().owned.cloud;interact();out.chest=!!G.opened.topcloud&&!!tops().owned.cloud&&/CLOUD GLAZE/.test(G.msg?G.msg.lines.join(' '):'');G.msg=null;G.msgQ=[];
   // 7. pause map, quest and badge wiring
-  out.quest=questList().some(q=>q.id==='sky'&&q.status==='done');G.paused=true;G.pauseTab='map';render();out.pauseOk=true;G.paused=false;
+  out.quest=questList().some(q=>q.id==='sky'&&q.status==='active'&&/door is hot/.test(q.line));G.paused=true;G.pauseTab='map';render();out.pauseOk=true;G.paused=false;
   out.explorerNeedsSky=(()=>{G.visited={cave:1,castle:1,grotto:1,peaks:1,glacier:1,coast:1,wreck:1};const b=BADGES.find(x=>x.id==='explorer');const a=b.cond();G.visited.sky=1;return !a&&b.cond();})();
   // 8. way back down
   P.x=6*16+3;P.y=28*16+3;P.safe={x:P.x,y:P.y};run(40);out.backToPeaks=G.mapName==='peaks';

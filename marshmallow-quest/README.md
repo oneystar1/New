@@ -123,12 +123,18 @@ open sky does not: step off a plank and he falls back to his last safe spot,
 a little more toasted. Gusts blow across every plank and die down in a lull,
 so cross on the lull. Sugar Gulls dive, Burnt Crumbs roll the clouds and
 turn at every edge. The Cloud Glaze topping on the west cloud makes Puff
-immune to wind. The Great Oven at the top is still preheating.
+immune to wind. The Great Oven at the top holds the OVEN LORD: a stove the
+size of a house that sprays cinders from its open door, charges and slams
+so a burning line crawls across the floor, and shakes Burnt Crumbs loose.
+In its second half the wall coils flare across random rows. Beating it
+opens a chest with the OVEN MITT: lava and burning trails toast Puff half
+as fast, and the toast meter grows. The pause map marks regions whose boss
+still stands with a small flame.
 
-The BADGE WALL in Puff's home tracks seventeen achievements (first buddy,
+The BADGE WALL in Puff's home tracks eighteen achievements (first buddy,
 each boss, all seals, every region, 100 monsters doused, 250 sprinkles,
 full toppings, a night's sleep, a no-melt clear, ten melts, the gauntlet,
-New Game+, reaching the sky). Earning one shows a banner; face the wall to page through them.
+New Game+, reaching the sky, the Oven Lord). Earning one shows a banner; face the wall to page through them.
 Badges carry into New Game+. Saves carry a version and migrate forward.
 
 Difficulty cycles Normal, Hard, Easy (70% heat, cooling never pauses, one

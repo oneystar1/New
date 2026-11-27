@@ -20,7 +20,9 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 - [x] Frosted Peaks region: snow, ice sliding, cold meter that inverts the fire rule, Snow Slime and Icicle Bat, Sugar Glacier dungeon, Frost Marshal boss, Mitten Charm, Seal 5 (Nov 20)
 - [x] Caramel Coast region: tide pools on the clock, Crab Knights, Caramel Jellies, the Sugarplum wreck, Kraken boss, Captain's Compass, Seal 6 (Nov 22)
 - [x] Sky Bakery region: cloud platforms over open air (falling), crust planks, gusting wind rects with lulls, Sugar Gull and Burnt Crumb, Cloud Glaze topping, updraft entrance gated on the Mitten Charm (Nov 26)
-- [ ] The Great Oven: Oven Lord boss behind the preheating door, with its own arena and name card
+- [x] The Great Oven: Oven Lord boss (bake fan, stomp trail, coil rows in phase 2) in a brick arena with coil walls, name card, Oven Mitt reward (Nov 27)
+- [ ] Oven Lord in the boss gauntlet as a fifth stage
+- [ ] Villager lines about the sky and the oven for the Elder and Granny
 - [ ] Rewritten throne room finale with a two-stage Pyre Lord arena
 
 ### B. Systems
@@ -39,7 +41,7 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 - [ ] Weather: rain days with puddles; snow in the Peaks
 - [ ] Larger sprite set: 8-direction Puff, enemy death animations per type
 - [ ] Title attract mode
-- [ ] Badge rewards: a cosmetic topping or home decoration at 9 and 17 badges
+- [ ] Badge rewards: a cosmetic topping or home decoration at 9 and 18 badges
 - [ ] Cloud tiles are flat; add puffier edges and a second cloud variant
 - [ ] Followers in the sky should stay on clouds or wait at the plank
 - [ ] Dialog skip hint moved above the box (Nov 24); a proper 'hold B' progress pip is still open
@@ -65,10 +67,12 @@ up next to the SNES classics. Single HTML file, no build step, phone-first.
 - Bosses that must respawn on re-entry use a trigger with a `*Met` flag (taunt once) and are skipped in loadMap.
 - Counters live in G.stats via bump(k); badge conditions read them through stat(k). checkBadges() awards one badge per call so banners never pile up.
 - New save fields: add a default in migrateSave() and bump SAVE_VER.
+- Bosses with a mini flag use the mini damage path; add a bossN flag, a death branch in damageEnemy, a trigger with a *Met flag, a loadMap skip, and a health bar line.
 - Sky: tiles in FALL (just 'A') drop Puff via P.falling and return him to P.safe, which only updates outside wind rects. Wind lives in m.wind rects; windStrength() is a sine gust with a per-rect phase. Warps gate on items with needsItem.
 - In Puff's home, tile (8,1) faces the bed when looking down; tests must face up (dir 1) to hit the wall.
 
 ## Log
+- Nov 27: Oven Lord boss and the Great Oven arena, Oven Mitt, Baker's Dozen badge, boss flame markers on the pause map, Baker line
 - Nov 26: Sky Bakery region with wind, falling, two enemies, Cloud Glaze, oven door placeholder; Head in the Clouds badge; plank footsteps (the Nov 25 firing arrived late and was folded into this pass)
 - Nov 24: badge wall with 16 badges, kill/coin/sleep counters, save versioning + migration, sprinkle drop nudge, skip hint off the dialog border
 - Nov 23: dialog portraits with moods; boss entrance cutscenes for all four bosses; ambient beds; FLASH option and reduced-motion handling; credits skip, remembered intro
