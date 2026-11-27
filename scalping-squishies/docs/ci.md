@@ -9,6 +9,7 @@ with a message naming them, it never half-deploys.
 | `scalping-squishies-ci.yml` | push / PR touching `scalping-squishies/` | typecheck, engine and server tests, balance guardrails, preflight report, build, two headless smoke passes (main flow; season splash and trade board), framed listing screenshots, deploy `dist/` to GitHub Pages |
 | `scalping-squishies-server.yml` | push touching `server/` or `fly.toml` | server tests, then `server/deploy.sh` to Fly.io when `FLY_API_TOKEN` is set |
 | `scalping-squishies-ios.yml` | manual run, or a tag `ss-ios-v*` | builds the Capacitor shell on a macOS runner, signs with fastlane match, uploads to TestFlight |
+| `scalping-squishies-android.yml` | manual run, or a tag `ss-android-v*` | builds a signed release bundle on Linux, uploads it as an artifact, and to the Play internal track when a service account is set |
 
 ## 1. Public web build (GitHub Pages)
 
@@ -124,3 +125,29 @@ in App Store Connect: missing ids, wrong types (consumable vs
 non-consumable vs subscription) and products not yet approved. Without
 the key it only prints the expected table. `--strict` exits 1 on any gap;
 run it before each store submission.
+
+## 7. Android builds
+
+Same shape as iOS, no Mac and no Fastlane. One-time on your side:
+
+1. Make an upload keystore once, anywhere with Java:
+   `keytool -genkeypair -v -keystore release.keystore -alias scalpingsquishies -keyalg RSA -keysize 2048 -validity 10000`
+2. Add repository **secrets**:
+
+| Secret | Value |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | `base64 -i release.keystore \| tr -d '\n'` |
+| `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | what you typed into keytool |
+| `PLAY_SERVICE_ACCOUNT_JSON` | optional: a Play Console service account with release access; enables the upload step |
+| `ADMOB_ANDROID_APP_ID`, `ADMOB_ANDROID_REWARDED_UNIT`, `ADMOB_ANDROID_INTERSTITIAL_UNIT` | optional until release; Google's test ids otherwise |
+| `RC_ANDROID_KEY` | RevenueCat public Android SDK key; optional |
+
+3. Actions → **Scalping Squishies Android** → Run workflow. The bundle
+   lands in the `android-release-bundle` artifact; with the service
+   account it also goes to the Play internal testing track. Create the
+   app in Play Console once (package `com.oneycollectibles.scalpingsquishies`)
+   and the in-app products with the same ids as iOS before the first
+   store upload.
+
+`tools/android-manifest.sh` sets the AdMob app id in the generated
+manifest; the version code is the GitHub run number.

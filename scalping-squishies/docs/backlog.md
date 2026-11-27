@@ -10,14 +10,18 @@ Mark done with the date. Add anything noticed during a cycle.
 | --- | --- | --- | --- | --- |
 
 
-| 27 | retention | Con Weekend leaderboard: show the top three handles in the camp line flavor ("DeadstockDrew is three ahead of you") when the backend is reachable | half day | 2026-11-26 |
-| 28 | polish | Shelf: a "complete this page" hint on each store page listing the cheapest route (pull odds vs trade board vs event shop) | small | 2026-11-26 |
-| 29 | launch | Android: `npx cap add android` workflow mirror of the iOS one, gated on Play secrets, so the second platform is a secrets drop | half day | 2026-11-26 |
+
+| 30 | retention | Con Weekend: a "beat {handle}" mini-goal card on the Hunt tab with the units gap to the next leaderboard rank | small | 2026-11-27 |
+| 31 | polish | Android: RevenueCat key is passed through the iOS env name; add VITE_RC_ANDROID_KEY and pick by platform in config | small | 2026-11-27 |
+| 32 | launch | Play Store listing pack: short/full description (4000), feature graphic 1024x500 script, data safety form answers mirroring the iOS privacy label | half day | 2026-11-27 |
 
 ## Done
 
 | # | Area | Item | Done |
 | --- | --- | --- | --- |
+| 29 | launch | Android: `npx cap add android` workflow mirror of the iOS one, gated on Play secrets, so the second platform is a secrets drop | 2026-11-27 |
+| 28 | polish | Shelf: a "complete this page" hint on each store page listing the cheapest route (pull odds vs trade board vs event shop) | 2026-11-27 |
+| 27 | retention | Con Weekend leaderboard: show the top three handles in the camp line flavor ("DeadstockDrew is three ahead of you") when the backend is reachable | 2026-11-27 |
 | 26 | launch | Smoke test: cover the Shelf trades segment and the season splash under `?season=dohlidays` in a second short pass | 2026-11-26 |
 | 25 | polish | Trade board: show the collector's portrait instead of an emoji, reuse the Portrait art | 2026-11-26 |
 | 24 | retention | Achievements for the new systems: first trade, wanted post fulfilled, full seasonal set, streak shield saved a streak | 2026-11-26 |

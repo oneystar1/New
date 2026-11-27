@@ -409,3 +409,13 @@ Collector's Collector (25 trades), Saw Your Post (a wanted post
 fulfilled), Life Happens (the streak shield saved a streak), Thirty
 Mornings (30-day streak), Limited Time Only (a seasonal set completed).
 Trade board collectors show their portraits.
+
+**Leaderboard rivals in the line.** On Con Weekend, when the backend is
+reachable, the top five leaderboard handles (not yours) feed the camp:
+one reseller or sneaker bro in the line wears a real handle, and six in
+ten opening lines mention one. Pulled with the cloud save on boot.
+
+**Page hints.** Each store page in Shelf → Sets says how many standards
+are missing, by rarity, with the pull odds at that store, how many of
+them are on today's trade board, and whether the store still needs its
+first run.

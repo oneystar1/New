@@ -38,13 +38,25 @@ export function makeRival(kind: RivalKind, rand: () => number): Rival {
 }
 
 /** Opening line of the run log; seasons add their own lines half the time. */
-function lineFlavor(now: number, rand: () => number): string {
+function lineFlavor(now: number, rand: () => number, online: string[] = []): string {
+  // Con Weekend: real leaderboard handles show up in the line when the backend is reachable.
+  if (online.length && isConWeekend(now) && rand() < 0.6) {
+    const h = online[Math.floor(rand() * online.length)];
+    const lines = [
+      `${h} is three ahead of you, refreshing the leaderboard with both thumbs.`,
+      `${h} brought a cooler. ${h} is not sharing the cooler.`,
+      `Someone recognizes ${h} from the leaderboard and asks for a photo. In line. At 6am.`,
+      `${h} is on the phone: "No, I'm at the OTHER store. Camp both."`,
+    ];
+    return lines[Math.floor(rand() * lines.length)];
+  }
   const season = activeSeason(now);
   if (season && season.lineFlavor.length && rand() < 0.5) return season.lineFlavor[Math.floor(rand() * season.lineFlavor.length)];
   return LINE_FLAVOR[Math.floor(rand() * LINE_FLAVOR.length)];
 }
 
-export function startRun(s: GameState, storeId: string, m: Modifiers, now: number, rand: () => number): RestockRun | null {
+/** `online`: top leaderboard handles (Con Weekend flavor and one named rival in the line). */
+export function startRun(s: GameState, storeId: string, m: Modifiers, now: number, rand: () => number, online: string[] = []): RestockRun | null {
   if (!restockReady(s, storeId, now)) return null;
   const intel = s.restockIntel[storeId] ?? 0;
   delete s.restockIntel[storeId];
@@ -52,6 +64,11 @@ export function startRun(s: GameState, storeId: string, m: Modifiers, now: numbe
   const ahead = Math.max(0, 4 + Math.floor(rand() * 4) - m.linePosition);
   const rivals: Rival[] = [];
   for (let i = 0; i < ahead; i++) rivals.push(makeRival(weightedPick(RIVAL_WEIGHTS, rand), rand));
+  // On Con Weekend one reseller in the line wears a real leaderboard handle.
+  if (online.length && isConWeekend(now)) {
+    const slot = rivals.find((r) => r.kind === 'reseller' || r.kind === 'sneakerbro');
+    if (slot) slot.name = `${online[Math.floor(rand() * online.length)]} (leaderboard)`;
+  }
   const run: RestockRun = {
     upgradesSnapshot: [...s.upgrades],
     storeId,
@@ -84,7 +101,7 @@ export function startRun(s: GameState, storeId: string, m: Modifiers, now: numbe
     kidsSnatched: 0,
     momsArgued: 0,
     brosRaced: 0,
-    log: [lineFlavor(now, rand)],
+    log: [lineFlavor(now, rand, online)],
     carry: 4 + m.carry,
   };
   run.remaining = computeRemaining(run);

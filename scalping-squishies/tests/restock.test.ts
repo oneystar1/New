@@ -365,3 +365,24 @@ describe('camp phase', () => {
     expect(run.position).toBe(6);
   });
 });
+
+describe('leaderboard rivals on Con Weekend', () => {
+  it('a real handle shows up in the line and the opening line only on Con Weekend', () => {
+    const s = ready();
+    // T0 is a Tuesday; find the next Saturday noon
+    const d = new Date(T0);
+    const sat = T0 + ((6 - d.getUTCDay() + 7) % 7) * 86_400_000 + 12 * 3600_000;
+    let named = 0, mentioned = 0;
+    for (let i = 0; i < 40; i++) {
+      s.restockReadyAt.bullseye = 0;
+      const run = startRun(s, 'bullseye', computeModifiers(s, sat), sat, makeRng(100 + i), ['DeadstockDrew', 'BrendaAdmin'])!;
+      if (run.rivals.some((r) => r.name.endsWith('(leaderboard)'))) named++;
+      if (/DeadstockDrew|BrendaAdmin/.test(run.log[0])) mentioned++;
+    }
+    expect(named).toBeGreaterThan(5);
+    expect(mentioned).toBeGreaterThan(10);
+    const weekday = startRun(s, 'bullseye', computeModifiers(s, T0), T0, makeRng(3), ['DeadstockDrew'])!;
+    expect(weekday.rivals.some((r) => r.name.endsWith('(leaderboard)'))).toBe(false);
+    expect(/DeadstockDrew/.test(weekday.log[0])).toBe(false);
+  });
+});

@@ -7,7 +7,7 @@ import { TUTORIAL } from './data/tutorial';
 import { RANKED_RIVALS } from './data/rivals';
 import { CITY_BY_ID } from './data/cities';
 import { storage, haptic } from '../platform/native';
-import { pushSave, pullSave, fetchGrants, claimGrant, submitScore, cloudEnabled, deleteCloudData } from '../net/api';
+import { pushSave, pullSave, fetchGrants, claimGrant, submitScore, cloudEnabled, deleteCloudData, fetchLeaderboard } from '../net/api';
 import { ITEM_BY_ID } from './data/items';
 import { initialState, deserialize, serialize, SAVE_KEY } from './state';
 import {
@@ -89,6 +89,8 @@ interface GameStore {
   openRelocate: () => void;
   closeRelocate: () => void;
   relocating: boolean;
+  /** Top leaderboard handles (not yours), refreshed with the cloud pull; used for Con Weekend line flavor. */
+  onlineRivals: string[];
   tabRequest: TabId | null;
   requestTab: (t: TabId | null) => void;
   claimOfflineNormal: () => void;
@@ -199,6 +201,7 @@ export const useGame = create<GameStore>((set, get) => {
     run: null,
     runResult: null,
     relocating: false,
+    onlineRivals: [],
     tabRequest: null,
     requestTab: (t) => set({ tabRequest: t }),
     provider: null,
@@ -242,6 +245,8 @@ export const useGame = create<GameStore>((set, get) => {
         get().adoptSave(cs.json);
         toast('Cloud save loaded', '☁️', 'good');
       }
+      const lb = await fetchLeaderboard();
+      if (lb) set({ onlineRivals: lb.top.filter((r) => !r.you && r.name && r.name !== 'Anonymous Scalper').slice(0, 5).map((r) => r.name) });
     },
     cloudPush: async () => {
       if (!cloudEnabled()) return;
@@ -637,7 +642,7 @@ export const useGame = create<GameStore>((set, get) => {
       const st = get();
       const now = Date.now();
       const m = computeModifiers(st.s, now);
-      const run = startRun(st.s, storeId, m, now, rand);
+      const run = startRun(st.s, storeId, m, now, rand, st.onlineRivals);
       if (!run) { toast('No restock yet. Check the cooldown.', '⏳', 'bad'); return; }
       track('restock_start', { storeId });
       set({ run, runResult: null });

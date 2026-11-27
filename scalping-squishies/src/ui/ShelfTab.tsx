@@ -11,6 +11,7 @@ import { Portrait } from '../art/Portrait';
 import { SEASON_BY_ID } from '../engine/data/seasons';
 import { visibleSeasonItems } from '../engine/season';
 import { tradeableDupes } from '../engine/trades';
+import { itemsForStore } from '../engine/data/items';
 import { parseShelfKey } from '../engine/data/items';
 
 export function ShelfTab() {
@@ -135,6 +136,18 @@ export function ShelfTab() {
             return (
               <div className="card" key={st.id}>
                 <h3>{st.name} page</h3>
+                {(() => {
+                  // Cheapest route to finish the standard page: pull odds at this store vs the trade board today.
+                  const missing = itemsForStore(st.id).filter((i) => (s.shelf[i.id] ?? 0) === 0);
+                  if (missing.length === 0) return <div className="sub" style={{ color: 'var(--mint)' }}>Standard page complete.</div>;
+                  const w = st.pullWeights;
+                  const total = Object.values(w).reduce((a, b) => a + (b ?? 0), 0);
+                  const byRarity = missing.reduce<Record<string, number>>((acc, i) => { acc[i.rarity] = (acc[i.rarity] ?? 0) + 1; return acc; }, {});
+                  const onBoard = openTrades.filter((o) => missing.some((i) => i.id === o.getItemId)).length;
+                  const unlocked = (s.stores[st.id]?.units ?? 0) > 0;
+                  const odds = Object.entries(byRarity).map(([r, n]) => `${n} ${RARITY_LABEL[r as keyof typeof RARITY_LABEL].toLowerCase()} (${(((w[r as keyof typeof w] ?? 0) / total) * 100).toFixed(1)}% per pull here)`).join(', ');
+                  return <div className="sub">Missing {missing.length}: {odds}.{onBoard ? ` ${onBoard} on the trade board today.` : ''}{!unlocked ? ` Start a run at ${st.name} to pull from this page.` : ''}</div>;
+                })()}
                 {rows.map((x) => (
                   <div className="row between small" key={x.id} style={{ marginTop: 4 }}>
                     <span>{VARIANT_ICON[x.variant as Variant]} {VARIANT_LABEL[x.variant as Variant]} · {x.have}/{x.total}</span>
