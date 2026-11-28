@@ -532,6 +532,15 @@ export function sellDuplicate(s: GameState, key: string, now: number): number {
 // ---------------------------------------------------------------------------
 
 /** Real-time weekend event: Saturday and Sunday in the player's local time. */
+/** The next leaderboard row above you this Con Weekend and the units gap, from a board snapshot. */
+export function conWeekendGoal(s: GameState, board: { top: { name: string; score: number; you: boolean }[] } | null, now: number): { name: string; gap: number; rank: number } | null {
+  if (!board || !isConWeekend(now)) return null;
+  const mine = s.conWeek.week === weekKey(now) ? s.conWeek.units : 0;
+  const above = board.top.filter((r) => !r.you && r.score > mine).sort((a, b) => a.score - b.score)[0];
+  if (!above) return null;
+  return { name: above.name, gap: above.score - mine, rank: board.top.indexOf(above) + 1 };
+}
+
 export function isConWeekend(now: number): boolean {
   const d = new Date(now).getDay();
   return d === 0 || d === 6;

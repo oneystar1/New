@@ -68,7 +68,7 @@ jobs:
           VITE_ADMOB_REWARDED: ${{ secrets.ADMOB_ANDROID_REWARDED_UNIT }}
           VITE_ADMOB_INTERSTITIAL: ${{ secrets.ADMOB_ANDROID_INTERSTITIAL_UNIT }}
           VITE_ADMOB_TESTING: ${{ github.event.inputs.admob_testing || 'true' }}
-          VITE_RC_IOS_KEY: ${{ secrets.RC_ANDROID_KEY }}
+          VITE_RC_ANDROID_KEY: ${{ secrets.RC_ANDROID_KEY }}
           VITE_APP_VERSION: 0.1.${{ github.run_number }}
         run: npx tsc --noEmit && npx vite build
       - name: Generate the Android project

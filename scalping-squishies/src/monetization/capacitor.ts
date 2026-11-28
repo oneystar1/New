@@ -43,10 +43,11 @@ export async function createCapacitorProvider(opts: NativeProviderOptions): Prom
   // --- Purchases ---
   let products: Record<string, PurchasesStoreProduct> = {};
   let iapReady = false;
-  if (CONFIG.revenueCatIosKey) {
+  const rcKey = platform() === 'android' ? CONFIG.revenueCatAndroidKey : CONFIG.revenueCatIosKey;
+  if (rcKey) {
     try {
       await Purchases.setLogLevel({ level: CONFIG.admob.testing ? LOG_LEVEL.DEBUG : LOG_LEVEL.WARN });
-      await Purchases.configure({ apiKey: CONFIG.revenueCatIosKey, appUserID: opts.appUserId });
+      await Purchases.configure({ apiKey: rcKey, appUserID: opts.appUserId });
       const res = await Purchases.getProducts({ productIdentifiers: PRODUCTS.map((p) => p.id) });
       products = Object.fromEntries(res.products.map((p) => [p.identifier, p]));
       iapReady = true;

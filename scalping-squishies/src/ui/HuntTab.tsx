@@ -6,7 +6,7 @@ import { STORE_BY_ID, STORES } from '../engine/data/stores';
 import { restockReady, isBanned } from '../engine/restock';
 import { formatDuration } from '../engine/math';
 import { TUTORIAL } from '../engine/data/tutorial';
-import { isConWeekend } from '../engine/sim';
+import { isConWeekend, conWeekendGoal } from '../engine/sim';
 import { Sprite } from '../art/Sprite';
 import { StoreSprite } from '../art/Portrait';
 import { haptic } from '../platform/native';
@@ -34,6 +34,8 @@ export function HuntTab() {
   const claimDailyReward = useGame((g) => g.claimDailyReward);
   const claimMissionReward = useGame((g) => g.claimMissionReward);
   const restockStart = useGame((g) => g.restockStart);
+  const onlineBoard = useGame((g) => g.onlineBoard);
+  const goal = conWeekendGoal(s, onlineBoard, now);
   const [floats, setFloats] = useState<{ id: number; x: number; y: number; text: string }[]>([]);
   const m = computeModifiers(s, now);
   const tv = tapValue(s, m);
@@ -63,7 +65,7 @@ export function HuntTab() {
       {isConWeekend(now) && (
         <div className="banner good" style={{ marginBottom: 10 }}>
           <span style={{ fontSize: 22 }}>🎪</span>
-          <div className="t"><b>Con Weekend</b><span className="small">Restock trucks are 50% fuller all weekend. Camp everything.</span></div>
+          <div className="t"><b>Con Weekend{goal ? ` · beat ${goal.name}` : ''}</b><span className="small">{goal ? `${goal.gap} more unit${goal.gap === 1 ? '' : 's'} this weekend passes ${goal.name} for #${goal.rank}. Trucks are 50% fuller. Camp everything.` : 'Restock trucks are 50% fuller all weekend. Camp everything.'}</span></div>
         </div>
       )}
       <Leaderboard />

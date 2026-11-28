@@ -419,3 +419,9 @@ ten opening lines mention one. Pulled with the cloud save on boot.
 are missing, by rarity, with the pull odds at that store, how many of
 them are on today's trade board, and whether the store still needs its
 first run.
+
+**Con Weekend goal card.** With the backend reachable, the Con Weekend
+banner on the Hunt tab names the next leaderboard row above you and the
+units gap to pass them ("beat DeadstockDrew · 7 more units this weekend
+passes DeadstockDrew for #3"), computed from the board snapshot pulled
+with the cloud save.

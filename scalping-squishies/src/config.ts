@@ -15,6 +15,8 @@ export const CONFIG = {
   },
   /** RevenueCat public SDK key for iOS. Empty = purchases unavailable. */
   revenueCatIosKey: env.VITE_RC_IOS_KEY ?? '',
+  /** RevenueCat public SDK key for Android. Empty = purchases unavailable there. */
+  revenueCatAndroidKey: env.VITE_RC_ANDROID_KEY ?? '',
   /** Where feedback goes. Empty hides the mail link and points at the support page. */
   supportEmail: env.VITE_SUPPORT_EMAIL ?? '',
   /** Public web home (privacy and support pages live next to it). */

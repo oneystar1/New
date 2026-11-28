@@ -91,6 +91,8 @@ interface GameStore {
   relocating: boolean;
   /** Top leaderboard handles (not yours), refreshed with the cloud pull; used for Con Weekend line flavor. */
   onlineRivals: string[];
+  /** Leaderboard snapshot for the Con Weekend goal card: top rows and your rank. */
+  onlineBoard: { top: { name: string; score: number; you: boolean }[]; yourRank: number | null } | null;
   tabRequest: TabId | null;
   requestTab: (t: TabId | null) => void;
   claimOfflineNormal: () => void;
@@ -202,6 +204,7 @@ export const useGame = create<GameStore>((set, get) => {
     runResult: null,
     relocating: false,
     onlineRivals: [],
+    onlineBoard: null,
     tabRequest: null,
     requestTab: (t) => set({ tabRequest: t }),
     provider: null,
@@ -246,7 +249,7 @@ export const useGame = create<GameStore>((set, get) => {
         toast('Cloud save loaded', '☁️', 'good');
       }
       const lb = await fetchLeaderboard();
-      if (lb) set({ onlineRivals: lb.top.filter((r) => !r.you && r.name && r.name !== 'Anonymous Scalper').slice(0, 5).map((r) => r.name) });
+      if (lb) set({ onlineRivals: lb.top.filter((r) => !r.you && r.name && r.name !== 'Anonymous Scalper').slice(0, 5).map((r) => r.name), onlineBoard: { top: lb.top.map((r) => ({ name: r.name, score: r.score, you: r.you })), yourRank: lb.yourRank } });
     },
     cloudPush: async () => {
       if (!cloudEnabled()) return;

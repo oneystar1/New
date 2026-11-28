@@ -21,7 +21,8 @@
     "shots:store": "node tools/store-shots.mjs",
     "preflight": "node tools/preflight.mjs",
     "asc:products": "node tools/asc-products.mjs",
-    "smoke:season": "node tests/smoke-season.mjs"
+    "smoke:season": "node tests/smoke-season.mjs",
+    "shots:feature": "node tools/feature-graphic.mjs"
   },
   "license": "MIT",
   "dependencies": {

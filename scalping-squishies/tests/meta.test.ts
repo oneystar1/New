@@ -76,3 +76,21 @@ describe('con weekend', () => {
     expect(b.stock).toBe(Math.round(a.stock * 1.5));
   });
 });
+
+describe('con weekend goal', () => {
+  it('names the next row above you and the units gap, only on Con Weekend with a board', async () => {
+    const { conWeekendGoal, weekKey } = await import('../src/engine/sim');
+    const s = initialState(T0);
+    const d = new Date(T0);
+    const sat = T0 + ((6 - d.getUTCDay() + 7) % 7) * 86_400_000 + 12 * 3600_000;
+    const board = { top: [{ name: 'DeadstockDrew', score: 40, you: false }, { name: 'BrendaAdmin', score: 25, you: false }, { name: 'me', score: 12, you: true }] };
+    s.conWeek = { week: weekKey(sat), units: 12 };
+    expect(conWeekendGoal(s, board, sat)).toEqual({ name: 'BrendaAdmin', gap: 13, rank: 2 });
+    s.conWeek.units = 30;
+    expect(conWeekendGoal(s, board, sat)).toEqual({ name: 'DeadstockDrew', gap: 10, rank: 1 });
+    s.conWeek.units = 50;
+    expect(conWeekendGoal(s, board, sat)).toBeNull();
+    expect(conWeekendGoal(s, board, T0)).toBeNull(); // a Tuesday
+    expect(conWeekendGoal(s, null, sat)).toBeNull();
+  });
+});

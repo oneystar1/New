@@ -11,14 +11,20 @@ Mark done with the date. Add anything noticed during a cycle.
 
 
 
-| 30 | retention | Con Weekend: a "beat {handle}" mini-goal card on the Hunt tab with the units gap to the next leaderboard rank | small | 2026-11-27 |
-| 31 | polish | Android: RevenueCat key is passed through the iOS env name; add VITE_RC_ANDROID_KEY and pick by platform in config | small | 2026-11-27 |
-| 32 | launch | Play Store listing pack: short/full description (4000), feature graphic 1024x500 script, data safety form answers mirroring the iOS privacy label | half day | 2026-11-27 |
+
+| 33 | retention | Player-type simulations: casual, collector and whale bots run a simulated week each and report stall points, first paywall, and whether a free player can finish a seasonal set | day | 2026-11-28 |
+| 34 | polish | Sound for the doors, the haul, the Marketplace and the Relocate from the synth system | half day | 2026-11-28 |
+| 35 | launch | App Preview video: Playwright capture cut with ffmpeg (camp at dawn, grab, flip a dupe, open a pull), 15 to 30 s, portrait | half day | 2026-11-28 |
+| 36 | launch | Remote config endpoint and client hook: multipliers, event cadence, ad kill switch without a release | half day | 2026-11-28 |
+| 37 | launch | Landing page on the Pages site with trailer, screenshots, store badges; press kit | half day | 2026-11-28 |
 
 ## Done
 
 | # | Area | Item | Done |
 | --- | --- | --- | --- |
+| 32 | launch | Play Store listing pack: short/full description (4000), feature graphic 1024x500 script, data safety form answers mirroring the iOS privacy label | 2026-11-28 |
+| 31 | polish | Android: RevenueCat key is passed through the iOS env name; add VITE_RC_ANDROID_KEY and pick by platform in config | 2026-11-28 |
+| 30 | retention | Con Weekend: a "beat {handle}" mini-goal card on the Hunt tab with the units gap to the next leaderboard rank | 2026-11-28 |
 | 29 | launch | Android: `npx cap add android` workflow mirror of the iOS one, gated on Play secrets, so the second platform is a secrets drop | 2026-11-27 |
 | 28 | polish | Shelf: a "complete this page" hint on each store page listing the cheapest route (pull odds vs trade board vs event shop) | 2026-11-27 |
 | 27 | retention | Con Weekend leaderboard: show the top three handles in the camp line flavor ("DeadstockDrew is three ahead of you") when the backend is reachable | 2026-11-27 |
