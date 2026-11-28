@@ -131,6 +131,15 @@ opens a chest with the OVEN MITT: lava and burning trails toast Puff half
 as fast, and the toast meter grows. The pause map marks regions whose boss
 still stands with a small flame.
 
+WEATHER. Some days a storm rolls in (rolled at midnight, noon and when
+you sleep). In Sugarfield and on the Caramel Coast it rains: puddles form
+on open ground and leave Puff soggy and cool for a while, fire monsters
+move slower and toast you less, and the world tints grey under the
+rainfall. On the Frosted Peaks the same storm is a blizzard: snow drives
+sideways and the cold creeps in faster. The pause screen shows Storm next
+to Day or Night. The boss gauntlet now ends with the Oven Lord as a third
+wave, and the Elder and Granny have lines about the sky and the oven.
+
 The BADGE WALL in Puff's home tracks eighteen achievements (first buddy,
 each boss, all seals, every region, 100 monsters doused, 250 sprinkles,
 full toppings, a night's sleep, a no-melt clear, ten melts, the gauntlet,
